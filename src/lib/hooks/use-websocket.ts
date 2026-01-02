@@ -2,9 +2,9 @@
 
 import { useEffect, useCallback, useRef } from "react";
 import { wsClient } from "@/lib/websocket/client";
-import { useWebSocketStore } from "@/lib/stores/websocket-store";
-import { useEditorStore } from "@/lib/stores/editor-store";
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { useWebSocketStore } from "@/lib/stores/websocket";
+import { useEditorStore } from "@/lib/stores/editor";
+import { useAuthStore } from "@/lib/stores/auth";
 import { storage } from "@/lib/utils/storage";
 import { debounce } from "@/lib/utils/debounce";
 

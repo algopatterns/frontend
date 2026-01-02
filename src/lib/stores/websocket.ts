@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SessionRole } from "@/lib/api/sessions.types";
+import type { SessionRole } from "@/lib/api/sessions/types";
 import type { ConnectionStatus, ChatMessage } from "@/lib/websocket/types";
 
 interface Participant {

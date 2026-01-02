@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { useAuthStore } from "@/lib/stores/auth";
 import { storage } from "@/lib/utils/storage";
 
 interface AuthGuardProps {

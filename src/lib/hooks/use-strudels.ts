@@ -5,7 +5,7 @@ import { strudelsApi } from "@/lib/api/strudels";
 import type {
   CreateStrudelRequest,
   UpdateStrudelRequest,
-} from "@/lib/api/strudels.types";
+} from "@/lib/api/strudels/types";
 
 export const strudelKeys = {
   all: ["strudels"] as const,

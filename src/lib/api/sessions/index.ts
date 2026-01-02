@@ -1,4 +1,4 @@
-import { apiClient } from "./client";
+import { apiClient } from "../client";
 import type {
   CreateSessionRequest,
   CreateSessionResponse,
@@ -18,7 +18,7 @@ import type {
   ParticipantsListResponse,
   MessagesResponse,
   MessageResponse,
-} from "./sessions.types";
+} from "./types";
 
 export const sessionsApi = {
   // Session CRUD

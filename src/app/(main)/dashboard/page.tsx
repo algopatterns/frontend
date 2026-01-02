@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { AuthGuard } from "@/components/shared/auth-guard";
 import { useStrudels } from "@/lib/hooks/use-strudels";
-import { useUIStore } from "@/lib/stores/ui-store";
+import { useUIStore } from "@/lib/stores/ui";
 
 function DashboardContent() {
   const router = useRouter();

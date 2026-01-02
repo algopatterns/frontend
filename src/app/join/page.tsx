@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { wsClient } from "@/lib/websocket/client";
-import { useWebSocketStore } from "@/lib/stores/websocket-store";
+import { useWebSocketStore } from "@/lib/stores/websocket";
 
 function JoinContent() {
   const router = useRouter();

@@ -5,7 +5,7 @@ import { usersApi } from "@/lib/api/users";
 import type {
   TrainingConsentRequest,
   AIFeaturesEnabledRequest,
-} from "@/lib/api/users.types";
+} from "@/lib/api/users/types";
 
 export const userKeys = {
   all: ["users"] as const,

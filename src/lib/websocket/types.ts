@@ -1,4 +1,4 @@
-import type { SessionRole } from "@/lib/api/sessions.types";
+import type { SessionRole } from "@/lib/api/sessions/types";
 
 export type ConnectionStatus =
   | "disconnected"

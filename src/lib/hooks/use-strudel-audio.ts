@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useAudioStore } from "@/lib/stores/audio-store";
+import { useAudioStore } from "@/lib/stores/audio";
 import { evaluateStrudel, stopStrudel } from "@/components/shared/strudel-editor";
 
 export function useStrudelAudio() {

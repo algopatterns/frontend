@@ -1,5 +1,5 @@
 // Re-export User type for convenience
-export type { User } from "./auth.types";
+export type { User } from "../auth/types";
 
 // Usage statistics
 export interface DailyUsage {

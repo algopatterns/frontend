@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useEditorStore } from "@/lib/stores/editor-store";
-import { useAudioStore } from "@/lib/stores/audio-store";
+import { useEditorStore } from "@/lib/stores/editor";
+import { useAudioStore } from "@/lib/stores/audio";
 import { EDITOR } from "@/lib/constants";
 
 interface StrudelEditorProps {

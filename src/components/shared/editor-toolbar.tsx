@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useAudioStore } from "@/lib/stores/audio-store";
-import { useEditorStore } from "@/lib/stores/editor-store";
-import { useWebSocketStore } from "@/lib/stores/websocket-store";
+import { useAudioStore } from "@/lib/stores/audio";
+import { useEditorStore } from "@/lib/stores/editor";
+import { useWebSocketStore } from "@/lib/stores/websocket";
 
 interface EditorToolbarProps {
   onPlay: () => void;

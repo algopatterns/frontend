@@ -6,8 +6,8 @@ import { EditorToolbar } from "@/components/shared/editor-toolbar";
 import { ChatPanel } from "@/components/shared/chat-panel";
 import { useStrudelAudio } from "@/lib/hooks/use-strudel-audio";
 import { useWebSocket } from "@/lib/hooks/use-websocket";
-import { useUIStore } from "@/lib/stores/ui-store";
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { useUIStore } from "@/lib/stores/ui";
+import { useAuthStore } from "@/lib/stores/auth";
 import { Button } from "@/components/ui/button";
 
 export default function HomePage() {

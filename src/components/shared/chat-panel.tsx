@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { useWebSocketStore } from "@/lib/stores/websocket-store";
+import { useWebSocketStore } from "@/lib/stores/websocket";
 import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
 import { ParticipantsList } from "./participants-list";

@@ -1,7 +1,7 @@
-import { apiClient } from "./client";
+import { apiClient } from "../client";
 import { API_BASE_URL } from "@/lib/constants";
-import type { UserResponse, UpdateProfileRequest } from "./auth.types";
-import type { MessageResponse } from "./sessions.types";
+import type { UserResponse, UpdateProfileRequest } from "./types";
+import type { MessageResponse } from "../sessions/types";
 
 export const authApi = {
   getMe: () =>

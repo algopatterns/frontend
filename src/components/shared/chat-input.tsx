@@ -3,7 +3,7 @@
 import { useState, useRef, type KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEditorStore } from "@/lib/stores/editor-store";
+import { useEditorStore } from "@/lib/stores/editor";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;

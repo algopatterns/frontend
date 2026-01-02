@@ -1,10 +1,10 @@
-import { apiClient } from "./client";
-import type { User } from "./auth.types";
+import { apiClient } from "../client";
+import type { User } from "../auth/types";
 import type {
   UsageResponse,
   TrainingConsentRequest,
   AIFeaturesEnabledRequest,
-} from "./users.types";
+} from "./types";
 
 export const usersApi = {
   getUsage: () =>

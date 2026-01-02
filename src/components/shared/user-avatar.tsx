@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { User } from "@/lib/api/auth.types";
+import type { User } from "@/lib/api/auth/types";
 
 interface UserAvatarProps {
   user: User | null;

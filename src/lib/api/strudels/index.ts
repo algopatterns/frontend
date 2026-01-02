@@ -1,11 +1,11 @@
-import { apiClient } from "./client";
+import { apiClient } from "../client";
 import type {
   Strudel,
   CreateStrudelRequest,
   UpdateStrudelRequest,
   StrudelsListResponse,
-} from "./strudels.types";
-import type { MessageResponse } from "./sessions.types";
+} from "./types";
+import type { MessageResponse } from "../sessions/types";
 
 export const strudelsApi = {
   list: () =>

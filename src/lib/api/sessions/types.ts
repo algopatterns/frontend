@@ -1,4 +1,4 @@
-import type { Strudel } from "./strudels.types";
+import type { Strudel } from "../strudels/types";
 
 // Session roles
 export type SessionRole = "host" | "co-author" | "viewer";

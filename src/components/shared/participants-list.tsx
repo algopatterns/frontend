@@ -1,6 +1,6 @@
 "use client";
 
-import { useWebSocketStore } from "@/lib/stores/websocket-store";
+import { useWebSocketStore } from "@/lib/stores/websocket";
 
 export function ParticipantsList() {
   const { participants } = useWebSocketStore();

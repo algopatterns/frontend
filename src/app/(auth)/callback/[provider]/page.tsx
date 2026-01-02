@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { useAuthStore } from "@/lib/stores/auth";
 import { authApi } from "@/lib/api/auth";
 import { storage } from "@/lib/utils/storage";
 

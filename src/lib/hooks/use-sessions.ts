@@ -8,7 +8,7 @@ import type {
   TransferSessionRequest,
   SetDiscoverableRequest,
   JoinSessionRequest,
-} from "@/lib/api/sessions.types";
+} from "@/lib/api/sessions/types";
 
 export const sessionKeys = {
   all: ["sessions"] as const,

@@ -1,6 +1,6 @@
-import { useAuthStore } from "@/lib/stores/auth-store";
-import { useWebSocketStore } from "@/lib/stores/websocket-store";
-import { useEditorStore } from "@/lib/stores/editor-store";
+import { useAuthStore } from "@/lib/stores/auth";
+import { useWebSocketStore } from "@/lib/stores/websocket";
+import { useEditorStore } from "@/lib/stores/editor";
 import { storage } from "@/lib/utils/storage";
 import { WS_BASE_URL, WEBSOCKET } from "@/lib/constants";
 import type {

@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { useAuthStore } from "@/lib/stores/auth";
 import { API_BASE_URL } from "@/lib/constants";
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
