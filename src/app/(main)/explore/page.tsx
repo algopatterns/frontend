@@ -8,7 +8,7 @@ export default function ExplorePage() {
   const { data, isLoading } = usePublicStrudels({ limit: 20 });
 
   return (
-    <div className="container py-8">
+    <div className="container p-8 w-full max-w-full">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Explore</h1>
         <p className="text-muted-foreground">
@@ -31,7 +31,7 @@ export default function ExplorePage() {
           ))}
         </div>
       ) : data?.strudels && data.strudels.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {data.strudels.map((strudel) => (
             <Card key={strudel.id}>
               <CardHeader>

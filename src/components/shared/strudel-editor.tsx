@@ -17,7 +17,7 @@ let strudelMirrorInstance: {
   setCode: (code: string) => void;
   evaluate: () => Promise<void>;
   stop: () => void;
-  destroy: () => void;
+  destroy?: () => void;
 } | null = null;
 
 let codePollingInterval: ReturnType<typeof setInterval> | null = null;
@@ -155,7 +155,10 @@ export function StrudelEditor({
         codePollingInterval = null;
       }
       if (strudelMirrorInstance) {
-        strudelMirrorInstance.destroy();
+        strudelMirrorInstance.stop();
+        if (typeof strudelMirrorInstance.destroy === 'function') {
+          strudelMirrorInstance.destroy();
+        }
         strudelMirrorInstance = null;
         initializedRef.current = false;
       }

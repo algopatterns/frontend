@@ -18,7 +18,7 @@ export function LoginButtons() {
         </svg>
         Continue with GitHub
       </Button>
-      
+
       <Button
         variant="outline"
         size="lg"

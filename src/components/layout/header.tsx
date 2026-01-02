@@ -11,9 +11,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useUIStore } from "@/lib/stores/ui";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { setLoginModalOpen } = useUIStore();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -74,8 +76,8 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button asChild size="sm">
-              <Link href="/login">Sign In</Link>
+            <Button size="sm" onClick={() => setLoginModalOpen(true)}>
+              Sign In
             </Button>
           )}
         </div>

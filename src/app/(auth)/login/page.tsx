@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { LoginButtons } from './_components/login-buttons';
+import { LoginButtons } from '@/components/shared/login-buttons';
 import { useAuthStore } from '@/lib/stores/auth';
 import { storage } from '@/lib/utils/storage';
 import Link from 'next/link';
