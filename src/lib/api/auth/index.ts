@@ -15,7 +15,8 @@ export const authApi = {
   },
 
   getOAuthUrl: (provider: 'github' | 'google' | 'apple') => {
-    return `${API_BASE_URL}/api/v1/auth/${provider}`;
+    const callbackUrl = `${window.location.origin}/callback/${provider}`;
+    return `${API_BASE_URL}/api/v1/auth/${provider}?redirect_url=${encodeURIComponent(callbackUrl)}`;
   },
 
   logout: () => {

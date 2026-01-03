@@ -31,7 +31,7 @@ function DashboardContent() {
 
   return (
     <AuthGuard>
-      <div className="container py-8">
+      <div className="container p-8 w-full max-w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
