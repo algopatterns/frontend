@@ -285,7 +285,7 @@ export function StrudelEditor({ initialCode = '', onCodeChange }: StrudelEditorP
   return (
     <div
       ref={containerRef}
-      className="strudel-editor h-full w-full overflow-hidden border-t rounded-none"
+      className="strudel-editor h-full w-full overflow-hidden rounded-none"
     />
   );
 }

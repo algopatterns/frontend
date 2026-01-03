@@ -253,6 +253,7 @@ class AlgoraveWebSocket {
           type: "user",
           content: payload.user_query,
           displayName: payload.display_name,
+          isAIRequest: true,
           timestamp: message.timestamp,
         });
         addToHistory("user", payload.user_query);

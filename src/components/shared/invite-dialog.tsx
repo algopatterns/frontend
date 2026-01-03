@@ -122,7 +122,7 @@ export function InviteDialog() {
 
         <div className="space-y-6 py-4">
           {/* Go Live toggle */}
-          <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-3 rounded-none border bg-muted/30">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 {isLive ? (
@@ -227,7 +227,7 @@ export function InviteDialog() {
                 {invites.map((invite) => (
                   <div
                     key={invite.id}
-                    className="flex items-center gap-2 p-2 rounded-md bg-muted/50 text-sm"
+                    className="flex items-center gap-2 p-2 rounded-none bg-muted/50 text-sm"
                   >
                     <span className="flex items-center gap-1 text-muted-foreground">
                       {getRoleIcon(invite.role)}

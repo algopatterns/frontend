@@ -7,6 +7,7 @@ import { useStrudelAudio } from '@/lib/hooks/use-strudel-audio';
 import { useWebSocket } from '@/lib/hooks/use-websocket';
 import { useAutosave } from '@/lib/hooks/use-autosave';
 import { useStrudel, usePublicStrudel } from '@/lib/hooks/use-strudels';
+import { useSession } from '@/lib/hooks/use-sessions';
 import { useUIStore } from '@/lib/stores/ui';
 import { useAuthStore } from '@/lib/stores/auth';
 import { useEditorStore } from '@/lib/stores/editor';
@@ -39,6 +40,10 @@ export const useEditor = ({ strudelId, forkStrudelId }: UseEditorOptions = {}) =
     useWebSocket({
       autoConnect: true,
     });
+
+  // Get session data to check if live
+  const { data: session } = useSession(sessionId || '');
+  const isLive = session?.is_discoverable ?? false;
 
   // track if we've already loaded this strudel to prevent re-fetching
   const loadedStrudelIdRef = useRef<string | null>(null);
@@ -196,5 +201,6 @@ export const useEditor = ({ strudelId, forkStrudelId }: UseEditorOptions = {}) =
     isAuthenticated,
     isLoadingStrudel,
     currentStrudelId,
+    isLive,
   };
 };

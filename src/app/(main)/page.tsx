@@ -4,7 +4,8 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { StrudelEditor } from '@/components/shared/strudel-editor';
 import { EditorToolbar } from '@/components/shared/editor-toolbar';
-import { ChatPanel } from '@/components/shared/chat-panel';
+import { SidebarPanel } from '@/components/shared/sidebar-panel';
+import { AIInput } from '@/components/shared/ai-input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useEditor } from './hooks';
@@ -28,10 +29,9 @@ function HomePageContent() {
     isChatPanelOpen,
     toggleChatPanel,
     isConnected,
-    canEdit,
     sessionId,
     saveStatus,
-    isLoadingStrudel,
+    isLive,
   } = useEditor({ strudelId, forkStrudelId });
 
   const handleShare = () => {
@@ -40,6 +40,7 @@ function HomePageContent() {
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
+      {/* Main editor area */}
       <div className="flex-1 flex flex-col min-w-0">
         <EditorToolbar
           onPlay={handlePlay}
@@ -55,11 +56,16 @@ function HomePageContent() {
         <div className="flex-1 overflow-hidden">
           <StrudelEditor
             onCodeChange={handleCodeChange}
-            readOnly={!canEdit && isConnected}
           />
         </div>
+        {/* AI Input at bottom of editor */}
+        <AIInput
+          onSendAIRequest={handleSendAIRequest}
+          disabled={!isConnected}
+        />
       </div>
 
+      {/* Mobile toggle button for sidebar */}
       <Button
         variant="outline"
         size="icon"
@@ -73,31 +79,35 @@ function HomePageContent() {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
         </svg>
       </Button>
 
+      {/* Desktop sidebar */}
       <div
-        className={cn('transition-all duration-300 overflow-hidden md:block', {
+        className={cn('transition-all duration-300 overflow-hidden hidden md:block', {
           'w-80': isChatPanelOpen,
-          'translate-x-full': !isChatPanelOpen,
+          'w-0': !isChatPanelOpen,
         })}>
         {isChatPanelOpen && (
-          <ChatPanel
+          <SidebarPanel
+            isLive={isLive}
             onSendMessage={handleSendMessage}
-            onSendAIRequest={handleSendAIRequest}
             disabled={!isConnected}
           />
         )}
       </div>
 
+      {/* Mobile sidebar overlay */}
       {isChatPanelOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={toggleChatPanel} />
           <div className="absolute right-0 top-0 bottom-0 w-80 bg-background">
-            <ChatPanel
+            <SidebarPanel
+              isLive={isLive}
               onSendMessage={handleSendMessage}
-              onSendAIRequest={handleSendAIRequest}
               disabled={!isConnected}
             />
           </div>

@@ -111,6 +111,7 @@ export interface ChatMessage {
   content: string;
   displayName?: string;
   isActionable?: boolean;
+  isAIRequest?: boolean;
   clarifyingQuestions?: string[];
   timestamp: string;
 }
