@@ -2,7 +2,7 @@ import { useAuthStore } from "@/lib/stores/auth";
 import { useWebSocketStore } from "@/lib/stores/websocket";
 import { useEditorStore } from "@/lib/stores/editor";
 import { storage } from "@/lib/utils/storage";
-import { WS_BASE_URL, WEBSOCKET } from "@/lib/constants";
+import { WS_BASE_URL, WEBSOCKET, EDITOR } from "@/lib/constants";
 import type {
   WebSocketMessage,
   SessionStatePayload,
@@ -29,10 +29,20 @@ class AlgoraveWebSocket {
   private reconnectAttempts = 0;
   private connectionOptions: ConnectionOptions = {};
   private shouldReconnect = true;
+  private onConnectedCallbacks: Array<() => void> = [];
+
+  onceConnected(callback: () => void) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      callback();
+    } else {
+      this.onConnectedCallbacks.push(callback);
+    }
+  }
 
   connect(options: ConnectionOptions = {}) {
     // Don't interrupt an existing connection
     if (this.ws && (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)) {
+      console.log("[WS] Connection already in progress, skipping");
       return;
     }
 
@@ -55,6 +65,7 @@ class AlgoraveWebSocket {
     if (options.displayName) params.set("display_name", options.displayName);
 
     const wsUrl = `${WS_BASE_URL}/api/v1/ws${params.toString() ? `?${params}` : ""}`;
+    console.log("[WS] Connecting - sessionId:", options.sessionId, "hasToken:", !!token);
 
     try {
       this.ws = new WebSocket(wsUrl);
@@ -109,14 +120,21 @@ class AlgoraveWebSocket {
     const { setStatus, setError } = useWebSocketStore.getState();
 
     this.ws.onopen = () => {
+      console.log("[WS] Connection opened");
       this.clearConnectionTimeout();
       this.reconnectAttempts = 0;
       setStatus("connected");
       setError(null);
       this.startPing();
+
+      // Execute and clear onceConnected callbacks
+      const callbacks = this.onConnectedCallbacks;
+      this.onConnectedCallbacks = [];
+      callbacks.forEach((cb) => cb());
     };
 
     this.ws.onclose = (event) => {
+      console.log("[WS] Connection closed - code:", event.code, "reason:", event.reason, "wasClean:", event.wasClean);
       this.clearConnectionTimeout();
       this.stopPing();
 
@@ -134,9 +152,10 @@ class AlgoraveWebSocket {
     this.ws.onmessage = (event) => {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
+        console.log("[WS] Received message:", message.type, message);
         this.handleMessage(message);
       } catch (error) {
-        console.error("[WS] Failed to parse message:", error);
+        console.error("[WS] Failed to parse message:", error, event.data);
       }
     };
   }
@@ -145,6 +164,7 @@ class AlgoraveWebSocket {
     const { setStatus } = useWebSocketStore.getState();
 
     if (this.reconnectAttempts >= WEBSOCKET.RECONNECT_MAX_ATTEMPTS) {
+      console.log("[WS] Max reconnect attempts reached, giving up");
       setStatus("disconnected");
       return;
     }
@@ -156,6 +176,8 @@ class AlgoraveWebSocket {
       WEBSOCKET.RECONNECT_DELAY_MS * Math.pow(2, this.reconnectAttempts - 1),
       10000
     );
+
+    console.log("[WS] Scheduling reconnect attempt", this.reconnectAttempts, "in", delay, "ms with options:", this.connectionOptions);
 
     this.reconnectTimeout = setTimeout(() => {
       this.connect(this.connectionOptions);
@@ -177,9 +199,12 @@ class AlgoraveWebSocket {
     switch (message.type) {
       case "session_state": {
         const payload = message.payload as SessionStatePayload;
+        const hasToken = !!useAuthStore.getState().token;
+        const savedAnonymousCode = storage.getAnonymousCode();
+        console.log("[WS] Received session_state - sessionId:", message.session_id, "role:", payload.your_role, "codeLength:", payload.code?.length || 0, "hasToken:", hasToken, "hasSavedCode:", !!savedAnonymousCode);
+
         setSessionId(message.session_id);
         setMyRole(payload.your_role);
-        setCode(payload.code, true);
         setParticipants(
           payload.participants.map((p, index) => ({
             id: p.user_id || `participant-${index}`,
@@ -188,8 +213,29 @@ class AlgoraveWebSocket {
             role: p.role,
           }))
         );
-        if (!useAuthStore.getState().token) {
+
+        // For anonymous users with saved code (e.g., after refresh), restore their code
+        // For authenticated users or anonymous without saved code, use server's code
+        // Fall back to default code if server sends empty code
+        if (!hasToken && savedAnonymousCode) {
+          console.log("[WS] Restoring saved anonymous code");
+          setCode(savedAnonymousCode, true);
+          // Sync the restored code with the server
+          this.sendCodeUpdate(savedAnonymousCode);
+        } else {
+          const code = payload.code || EDITOR.DEFAULT_CODE;
+          setCode(code, true);
+          // If we had to use default code, sync it with the server
+          if (!payload.code) {
+            this.sendCodeUpdate(code);
+          }
+        }
+
+        // Only store session ID for authenticated users
+        // Anonymous sessions are ephemeral - code is saved separately
+        if (hasToken) {
           storage.setSessionId(message.session_id);
+          console.log("[WS] Stored session ID in localStorage (authenticated user)");
         }
         break;
       }
@@ -298,6 +344,10 @@ class AlgoraveWebSocket {
   }
 
   sendCodeUpdate(code: string, cursorLine?: number, cursorCol?: number) {
+    // Save code for anonymous users so it can be restored after login
+    if (!useAuthStore.getState().token) {
+      storage.setAnonymousCode(code);
+    }
     this.send("code_update", { code, cursor_line: cursorLine, cursor_col: cursorCol });
   }
 

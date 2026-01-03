@@ -20,7 +20,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { status, sessionId, error, participants, messages, myRole } =
     useWebSocketStore();
   const { code, cursorLine, cursorCol, conversationHistory } = useEditorStore();
-  const { token, hasHydrated } = useAuthStore();
+  const { hasHydrated } = useAuthStore();
 
   // track if we initiated a connection
   const hasConnected = useRef(false);
@@ -50,25 +50,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       hasConnected.current = false;
     };
   }, [hasHydrated, autoConnect, options.sessionId, options.inviteToken, options.displayName]);
-
-  // reconnect when token changes (login/logout)
-  const prevTokenRef = useRef(token);
-  useEffect(() => {
-    if (!hasHydrated) return;
-    if (prevTokenRef.current === token) return;
-    prevTokenRef.current = token;
-
-    // only reconnect if we're already connected
-    if (!wsClient.isConnected) return;
-
-    // reconnect with new auth state
-    wsClient.disconnect();
-    wsClient.connect({
-      sessionId: options.sessionId || storage.getSessionId() || undefined,
-      inviteToken: options.inviteToken,
-      displayName: options.displayName,
-    });
-  }, [hasHydrated, token, options.sessionId, options.inviteToken, options.displayName]);
 
   // create debounced send function
   const debouncedSendCodeRef = useRef(

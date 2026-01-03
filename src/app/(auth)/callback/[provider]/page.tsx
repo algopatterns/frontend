@@ -11,7 +11,7 @@ function CallbackContent() {
   const hasProcessed = useRef(false);
   const searchParams = useSearchParams();
 
-  const { setAuth } = useAuthStore();
+  const { loginWithReconnect } = useAuthStore();
 
   useEffect(() => {
     async function handleCallback() {
@@ -40,8 +40,8 @@ function CallbackContent() {
         // fetch user profile
         const { user } = await authApi.getMe();
 
-        // update store
-        setAuth(user, token);
+        // update store with reconnect - this will reconnect WebSocket with auth
+        loginWithReconnect(user, token);
 
         // check for pending session transfer
         const pendingSessionId = storage.getSessionId();
@@ -64,7 +64,7 @@ function CallbackContent() {
     }
 
     handleCallback();
-  }, [searchParams, router, setAuth]);
+  }, [searchParams, router, loginWithReconnect]);
 
   return (
     <div className="text-center">

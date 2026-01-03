@@ -1,5 +1,7 @@
 import { STORAGE_KEYS } from "@/lib/constants";
 
+const ANONYMOUS_CODE_KEY = "algorave_anonymous_code";
+
 export const storage = {
   getSessionId: (): string | null => {
     if (typeof window === "undefined") return null;
@@ -14,6 +16,21 @@ export const storage = {
   clearSessionId: (): void => {
     if (typeof window === "undefined") return;
     localStorage.removeItem(STORAGE_KEYS.SESSION_ID);
+  },
+
+  getAnonymousCode: (): string | null => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(ANONYMOUS_CODE_KEY);
+  },
+
+  setAnonymousCode: (code: string): void => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(ANONYMOUS_CODE_KEY, code);
+  },
+
+  clearAnonymousCode: (): void => {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(ANONYMOUS_CODE_KEY);
   },
 
   getRedirectUrl: (): string | null => {

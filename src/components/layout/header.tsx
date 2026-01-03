@@ -16,8 +16,8 @@ import { useAuth } from '@/lib/hooks/use-auth';
 import { useUIStore } from '@/lib/stores/ui';
 
 export function Header() {
-  const { user, isAuthenticated, logout } = useAuth();
-  const { setLoginModalOpen } = useUIStore();
+  const { user, isAuthenticated } = useAuth();
+  const { setLoginModalOpen, setLogoutDialogOpen } = useUIStore();
   const { theme, setTheme } = useTheme();
 
   return (
@@ -74,7 +74,7 @@ export function Header() {
                   <Link href="/settings">Settings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => setLogoutDialogOpen(true)} className="cursor-pointer">
                   Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
