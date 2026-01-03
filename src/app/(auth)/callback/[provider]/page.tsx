@@ -41,21 +41,13 @@ function CallbackContent() {
         const { user } = await authApi.getMe();
 
         // update store with reconnect - this will reconnect WebSocket with auth
+        // and pass previous_session_id to preserve code from anonymous session
         loginWithReconnect(user, token);
 
-        // check for pending session transfer
-        const pendingSessionId = storage.getSessionId();
         const redirectPath = storage.getRedirectUrl() || '/';
-
         storage.clearRedirectUrl();
 
-        if (pendingSessionId) {
-          // offer to transfer anonymous session on the same page they were on
-          const separator = redirectPath.includes('?') ? '&' : '?';
-          router.push(`${redirectPath}${separator}transfer_session=${pendingSessionId}`);
-        } else {
-          router.push(redirectPath);
-        }
+        router.push(redirectPath);
       } catch (error) {
         console.error('auth callback error:', error);
         useAuthStore.getState().clearAuth();

@@ -1,5 +1,7 @@
 'use client';
 
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { StrudelEditor } from '@/components/shared/strudel-editor';
 import { EditorToolbar } from '@/components/shared/editor-toolbar';
 import { ChatPanel } from '@/components/shared/chat-panel';
@@ -7,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useEditor } from './hooks';
 
-export default function HomePage() {
+function HomePageContent() {
+  const searchParams = useSearchParams();
+  const strudelId = searchParams.get('id');
+
   const {
     handleCodeChange,
     handlePlay,
@@ -22,7 +27,8 @@ export default function HomePage() {
     canEdit,
     sessionId,
     saveStatus,
-  } = useEditor();
+    isLoadingStrudel,
+  } = useEditor({ strudelId });
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
@@ -89,5 +95,13 @@ export default function HomePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="flex h-[calc(100vh-3.5rem)] items-center justify-center">Loading...</div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }

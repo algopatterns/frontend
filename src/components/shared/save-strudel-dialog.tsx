@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ import { useEditorStore } from "@/lib/stores/editor";
 import { useCreateStrudel } from "@/lib/hooks/use-strudels";
 
 export function SaveStrudelDialog() {
+  const router = useRouter();
   const { isSaveStrudelDialogOpen, setSaveStrudelDialogOpen } = useUIStore();
   const { code, conversationHistory, setCurrentStrudel, markSaved } = useEditorStore();
   const createStrudel = useCreateStrudel();
@@ -47,6 +49,10 @@ export function SaveStrudelDialog() {
 
       setCurrentStrudel(strudel.id, strudel.title);
       markSaved();
+
+      // Update URL with new strudel ID (enables refresh)
+      router.replace(`/?id=${strudel.id}`, { scroll: false });
+
       handleClose();
     } catch (err) {
       setError("Failed to save strudel. Please try again.");
