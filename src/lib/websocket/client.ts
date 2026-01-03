@@ -32,6 +32,9 @@ class AlgoraveWebSocket {
   private shouldReconnect = true;
   private onConnectedCallbacks: Array<() => void> = [];
 
+  // flag to skip code restoration in session_state when forking
+  public skipCodeRestoration = false;
+
   onceConnected(callback: () => void) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       callback();
@@ -59,6 +62,7 @@ class AlgoraveWebSocket {
     setError(null);
 
     const params = new URLSearchParams();
+    
     if (options.sessionId) params.set("session_id", options.sessionId);
     if (options.previousSessionId) params.set("previous_session_id", options.previousSessionId);
     if (token) params.set("token", token);
@@ -209,7 +213,10 @@ class AlgoraveWebSocket {
 
         // if we have saved anonymous code and server sent empty code, restore the saved code
         // this handles anonymous refresh (login transition is handled by backend via previous_session_id)
-        if (savedAnonymousCode && !payload.code) {
+        // skip if skipCodeRestoration flag is set (e.g., when forking)
+        if (this.skipCodeRestoration) {
+          this.skipCodeRestoration = false; // Reset flag after use
+        } else if (savedAnonymousCode && !payload.code) {
           setCode(savedAnonymousCode, true);
           // sendCodeUpdate also saves to localStorage, keeping it for future refreshes
           this.sendCodeUpdate(savedAnonymousCode);
