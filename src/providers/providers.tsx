@@ -9,6 +9,7 @@ import { LoginModal } from "@/components/shared/login-modal";
 import { LogoutConfirmDialog } from "@/components/shared/logout-confirm-dialog";
 import { NewStrudelDialog } from "@/components/shared/new-strudel-dialog";
 import { SaveStrudelDialog } from "@/components/shared/save-strudel-dialog";
+import { InviteDialog } from "@/components/shared/invite-dialog";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -25,6 +26,7 @@ export function Providers({ children }: { children: ReactNode }) {
           <LogoutConfirmDialog />
           <NewStrudelDialog />
           <SaveStrudelDialog />
+          <InviteDialog />
           <Toaster />
         </AuthHydration>
       </QueryProvider>

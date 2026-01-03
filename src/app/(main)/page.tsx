@@ -8,11 +8,14 @@ import { ChatPanel } from '@/components/shared/chat-panel';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useEditor } from './hooks';
+import { useUIStore } from '@/lib/stores/ui';
 
 function HomePageContent() {
   const searchParams = useSearchParams();
   const strudelId = searchParams.get('id');
   const forkStrudelId = searchParams.get('fork');
+
+  const { setInviteDialogOpen } = useUIStore();
 
   const {
     handleCodeChange,
@@ -31,6 +34,10 @@ function HomePageContent() {
     isLoadingStrudel,
   } = useEditor({ strudelId, forkStrudelId });
 
+  const handleShare = () => {
+    setInviteDialogOpen(true);
+  };
+
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
       <div className="flex-1 flex flex-col min-w-0">
@@ -39,6 +46,7 @@ function HomePageContent() {
           onStop={handleStop}
           onSave={handleSave}
           onNew={handleNewStrudel}
+          onShare={handleShare}
           showSave={true}
           showNew={true}
           showShare={!!sessionId}
