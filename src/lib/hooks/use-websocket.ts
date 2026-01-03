@@ -22,49 +22,40 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { code, cursorLine, cursorCol, conversationHistory } = useEditorStore();
   const { token, hasHydrated } = useAuthStore();
 
-  // use ref to track if we've connected
+  // track if we initiated a connection
   const hasConnected = useRef(false);
 
   // connect once auth has hydrated
   useEffect(() => {
-    // wait for auth store to hydrate before connecting
-    if (!hasHydrated) return;
+    if (!hasHydrated || !autoConnect) return;
+    if (hasConnected.current) return;
 
-    if (autoConnect && !hasConnected.current) {
-      hasConnected.current = true;
+    hasConnected.current = true;
 
-      // check for stored session_id for anonymous reconnection
-      const storedSessionId =
-        options.sessionId || storage.getSessionId() || undefined;
+    const storedSessionId =
+      options.sessionId || storage.getSessionId() || undefined;
 
-      wsClient.connect({
-        sessionId: storedSessionId,
-        inviteToken: options.inviteToken,
-        displayName: options.displayName,
-      });
-    }
+    wsClient.connect({
+      sessionId: storedSessionId,
+      inviteToken: options.inviteToken,
+      displayName: options.displayName,
+    });
 
     return () => {
-      // only disconnect on unmount if we connected
-      if (hasConnected.current) {
-        wsClient.disconnect();
-        hasConnected.current = false;
-      }
+      wsClient.disconnect();
+      hasConnected.current = false;
     };
   }, [hasHydrated, autoConnect, options.sessionId, options.inviteToken, options.displayName]);
 
   // reconnect when token changes (login/logout)
   const prevTokenRef = useRef(token);
   useEffect(() => {
-    // skip if auth hasn't hydrated yet
     if (!hasHydrated) return;
-
-    // skip if token hasn't actually changed
     if (prevTokenRef.current === token) return;
     prevTokenRef.current = token;
 
-    // skip if we haven't connected yet
-    if (!hasConnected.current) return;
+    // only reconnect if we're already connected
+    if (!wsClient.isConnected) return;
 
     // reconnect with new auth state
     wsClient.disconnect();

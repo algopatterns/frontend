@@ -23,21 +23,19 @@ interface ConnectionOptions {
 
 class AlgoraveWebSocket {
   private ws: WebSocket | null = null;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = WEBSOCKET.RECONNECT_MAX_ATTEMPTS;
-  private reconnectDelay = WEBSOCKET.RECONNECT_DELAY_MS;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
-  private connectionTimeout: ReturnType<typeof setTimeout> | null = null;
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private reconnectAttempts = 0;
   private connectionOptions: ConnectionOptions = {};
+  private shouldReconnect = true;
 
   connect(options: ConnectionOptions = {}) {
-    // Don't connect if already connecting or connected
-    const currentStatus = useWebSocketStore.getState().status;
-    if (currentStatus === "connecting" || currentStatus === "connected") {
-      return;
-    }
+    // Clean up any existing connection first
+    this.cleanup();
 
     this.connectionOptions = options;
+    this.shouldReconnect = true;
+
     const { token } = useAuthStore.getState();
     const { setStatus, setError } = useWebSocketStore.getState();
 
@@ -55,28 +53,29 @@ class AlgoraveWebSocket {
     try {
       this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
-      this.startConnectionTimeout();
     } catch (error) {
-      console.error("Failed to create WebSocket:", error);
+      console.error("[WS] Failed to create WebSocket:", error);
       setStatus("disconnected");
-      setError("Failed to connect to WebSocket");
+      setError("Failed to connect");
     }
   }
 
-  private startConnectionTimeout() {
-    this.clearConnectionTimeout();
-    this.connectionTimeout = setTimeout(() => {
-      if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
-        console.log("WebSocket connection timeout");
-        this.ws.close();
+  private cleanup() {
+    this.stopPing();
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    if (this.ws) {
+      // Remove handlers before closing to prevent triggering reconnect
+      this.ws.onopen = null;
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+      this.ws.onmessage = null;
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        this.ws.close(1000, "Cleanup");
       }
-    }, WEBSOCKET.CONNECTION_TIMEOUT_MS);
-  }
-
-  private clearConnectionTimeout() {
-    if (this.connectionTimeout) {
-      clearTimeout(this.connectionTimeout);
-      this.connectionTimeout = null;
+      this.ws = null;
     }
   }
 
@@ -86,27 +85,24 @@ class AlgoraveWebSocket {
     const { setStatus, setError } = useWebSocketStore.getState();
 
     this.ws.onopen = () => {
-      console.log("WebSocket connected");
-      this.clearConnectionTimeout();
-      setStatus("connected");
       this.reconnectAttempts = 0;
+      setStatus("connected");
+      setError(null);
       this.startPing();
     };
 
     this.ws.onclose = (event) => {
-      console.log("WebSocket closed:", { code: event.code, reason: event.reason, wasClean: event.wasClean });
-      this.clearConnectionTimeout();
       this.stopPing();
-      if (event.wasClean) {
-        setStatus("disconnected");
+
+      if (this.shouldReconnect && event.code !== 1000) {
+        this.scheduleReconnect();
       } else {
-        this.attemptReconnect();
+        setStatus("disconnected");
       }
     };
 
-    this.ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      setError("WebSocket connection error");
+    this.ws.onerror = () => {
+      // onclose will follow and handle status
     };
 
     this.ws.onmessage = (event) => {
@@ -114,9 +110,30 @@ class AlgoraveWebSocket {
         const message: WebSocketMessage = JSON.parse(event.data);
         this.handleMessage(message);
       } catch (error) {
-        console.error("Failed to parse WebSocket message:", error);
+        console.error("[WS] Failed to parse message:", error);
       }
     };
+  }
+
+  private scheduleReconnect() {
+    const { setStatus } = useWebSocketStore.getState();
+
+    if (this.reconnectAttempts >= WEBSOCKET.RECONNECT_MAX_ATTEMPTS) {
+      setStatus("disconnected");
+      return;
+    }
+
+    setStatus("reconnecting");
+    this.reconnectAttempts++;
+
+    const delay = Math.min(
+      WEBSOCKET.RECONNECT_DELAY_MS * Math.pow(2, this.reconnectAttempts - 1),
+      10000
+    );
+
+    this.reconnectTimeout = setTimeout(() => {
+      this.connect(this.connectionOptions);
+    }, delay);
   }
 
   private handleMessage(message: WebSocketMessage) {
@@ -145,7 +162,6 @@ class AlgoraveWebSocket {
             role: p.role,
           }))
         );
-        // Store session_id for anonymous users
         if (!useAuthStore.getState().token) {
           storage.setSessionId(message.session_id);
         }
@@ -241,33 +257,22 @@ class AlgoraveWebSocket {
       }
 
       case "pong":
-        // Connection is alive
         break;
     }
   }
 
   send(type: string, payload: Record<string, unknown>) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.error("WebSocket is not connected");
       return;
     }
 
     const { sessionId } = useWebSocketStore.getState();
-    const message = {
-      type,
-      session_id: sessionId,
-      payload,
-    };
-
+    const message = { type, session_id: sessionId, payload };
     this.ws.send(JSON.stringify(message));
   }
 
   sendCodeUpdate(code: string, cursorLine?: number, cursorCol?: number) {
-    this.send("code_update", {
-      code,
-      cursor_line: cursorLine,
-      cursor_col: cursorCol,
-    });
+    this.send("code_update", { code, cursor_line: cursorLine, cursor_col: cursorCol });
   }
 
   sendAgentRequest(
@@ -291,6 +296,7 @@ class AlgoraveWebSocket {
   }
 
   private startPing() {
+    this.stopPing();
     this.pingInterval = setInterval(() => {
       this.send("ping", {});
     }, WEBSOCKET.PING_INTERVAL_MS);
@@ -303,43 +309,19 @@ class AlgoraveWebSocket {
     }
   }
 
-  private attemptReconnect() {
-    const { setStatus } = useWebSocketStore.getState();
-
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log("Max reconnection attempts reached");
-      setStatus("disconnected");
-      return;
-    }
-
-    setStatus("reconnecting");
-    this.reconnectAttempts++;
-
-    const delay =
-      this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-    console.log(
-      `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`
-    );
-
-    setTimeout(() => {
-      this.connect(this.connectionOptions);
-    }, delay);
-  }
-
   disconnect() {
-    this.clearConnectionTimeout();
-    this.stopPing();
-    if (this.ws) {
-      this.ws.close(1000, "Client disconnect");
-      this.ws = null;
-    }
+    this.shouldReconnect = false;
+    this.cleanup();
     useWebSocketStore.getState().reset();
   }
 
   get isConnected() {
     return this.ws?.readyState === WebSocket.OPEN;
   }
+
+  get isConnecting() {
+    return this.ws?.readyState === WebSocket.CONNECTING;
+  }
 }
 
-// Singleton instance
 export const wsClient = new AlgoraveWebSocket();
