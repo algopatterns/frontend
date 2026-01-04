@@ -15,7 +15,7 @@ import {
   Square,
   Cloud,
   Loader2,
-  FilePlus,
+  Plus,
   Share2,
 } from "lucide-react";
 
@@ -60,7 +60,7 @@ export function EditorToolbar({
           disabled={!isInitialized || isViewer}
           title={isViewer ? "Only hosts can control playback" : "Play (Ctrl+Enter)"}
         >
-          <Play className="h-4 w-4 mr-1" />
+          <Play className="h-3.5 w-3.5 mr-1" />
           Play
         </Button>
         <Button
@@ -70,7 +70,7 @@ export function EditorToolbar({
           disabled={!isPlaying || isViewer}
           title={isViewer ? "Only hosts can control playback" : "Stop (Ctrl+.)"}
         >
-          <Square className="h-4 w-4 mr-1" />
+          <Square className="h-3.5 w-3.5 mr-1" />
           Stop
         </Button>
       </div>
@@ -93,11 +93,11 @@ export function EditorToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
-              variant="ghost"
+              size="icon-round-sm"
+              variant="outline"
               onClick={onSave}
               disabled={saveStatus === "saving"}
-              className="h-8 w-8"
+              className="text-muted-foreground hover:text-foreground"
             >
               <SaveIndicator status={saveStatus} />
             </Button>
@@ -114,12 +114,12 @@ export function EditorToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
-              variant="ghost"
+              size="icon-round-sm"
+              variant="outline"
               onClick={onNew}
-              className="h-8 w-8"
+              className="text-muted-foreground hover:text-foreground"
             >
-              <FilePlus className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>New Strudel</TooltipContent>
@@ -130,10 +130,10 @@ export function EditorToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
-              variant="ghost"
+              size="icon-round-sm"
+              variant="outline"
               onClick={onShare}
-              className="h-8 w-8"
+              className="text-muted-foreground hover:text-foreground"
             >
               <Share2 className="h-4 w-4" />
             </Button>
@@ -151,12 +151,7 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
   }
 
   if (status === "unsaved") {
-    return (
-      <div className="relative">
-        <Cloud className="h-4 w-4" />
-        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-yellow-500" />
-      </div>
-    );
+    return <Cloud className="h-4 w-4 text-yellow-500" />;
   }
 
   // saved
