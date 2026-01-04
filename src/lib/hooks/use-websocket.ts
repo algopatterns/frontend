@@ -30,25 +30,51 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     if (!hasHydrated || !autoConnect) return;
     if (hasConnected.current) return;
 
+    // if already connected (e.g., from join page), don't reconnect
+    if (wsClient.isConnected) {
+      hasConnected.current = true;
+      return;
+    }
+
     hasConnected.current = true;
 
-    const storedSessionId =
-      options.sessionId || storage.getSessionId() || undefined;
+    // Priority: URL params > stored viewer session > stored host session
+    // This handles: direct URL access, viewer/collaborator refresh, host reconnect
+    let sessionId = options.sessionId;
+    let inviteToken = options.inviteToken;
+    let displayName = options.displayName;
+
+    // Check for stored viewer session if no URL params
+    if (!sessionId && !inviteToken) {
+      const viewerSession = storage.getViewerSession();
+      if (viewerSession) {
+        sessionId = viewerSession.sessionId;
+        inviteToken = viewerSession.inviteToken;
+        // Restore display name if not provided
+        if (!displayName && viewerSession.displayName) {
+          displayName = viewerSession.displayName;
+        }
+      }
+    }
+
+    // Fall back to host session ID
+    if (!sessionId) {
+      sessionId = storage.getSessionId() || undefined;
+    }
+
+    // Save viewer session for future reconnects (includes display name)
+    if (sessionId && inviteToken) {
+      storage.setViewerSession(sessionId, inviteToken, displayName);
+    }
 
     wsClient.connect({
-      sessionId: storedSessionId,
-      inviteToken: options.inviteToken,
-      displayName: options.displayName,
+      sessionId,
+      inviteToken,
+      displayName,
     });
 
-    return () => {
-      // Only disconnect if actually connected, not if still connecting
-      // This prevents StrictMode from closing the socket mid-handshake
-      if (wsClient.isConnected) {
-        wsClient.disconnect();
-      }
-      hasConnected.current = false;
-    };
+    // don't disconnect on unmount - WebSocket is a singleton that persists
+    // across page navigations. only disconnect explicitly (e.g., on logout).
   }, [hasHydrated, autoConnect, options.sessionId, options.inviteToken, options.displayName]);
 
   // create debounced send function
@@ -86,6 +112,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     wsClient.sendChatMessage(message);
   }, []);
 
+  const sendPlay = useCallback(() => {
+    wsClient.sendPlay();
+  }, []);
+
+  const sendStop = useCallback(() => {
+    wsClient.sendStop();
+  }, []);
+
   const connect = useCallback(
     (opts?: UseWebSocketOptions) => {
       wsClient.connect({
@@ -111,9 +145,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     isConnected: status === "connected",
     isConnecting: status === "connecting" || status === "reconnecting",
     canEdit: myRole === "host" || myRole === "co-author",
+    isHost: myRole === "host",
+    isCoAuthor: myRole === "co-author",
+    isViewer: myRole === "viewer",
     sendCode,
     sendAgentRequest,
     sendChatMessage,
+    sendPlay,
+    sendStop,
     connect,
     disconnect,
   };

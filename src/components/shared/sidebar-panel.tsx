@@ -7,31 +7,50 @@ import { SessionChatPanel } from "./session-chat-panel";
 import { Music, MessageCircle } from "lucide-react";
 
 interface SidebarPanelProps {
-  isLive: boolean;
+  showChat: boolean;
   onSendMessage: (message: string) => void;
   disabled?: boolean;
+  isViewer?: boolean;
 }
 
 export function SidebarPanel({
-  isLive,
+  showChat,
   onSendMessage,
   disabled = false,
+  isViewer = false,
 }: SidebarPanelProps) {
-  const [activeTab, setActiveTab] = useState("samples");
+  const [selectedTab, setSelectedTab] = useState<string | null>(null);
+
+  // compute effective tab: if viewer has samples selected but can't see it, force chat
+  const effectiveTab = (() => {
+    // user hasn't selected anything yet - use default
+    if (selectedTab === null) {
+      return isViewer && showChat ? "chat" : "samples";
+    }
+    
+    // viewer can't see samples tab - force to chat
+    if (isViewer && selectedTab === "samples" && showChat) {
+      return "chat";
+    }
+    
+    return selectedTab;
+  })();
 
   return (
     <div className="flex flex-col h-full border-l border-t bg-background">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        {/* Tab headers - matches editor toolbar height */}
+      <Tabs value={effectiveTab} onValueChange={setSelectedTab} className="flex flex-col h-full">
         <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-12 px-2">
-          <TabsTrigger
-            value="samples"
-            className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-          >
-            <Music className="h-4 w-4 mr-2" />
-            Samples
-          </TabsTrigger>
-          {isLive && (
+          {!isViewer && (
+            <TabsTrigger
+              value="samples"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            >
+              <Music className="h-4 w-4 mr-2" />
+              Samples
+            </TabsTrigger>
+          )}
+          
+          {showChat && (
             <TabsTrigger
               value="chat"
               className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
@@ -42,11 +61,13 @@ export function SidebarPanel({
           )}
         </TabsList>
 
-        {/* Tab content */}
-        <TabsContent value="samples" className="flex-1 overflow-hidden mt-0 data-[state=inactive]:hidden">
-          <SamplesPanel />
-        </TabsContent>
-        {isLive && (
+        {!isViewer && (
+          <TabsContent value="samples" className="flex-1 overflow-hidden mt-0 data-[state=inactive]:hidden">
+            <SamplesPanel />
+          </TabsContent>
+        )}
+
+        {showChat && (
           <TabsContent value="chat" className="flex-1 overflow-hidden mt-0 data-[state=inactive]:hidden">
             <SessionChatPanel
               onSendMessage={onSendMessage}

@@ -16,6 +16,7 @@ interface WebSocketState {
   participants: Participant[];
   messages: ChatMessage[];
   myRole: SessionRole | null;
+  sessionStateReceived: boolean;
 
   setStatus: (status: ConnectionStatus) => void;
   setSessionId: (id: string | null) => void;
@@ -26,6 +27,7 @@ interface WebSocketState {
   removeParticipant: (id: string) => void;
   addMessage: (message: ChatMessage) => void;
   clearMessages: () => void;
+  setSessionStateReceived: (received: boolean) => void;
   reset: () => void;
 }
 
@@ -36,6 +38,7 @@ const initialState = {
   participants: [],
   messages: [],
   myRole: null,
+  sessionStateReceived: false,
 };
 
 export const useWebSocketStore = create<WebSocketState>(set => ({
@@ -48,6 +51,7 @@ export const useWebSocketStore = create<WebSocketState>(set => ({
   clearMessages: () => set({ messages: [] }),
   setSessionId: sessionId => set({ sessionId }),
   setParticipants: participants => set({ participants }),
+  setSessionStateReceived: sessionStateReceived => set({ sessionStateReceived }),
 
   addParticipant: participant => {
     return set(state => ({

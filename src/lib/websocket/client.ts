@@ -13,6 +13,9 @@ import type {
   UserJoinedPayload,
   UserLeftPayload,
   ErrorPayload,
+  PlayPayload,
+  StopPayload,
+  SessionEndedPayload,
 } from "./types";
 
 interface ConnectionOptions {
@@ -32,8 +35,45 @@ class AlgoraveWebSocket {
   private shouldReconnect = true;
   private onConnectedCallbacks: Array<() => void> = [];
 
+  // playback control callbacks
+  private onPlayCallback: ((displayName: string) => void) | null = null;
+  private onStopCallback: ((displayName: string) => void) | null = null;
+  private onSessionEndedCallback: ((reason?: string) => void) | null = null;
+
   // flag to skip code restoration in session_state when forking
   public skipCodeRestoration = false;
+
+  // register callbacks for playback control events
+  // returns cleanup function to unregister
+  onPlay(callback: (displayName: string) => void): () => void {
+    this.onPlayCallback = callback;
+
+    return () => {
+      if (this.onPlayCallback === callback) {
+        this.onPlayCallback = null;
+      }
+    };
+  }
+
+  onStop(callback: (displayName: string) => void): () => void {
+    this.onStopCallback = callback;
+
+    return () => {
+      if (this.onStopCallback === callback) {
+        this.onStopCallback = null;
+      }
+    };
+  }
+
+  onSessionEnded(callback: (reason?: string) => void): () => void {
+    this.onSessionEndedCallback = callback;
+
+    return () => {
+      if (this.onSessionEndedCallback === callback) {
+        this.onSessionEndedCallback = null;
+      }
+    };
+  }
 
   onceConnected(callback: () => void) {
     if (this.ws?.readyState === WebSocket.OPEN) {
@@ -56,10 +96,11 @@ class AlgoraveWebSocket {
     this.shouldReconnect = true;
 
     const { token } = useAuthStore.getState();
-    const { setStatus, setError } = useWebSocketStore.getState();
+    const { setStatus, setError, setSessionStateReceived } = useWebSocketStore.getState();
 
     setStatus("connecting");
     setError(null);
+    setSessionStateReceived(false);
 
     const params = new URLSearchParams();
     
@@ -101,19 +142,23 @@ class AlgoraveWebSocket {
   private cleanup() {
     this.stopPing();
     this.clearConnectionTimeout();
+
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
+
     if (this.ws) {
       // remove handlers before closing to prevent triggering reconnect
       this.ws.onopen = null;
       this.ws.onclose = null;
       this.ws.onerror = null;
       this.ws.onmessage = null;
+
       if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
         this.ws.close(1000, "Cleanup");
       }
+
       this.ws = null;
     }
   }
@@ -191,7 +236,9 @@ class AlgoraveWebSocket {
       removeParticipant,
       addMessage,
       setError,
+      setSessionStateReceived,
     } = useWebSocketStore.getState();
+    
     const { setCode, setAIGenerating, addToHistory } = useEditorStore.getState();
 
     switch (message.type) {
@@ -236,6 +283,7 @@ class AlgoraveWebSocket {
           storage.setSessionId(message.session_id);
         }
 
+        setSessionStateReceived(true);
         break;
       }
 
@@ -248,6 +296,7 @@ class AlgoraveWebSocket {
       case "agent_request": {
         const payload = message.payload as AgentRequestBroadcastPayload;
         setAIGenerating(true);
+        
         addMessage({
           id: crypto.randomUUID(),
           type: "user",
@@ -256,17 +305,21 @@ class AlgoraveWebSocket {
           isAIRequest: true,
           timestamp: message.timestamp,
         });
+
         addToHistory("user", payload.user_query);
+
         break;
       }
 
       case "agent_response": {
         const payload = message.payload as AgentResponsePayload;
         setAIGenerating(false);
+
         if (payload.code && payload.is_actionable) {
           setCode(payload.code, true);
           addToHistory("assistant", payload.code);
         }
+
         addMessage({
           id: crypto.randomUUID(),
           type: "assistant",
@@ -275,11 +328,13 @@ class AlgoraveWebSocket {
           clarifyingQuestions: payload.clarifying_questions,
           timestamp: message.timestamp,
         });
+
         break;
       }
 
       case "chat_message": {
         const payload = message.payload as ChatMessageBroadcastPayload;
+
         addMessage({
           id: crypto.randomUUID(),
           type: "chat",
@@ -287,44 +342,103 @@ class AlgoraveWebSocket {
           displayName: payload.display_name,
           timestamp: message.timestamp,
         });
+
         break;
       }
 
       case "user_joined": {
         const payload = message.payload as UserJoinedPayload;
+
         addParticipant({
           id: payload.user_id || crypto.randomUUID(),
           userId: payload.user_id,
           displayName: payload.display_name,
           role: payload.role,
         });
+
         addMessage({
           id: crypto.randomUUID(),
           type: "system",
           content: `${payload.display_name} joined`,
           timestamp: message.timestamp,
         });
+
         break;
       }
 
       case "user_left": {
         const payload = message.payload as UserLeftPayload;
         removeParticipant(payload.user_id);
+
         addMessage({
           id: crypto.randomUUID(),
           type: "system",
           content: `${payload.display_name} left`,
           timestamp: message.timestamp,
         });
+
         break;
       }
 
       case "error": {
         const payload = message.payload as ErrorPayload;
         setError(payload.message);
+        
         if (payload.error === "too_many_requests") {
           setAIGenerating(false);
         }
+
+        break;
+      }
+
+      case "play": {
+        const payload = message.payload as PlayPayload;
+
+        if (this.onPlayCallback) {
+          this.onPlayCallback(payload.display_name);
+        }
+
+        addMessage({
+          id: crypto.randomUUID(),
+          type: "system",
+          content: `${payload.display_name} started playback`,
+          timestamp: message.timestamp,
+        });
+
+        break;
+      }
+
+      case "stop": {
+        const payload = message.payload as StopPayload;
+
+        if (this.onStopCallback) {
+          this.onStopCallback(payload.display_name);
+        }
+
+        addMessage({
+          id: crypto.randomUUID(),
+          type: "system",
+          content: `${payload.display_name} stopped playback`,
+          timestamp: message.timestamp,
+        });
+
+        break;
+      }
+
+      case "session_ended": {
+        const payload = message.payload as SessionEndedPayload;
+
+        if (this.onSessionEndedCallback) {
+          this.onSessionEndedCallback(payload.reason);
+        }
+
+        addMessage({
+          id: crypto.randomUUID(),
+          type: "system",
+          content: payload.reason || "Session ended by host",
+          timestamp: message.timestamp,
+        });
+
         break;
       }
 
@@ -370,6 +484,14 @@ class AlgoraveWebSocket {
 
   sendChatMessage(message: string) {
     this.send("chat_message", { message });
+  }
+
+  sendPlay() {
+    this.send("play", {});
+  }
+
+  sendStop() {
+    this.send("stop", {});
   }
 
   private startPing() {

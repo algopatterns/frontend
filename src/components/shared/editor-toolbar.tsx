@@ -32,6 +32,7 @@ interface EditorToolbarProps {
   showNew?: boolean;
   showShare?: boolean;
   saveStatus?: SaveStatus;
+  isViewer?: boolean;
 }
 
 export function EditorToolbar({
@@ -44,6 +45,7 @@ export function EditorToolbar({
   showNew = false,
   showShare = false,
   saveStatus = "saved",
+  isViewer = false,
 }: EditorToolbarProps) {
   const { isPlaying, isInitialized } = useAudioStore();
   const { isAIGenerating } = useEditorStore();
@@ -56,8 +58,8 @@ export function EditorToolbar({
           size="sm"
           variant={isPlaying ? "secondary" : "default"}
           onClick={onPlay}
-          disabled={!isInitialized}
-          title="Play (Ctrl+Enter)"
+          disabled={!isInitialized || isViewer}
+          title={isViewer ? "Only hosts can control playback" : "Play (Ctrl+Enter)"}
         >
           <Play className="h-4 w-4 mr-1" />
           Play
@@ -66,8 +68,8 @@ export function EditorToolbar({
           size="sm"
           variant="outline"
           onClick={onStop}
-          disabled={!isPlaying}
-          title="Stop (Ctrl+.)"
+          disabled={!isPlaying || isViewer}
+          title={isViewer ? "Only hosts can control playback" : "Stop (Ctrl+.)"}
         >
           <Square className="h-4 w-4 mr-1" />
           Stop

@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useAudioStore } from '@/lib/stores/audio';
+import { useWebSocketStore } from '@/lib/stores/websocket';
+import { Loader2 } from 'lucide-react';
 import { EDITOR } from '@/lib/constants';
 
 // sample pack URLs
@@ -30,10 +32,12 @@ const DRUM_MACHINE_ALIASES: Record<string, string> = {
   tr808: 'RolandTR808',
   tr909: 'RolandTR909',
   cr78: 'RolandCompurhythm78',
+  
   // linn
   lm1: 'LinnLM1',
   lm2: 'LinnLM2',
   linndrum: 'LinnDrum',
+  
   // other classics
   dmx: 'OberheimDMX',
   sp12: 'EmuSP12',
@@ -51,6 +55,7 @@ const SUPPRESSED_ERROR_PATTERNS = ['not found', 'duck target orbit'];
 interface StrudelEditorProps {
   initialCode?: string;
   onCodeChange?: (code: string) => void;
+  readOnly?: boolean;
 }
 
 interface StrudelMirrorInstance {
@@ -59,22 +64,39 @@ interface StrudelMirrorInstance {
   evaluate: () => Promise<void>;
   stop: () => void;
   destroy?: () => void;
+  reconfigureExtension?: (name: string, value: unknown) => void;
+  setFontFamily?: (font: string) => void;
+  setFontSize?: (size: number) => void;
+  setLineNumbers?: (show: boolean) => void;
+  setLineWrapping?: (wrap: boolean) => void;
 }
 
 let strudelMirrorInstance: StrudelMirrorInstance | null = null;
 let codePollingInterval: ReturnType<typeof setInterval> | null = null;
+let getAudioContextFn: (() => AudioContext) | null = null;
 
-export function StrudelEditor({ initialCode = '', onCodeChange }: StrudelEditorProps) {
+export function StrudelEditor({ initialCode = '', onCodeChange, readOnly = false }: StrudelEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
   const onCodeChangeRef = useRef(onCodeChange);
+  const readOnlyRef = useRef(readOnly);
 
   const { code, setCode } = useEditorStore();
   const { setPlaying, setInitialized, setError } = useAudioStore();
+  const wsStatus = useWebSocketStore(state => state.status);
+  const sessionStateReceived = useWebSocketStore(state => state.sessionStateReceived);
 
   useEffect(() => {
     onCodeChangeRef.current = onCodeChange;
   }, [onCodeChange]);
+
+  // update read-only state
+  useEffect(() => {
+    readOnlyRef.current = readOnly;
+    if (strudelMirrorInstance) {
+      strudelMirrorInstance.reconfigureExtension?.('isEditable', !readOnly);
+    }
+  }, [readOnly]);
 
   // suppress unhandled rejections for missing sounds
   useEffect(() => {
@@ -112,6 +134,9 @@ export function StrudelEditor({ initialCode = '', onCodeChange }: StrudelEditorP
         ]);
 
         const { getAudioContext, webaudioOutput, initAudioOnFirstClick, registerSynthSounds, samples } = webaudioModule;
+
+        // store audio context for resume
+        getAudioContextFn = getAudioContext;
         const { evalScope, silence } = coreModule;
 
         if (!containerRef.current || !isMounted) return;
@@ -215,6 +240,11 @@ export function StrudelEditor({ initialCode = '', onCodeChange }: StrudelEditorP
         mirror.reconfigureExtension?.('isPatternHighlightingEnabled', true);
         mirror.reconfigureExtension?.('isFlashEnabled', true);
 
+        // apply initial read-only state
+        if (readOnlyRef.current) {
+          mirror.reconfigureExtension?.('isEditable', false);
+        }
+
         if (!isMounted) {
           mirror.stop();
           mirror.destroy?.();
@@ -283,14 +313,49 @@ export function StrudelEditor({ initialCode = '', onCodeChange }: StrudelEditorP
   }, [code]);
 
   return (
-    <div
-      ref={containerRef}
-      className="strudel-editor h-full w-full overflow-hidden rounded-none"
-    />
+    <div className="relative h-full w-full">
+      <div
+        ref={containerRef}
+        className="strudel-editor h-full w-full overflow-hidden rounded-none"
+      />
+      {(wsStatus === 'connecting' || (wsStatus === 'connected' && !sessionStateReceived)) && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Connecting...</p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
-export function evaluateStrudel() {
+export function isAudioContextSuspended(): boolean {
+  if (!getAudioContextFn) return false;
+  try {
+    return getAudioContextFn().state === 'suspended';
+  } catch {
+    return false;
+  }
+}
+
+export async function resumeAudioContext(): Promise<boolean> {
+  if (!getAudioContextFn) return false;
+  try {
+    const ctx = getAudioContextFn();
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+    return ctx.state === 'running';
+  } catch (e) {
+    console.warn('[strudel] Failed to resume audio context:', e);
+    return false;
+  }
+}
+
+export async function evaluateStrudel() {
+  // try to resume audio context (needed after page refresh)
+  await resumeAudioContext();
   strudelMirrorInstance?.evaluate();
 }
 

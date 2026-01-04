@@ -10,6 +10,8 @@ export type ClientMessageType =
   | "code_update"
   | "agent_request"
   | "chat_message"
+  | "play"
+  | "stop"
   | "ping";
 
 export type ServerMessageType =
@@ -20,6 +22,9 @@ export type ServerMessageType =
   | "chat_message"
   | "user_joined"
   | "user_left"
+  | "play"
+  | "stop"
+  | "session_ended"
   | "error"
   | "pong";
 
@@ -114,4 +119,17 @@ export interface ChatMessage {
   isAIRequest?: boolean;
   clarifyingQuestions?: string[];
   timestamp: string;
+}
+
+// Playback control payloads
+export interface PlayPayload {
+  display_name: string;
+}
+
+export interface StopPayload {
+  display_name: string;
+}
+
+export interface SessionEndedPayload {
+  reason?: string;
 }

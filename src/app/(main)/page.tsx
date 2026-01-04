@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { StrudelEditor } from '@/components/shared/strudel-editor';
 import { EditorToolbar } from '@/components/shared/editor-toolbar';
 import { SidebarPanel } from '@/components/shared/sidebar-panel';
+import { SyncPlaybackOverlay } from '@/components/shared/sync-playback-overlay';
 import { AIInput } from '@/components/shared/ai-input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -15,8 +16,11 @@ function HomePageContent() {
   const searchParams = useSearchParams();
   const strudelId = searchParams.get('id');
   const forkStrudelId = searchParams.get('fork');
+  const urlSessionId = searchParams.get('session_id');
+  const urlInviteToken = searchParams.get('invite');
+  const urlDisplayName = searchParams.get('name');
 
-  const { setInviteDialogOpen } = useUIStore();
+  const { setInviteDialogOpen, setLoginModalOpen } = useUIStore();
 
   const {
     handleCodeChange,
@@ -29,18 +33,25 @@ function HomePageContent() {
     isChatPanelOpen,
     toggleChatPanel,
     isConnected,
+    isViewer,
+    canEdit,
     sessionId,
     saveStatus,
-    isLive,
-  } = useEditor({ strudelId, forkStrudelId });
+    showChat,
+    isAuthenticated,
+  } = useEditor({ strudelId, forkStrudelId, urlSessionId, urlInviteToken, urlDisplayName });
 
   const handleShare = () => {
+    if (!isAuthenticated) {
+      setLoginModalOpen(true);
+      return;
+    }
+    
     setInviteDialogOpen(true);
   };
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
-      {/* Main editor area */}
       <div className="flex-1 flex flex-col min-w-0">
         <EditorToolbar
           onPlay={handlePlay}
@@ -48,24 +59,27 @@ function HomePageContent() {
           onSave={handleSave}
           onNew={handleNewStrudel}
           onShare={handleShare}
-          showSave={true}
-          showNew={true}
-          showShare={!!sessionId}
+          showSave={canEdit}
+          showNew={canEdit}
+          showShare={!!sessionId && canEdit}
           saveStatus={saveStatus}
+          isViewer={isViewer}
         />
         <div className="flex-1 overflow-hidden">
           <StrudelEditor
             onCodeChange={handleCodeChange}
+            readOnly={isViewer}
           />
         </div>
-        {/* AI Input at bottom of editor */}
-        <AIInput
-          onSendAIRequest={handleSendAIRequest}
-          disabled={!isConnected}
-        />
+        
+        {canEdit && (
+          <AIInput
+            onSendAIRequest={handleSendAIRequest}
+            disabled={!isConnected}
+          />
+        )}
       </div>
 
-      {/* Mobile toggle button for sidebar */}
       <Button
         variant="outline"
         size="icon"
@@ -85,7 +99,6 @@ function HomePageContent() {
         </svg>
       </Button>
 
-      {/* Desktop sidebar */}
       <div
         className={cn('transition-all duration-300 overflow-hidden hidden md:block', {
           'w-80': isChatPanelOpen,
@@ -93,26 +106,29 @@ function HomePageContent() {
         })}>
         {isChatPanelOpen && (
           <SidebarPanel
-            isLive={isLive}
+            showChat={showChat}
             onSendMessage={handleSendMessage}
             disabled={!isConnected}
+            isViewer={isViewer}
           />
         )}
       </div>
 
-      {/* Mobile sidebar overlay */}
       {isChatPanelOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={toggleChatPanel} />
           <div className="absolute right-0 top-0 bottom-0 w-80 bg-background">
             <SidebarPanel
-              isLive={isLive}
+              showChat={showChat}
               onSendMessage={handleSendMessage}
               disabled={!isConnected}
+              isViewer={isViewer}
             />
           </div>
         </div>
       )}
+
+      <SyncPlaybackOverlay />
     </div>
   );
 }

@@ -81,7 +81,7 @@ export function InviteDialog() {
   };
 
   const handleCopyLink = async (token: string) => {
-    const inviteUrl = `${window.location.origin}/join?invite=${token}`;
+    const inviteUrl = `${window.location.origin}/join?session_id=${sessionId}&invite=${token}`;
     await navigator.clipboard.writeText(inviteUrl);
     setCopiedToken(token);
     setTimeout(() => setCopiedToken(null), 2000);

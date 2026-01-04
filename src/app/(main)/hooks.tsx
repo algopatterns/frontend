@@ -7,20 +7,28 @@ import { useStrudelAudio } from '@/lib/hooks/use-strudel-audio';
 import { useWebSocket } from '@/lib/hooks/use-websocket';
 import { useAutosave } from '@/lib/hooks/use-autosave';
 import { useStrudel, usePublicStrudel } from '@/lib/hooks/use-strudels';
-import { useSession } from '@/lib/hooks/use-sessions';
 import { useUIStore } from '@/lib/stores/ui';
 import { useAuthStore } from '@/lib/stores/auth';
 import { useEditorStore } from '@/lib/stores/editor';
+import { useAudioStore } from '@/lib/stores/audio';
 import { wsClient } from '@/lib/websocket/client';
 import { storage } from '@/lib/utils/storage';
+import {
+  evaluateStrudel,
+  stopStrudel,
+  isAudioContextSuspended,
+} from '@/components/shared/strudel-editor';
 
 interface UseEditorOptions {
   strudelId?: string | null;
   forkStrudelId?: string | null;
+  urlSessionId?: string | null;
+  urlInviteToken?: string | null;
+  urlDisplayName?: string | null;
 }
 
-export const useEditor = ({ strudelId, forkStrudelId }: UseEditorOptions = {}) => {
-  // set skip flag before WebSocket connects
+export const useEditor = ({ strudelId, forkStrudelId, urlSessionId, urlInviteToken, urlDisplayName }: UseEditorOptions = {}) => {
+  // set skip flag before webSocket connects
   // this prevents session_state from restoring old code when forking
 
   useLayoutEffect(() => {
@@ -36,16 +44,32 @@ export const useEditor = ({ strudelId, forkStrudelId }: UseEditorOptions = {}) =
   const { saveStatus, handleSave, isAuthenticated } = useAutosave();
   const { setCode, setCurrentStrudel, currentStrudelId } = useEditorStore();
   const { isChatPanelOpen, toggleChatPanel, setNewStrudelDialogOpen } = useUIStore();
-  const { sendCode, sendAgentRequest, sendChatMessage, isConnected, canEdit, sessionId } =
-    useWebSocket({
-      autoConnect: true,
-    });
+  
+  // check if we have a stored viewer session (for refresh reconnection)
+  const storedViewerSession = typeof window !== 'undefined' ? storage.getViewerSession() : null;
+  const hasInviteContext = !!(urlInviteToken || storedViewerSession?.inviteToken);
 
-  // Get session data to check if live
-  const { data: session } = useSession(sessionId || '');
-  const isLive = session?.is_discoverable ?? false;
+  const {
+    sendCode,
+    sendAgentRequest,
+    sendChatMessage,
+    sendPlay,
+    sendStop,
+    isConnected,
+    canEdit,
+    isViewer,
+    isCoAuthor,
+    sessionId,
+    participants,
+  } = useWebSocket({
+    autoConnect: true,
+    sessionId: urlSessionId || undefined,
+    inviteToken: urlInviteToken || undefined,
+    displayName: urlDisplayName || undefined,
+  });
 
-  // track if we've already loaded this strudel to prevent re-fetching
+  const showChat = hasInviteContext || isViewer || isCoAuthor || participants.length > 1;
+
   const loadedStrudelIdRef = useRef<string | null>(null);
   const forkedStrudelIdRef = useRef<string | null>(null);
 
@@ -157,8 +181,67 @@ export const useEditor = ({ strudelId, forkStrudelId }: UseEditorOptions = {}) =
     setCurrentStrudel,
   ]);
 
-  const handlePlay = useCallback(() => evaluate(), [evaluate]);
-  const handleStop = useCallback(() => stop(), [stop]);
+  // register WebSocket callbacks for remote play/stop
+  useEffect(() => {
+    const { setPendingPlayback, setShowSyncOverlay } = useAudioStore.getState();
+
+    const cleanupPlay = wsClient.onPlay(() => {
+      // always update pending action to latest
+      setPendingPlayback('play');
+
+      if (isAudioContextSuspended()) {
+        // audio needs user interaction - show sync overlay
+        setShowSyncOverlay(true);
+      } else {
+        // audio is ready - play immediately
+        evaluateStrudel();
+      }
+    });
+
+    const cleanupStop = wsClient.onStop(() => {
+      // always update pending action to latest
+      setPendingPlayback('stop');
+
+      if (isAudioContextSuspended()) {
+        // audio needs user interaction - show sync overlay
+        setShowSyncOverlay(true);
+      } else {
+        // audio is ready - stop immediately
+        stopStrudel();
+      }
+    });
+
+    const cleanupSessionEnded = wsClient.onSessionEnded((reason) => {
+      stopStrudel();
+      setShowSyncOverlay(false);
+      setPendingPlayback(null);
+      toast.info(reason || 'Session ended by host');
+    });
+
+    return () => {
+      cleanupPlay();
+      cleanupStop();
+      cleanupSessionEnded();
+    };
+  }, []);
+
+  const handlePlay = useCallback(() => {
+    evaluate();
+    
+    // if user can edit (host/co-author), broadcast play to other participants
+    if (canEdit) {
+      sendPlay();
+    }
+  }, [evaluate, canEdit, sendPlay]);
+
+  const handleStop = useCallback(() => {
+    stop();
+    
+    // if user can edit (host/co-author), broadcast stop to other participants
+    if (canEdit) {
+      sendStop();
+    }
+  }, [stop, canEdit, sendStop]);
 
   const handleCodeChange = useCallback(
     (newCode: string) => {
@@ -195,12 +278,13 @@ export const useEditor = ({ strudelId, forkStrudelId }: UseEditorOptions = {}) =
     toggleChatPanel,
     isConnected,
     canEdit,
+    isViewer,
     sessionId,
     token,
     saveStatus,
     isAuthenticated,
     isLoadingStrudel,
     currentStrudelId,
-    isLive,
+    showChat,
   };
 };

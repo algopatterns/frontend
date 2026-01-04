@@ -64,4 +64,29 @@ export const storage = {
     if (typeof window === "undefined") return;
     sessionStorage.removeItem("algorave_previous_session_id");
   },
+
+  // Viewer/collaborator session - for reconnecting after refresh
+  getViewerSession: (): { sessionId: string; inviteToken: string; displayName?: string } | null => {
+    if (typeof window === "undefined") return null;
+    const data = localStorage.getItem("algorave_viewer_session");
+    if (!data) return null;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
+  },
+
+  setViewerSession: (sessionId: string, inviteToken: string, displayName?: string): void => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(
+      "algorave_viewer_session",
+      JSON.stringify({ sessionId, inviteToken, displayName })
+    );
+  },
+
+  clearViewerSession: (): void => {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem("algorave_viewer_session");
+  },
 };

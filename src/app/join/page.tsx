@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { wsClient } from "@/lib/websocket/client";
 import { useWebSocketStore } from "@/lib/stores/websocket";
+import Link from "next/link";
 
 function JoinContent() {
   const router = useRouter();
@@ -16,25 +17,37 @@ function JoinContent() {
   const { status, error } = useWebSocketStore();
 
   const inviteToken = searchParams.get("invite");
+  const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
-    // Redirect to editor once connected
-    if (status === "connected") {
-      router.push("/");
+    // redirect to editor once connected, preserving session info in URL
+    if (status === "connected" && sessionId && inviteToken) {
+      const name = displayName.trim();
+      const params = new URLSearchParams({
+        session_id: sessionId,
+        invite: inviteToken,
+      });
+
+      if (name) {
+        params.set("name", name);
+      }
+
+      router.push(`/?${params.toString()}`);
     }
-  }, [status, router]);
+  }, [status, router, sessionId, inviteToken, displayName]);
 
   const handleJoin = () => {
-    if (!inviteToken) return;
+    if (!inviteToken || !sessionId) return;
 
     setIsJoining(true);
     wsClient.connect({
+      sessionId,
       inviteToken,
       displayName: displayName.trim() || undefined,
     });
   };
 
-  if (!inviteToken) {
+  if (!inviteToken || !sessionId) {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -45,7 +58,7 @@ function JoinContent() {
         </CardHeader>
         <CardContent>
           <Button asChild className="w-full">
-            <a href="/">Go to Homepage</a>
+            <Link href="/">Go to homepage</Link>
           </Button>
         </CardContent>
       </Card>
@@ -57,7 +70,7 @@ function JoinContent() {
       <CardHeader>
         <CardTitle>Join Session</CardTitle>
         <CardDescription>
-          You've been invited to collaborate on a live coding session
+          You&apos;ve been invited to collaborate on a live coding session
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
