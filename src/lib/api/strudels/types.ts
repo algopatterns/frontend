@@ -11,6 +11,15 @@ export interface PaginationParams {
   offset?: number;
 }
 
+export interface StrudelFilterParams extends PaginationParams {
+  search?: string;
+  tags?: string[];
+}
+
+export interface TagsResponse {
+  tags: string[];
+}
+
 // agent message for conversation history
 export interface AgentMessage {
   role: "user" | "assistant";

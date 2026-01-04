@@ -5,6 +5,8 @@ import type {
   UpdateStrudelRequest,
   StrudelsListResponse,
   PaginationParams,
+  StrudelFilterParams,
+  TagsResponse,
 } from './types';
 import type { MessageResponse } from '../sessions/types';
 
@@ -51,16 +53,22 @@ export const strudelsApi = {
     });
   },
 
-  listPublic: (params?: PaginationParams) => {
+  listPublic: (params?: StrudelFilterParams) => {
     const searchParams = new URLSearchParams();
 
     if (params?.limit) searchParams.set('limit', params.limit.toString());
     if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.tags?.length) searchParams.set('tags', params.tags.join(','));
 
     const query = searchParams.toString();
     return apiClient.get<StrudelsListResponse>(
       `/api/v1/public/strudels${query ? `?${query}` : ''}`
     );
+  },
+
+  getPublicTags: () => {
+    return apiClient.get<TagsResponse>('/api/v1/public/strudels/tags');
   },
 
   getPublic: (id: string) => {

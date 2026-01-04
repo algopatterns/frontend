@@ -1,21 +1,43 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useInfinitePublicStrudels } from "@/lib/hooks/use-strudels";
-import { Eye, GitFork, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useInfinitePublicStrudels, usePublicTags } from "@/lib/hooks/use-strudels";
+import { Eye, GitFork, Loader2, Search, Filter, X } from "lucide-react";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 
 export default function ExplorePage() {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
+  const filters = useMemo(() => ({
+    search: debouncedSearch || undefined,
+    tags: selectedTags.length > 0 ? selectedTags : undefined,
+  }), [debouncedSearch, selectedTags]);
+
+  const { data: tagsData } = usePublicTags();
+  const availableTags = tagsData?.tags ?? [];
+
   const {
     data,
     isLoading,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useInfinitePublicStrudels();
+  } = useInfinitePublicStrudels(filters);
 
   // Flatten pages into single array
   const strudels = data?.pages.flatMap(page => page.strudels) ?? [];
@@ -56,13 +78,113 @@ export default function ExplorePage() {
     router.push(`/?fork=${strudelId}`);
   };
 
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedTags([]);
+    setIsSearchOpen(false);
+  };
+
+  const hasActiveFilters = searchQuery || selectedTags.length > 0;
+
   return (
     <div className="container p-8 w-full max-w-full">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Explore</h1>
-        <p className="text-muted-foreground">
-          Discover patterns created by the community
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Explore</h1>
+          <p className="text-muted-foreground">
+            Discover patterns created by the community
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 h-9 w-[280px] justify-end">
+            {isSearchOpen ? (
+              <>
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8 w-full"
+                    autoFocus
+                  />
+                </div>
+                <Button
+                  size="icon-round-sm"
+                  variant="secondary"
+                  className="shrink-0"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setIsSearchOpen(false);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <Button
+                size="icon-round-sm"
+                variant="outline"
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon-round-sm"
+                variant="outline"
+                className={selectedTags.length > 0 ? "border-primary" : ""}
+              >
+                <Filter className="h-4 w-4" />
+                {selectedTags.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+                    {selectedTags.length}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-md max-h-64 overflow-y-auto">
+              {availableTags.length > 0 ? (
+                availableTags.map((tag) => (
+                  <DropdownMenuCheckboxItem
+                    key={tag}
+                    checked={selectedTags.includes(tag)}
+                    onCheckedChange={() => toggleTag(tag)}
+                    className="py-1 pl-7"
+                  >
+                    {tag}
+                  </DropdownMenuCheckboxItem>
+                ))
+              ) : (
+                <div className="px-2 py-1 text-sm text-muted-foreground">
+                  No tags available
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {hasActiveFilters && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={clearFilters}
+              className="text-muted-foreground"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -128,10 +250,24 @@ export default function ExplorePage() {
       ) : (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <h3 className="text-lg font-medium mb-2">No public strudels yet</h3>
-            <p className="text-muted-foreground text-center">
-              Be the first to share your creation!
-            </p>
+            {hasActiveFilters ? (
+              <>
+                <h3 className="text-lg font-medium mb-2">No results found</h3>
+                <p className="text-muted-foreground text-center mb-4">
+                  Try adjusting your search or filters
+                </p>
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-medium mb-2">No public strudels yet</h3>
+                <p className="text-muted-foreground text-center">
+                  Be the first to share your creation!
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       )}

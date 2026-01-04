@@ -11,6 +11,7 @@ import type {
   CreateStrudelRequest,
   UpdateStrudelRequest,
   StrudelsListResponse,
+  StrudelFilterParams,
 } from '@/lib/api/strudels/types';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -95,17 +96,32 @@ export function usePublicStrudels(params?: { limit?: number }) {
   });
 }
 
-export function useInfinitePublicStrudels(pageSize = DEFAULT_PAGE_SIZE) {
+export function useInfinitePublicStrudels(
+  filters?: Omit<StrudelFilterParams, 'limit' | 'offset'>,
+  pageSize = DEFAULT_PAGE_SIZE
+) {
   return useInfiniteQuery({
     initialPageParam: 0,
-    queryKey: [...strudelKeys.public(), 'infinite'],
+    queryKey: [...strudelKeys.public(), 'infinite', filters],
     queryFn: ({ pageParam = 0 }) => {
-      return strudelsApi.listPublic({ limit: pageSize, offset: pageParam });
+      return strudelsApi.listPublic({
+        limit: pageSize,
+        offset: pageParam,
+        search: filters?.search,
+        tags: filters?.tags,
+      });
     },
     getNextPageParam: (lastPage: StrudelsListResponse) =>
       lastPage.pagination.has_more
         ? lastPage.pagination.offset + lastPage.pagination.limit
         : undefined,
+  });
+}
+
+export function usePublicTags() {
+  return useQuery({
+    queryKey: [...strudelKeys.public(), 'tags'],
+    queryFn: () => strudelsApi.getPublicTags(),
   });
 }
 
