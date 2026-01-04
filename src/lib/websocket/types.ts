@@ -36,7 +36,7 @@ export interface WebSocketMessage<T = unknown> {
   payload: T;
 }
 
-// Client payloads
+// client payloads
 export interface CodeUpdatePayload {
   code: string;
   cursor_line?: number;
@@ -55,15 +55,24 @@ export interface ChatMessagePayload {
   message: string;
 }
 
-// Server payloads
+// server payloads
+export interface SessionStateChatMessage {
+  display_name: string;
+  avatar_url: string;
+  content: string;
+  timestamp: number;
+}
+
 export interface SessionStatePayload {
   code: string;
+  your_role: SessionRole;
+  chat_history?: SessionStateChatMessage[];
+  conversation_history?: Array<{ role: string; content: string }>;
   participants: Array<{
     user_id: string;
     display_name: string;
     role: SessionRole;
   }>;
-  your_role: SessionRole;
 }
 
 export interface CodeUpdateBroadcastPayload {
@@ -81,6 +90,7 @@ export interface AgentRequestBroadcastPayload {
 export interface AgentResponsePayload {
   code?: string;
   is_actionable: boolean;
+  is_code_response: boolean;
   clarifying_questions?: string[];
   docs_retrieved: number;
   examples_retrieved: number;
@@ -109,7 +119,7 @@ export interface ErrorPayload {
   details?: string;
 }
 
-// Chat message for UI
+// chat message for UI
 export interface ChatMessage {
   id: string;
   type: "user" | "assistant" | "chat" | "system";
@@ -121,7 +131,7 @@ export interface ChatMessage {
   timestamp: string;
 }
 
-// Playback control payloads
+// playback control payloads
 export interface PlayPayload {
   display_name: string;
 }

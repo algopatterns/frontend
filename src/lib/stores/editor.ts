@@ -19,6 +19,7 @@ interface EditorState {
   markSaved: () => void;
   setCurrentStrudel: (id: string | null, title: string | null) => void;
   addToHistory: (role: string, content: string) => void;
+  setConversationHistory: (history: Array<{ role: string; content: string }>) => void;
   clearHistory: () => void;
   reset: () => void;
 }
@@ -41,6 +42,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   reset: () => set(initialState),
   clearHistory: () => set({ conversationHistory: [] }),
+  setConversationHistory: conversationHistory => set({ conversationHistory }),
   setAIGenerating: isAIGenerating => set({ isAIGenerating }),
   setCursor: (cursorLine, cursorCol) => set({ cursorLine, cursorCol }),
 

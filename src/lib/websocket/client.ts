@@ -237,9 +237,10 @@ class AlgoraveWebSocket {
       addMessage,
       setError,
       setSessionStateReceived,
+      clearMessages,
     } = useWebSocketStore.getState();
     
-    const { setCode, setAIGenerating, addToHistory } = useEditorStore.getState();
+    const { setCode, setAIGenerating, addToHistory, setConversationHistory } = useEditorStore.getState();
 
     switch (message.type) {
       case "session_state": {
@@ -257,6 +258,38 @@ class AlgoraveWebSocket {
             role: p.role,
           }))
         );
+
+        // restore chat history
+        clearMessages();
+
+        if (payload.chat_history?.length) {
+          for (const msg of payload.chat_history) {
+            addMessage({
+              id: crypto.randomUUID(),
+              type: "chat",
+              content: msg.content,
+              displayName: msg.display_name,
+              timestamp: new Date(msg.timestamp).toISOString(),
+            });
+          }
+        }
+
+        // restore conversation history (for AI context and UI display)
+        if (payload.conversation_history?.length) {
+          setConversationHistory(payload.conversation_history);
+
+          // also add to messages for UI display
+          for (const msg of payload.conversation_history) {
+            addMessage({
+              id: crypto.randomUUID(),
+              type: msg.role === "assistant" ? "assistant" : "user",
+              content: msg.content,
+              isAIRequest: msg.role === "user",
+              isActionable: msg.role === "assistant",
+              timestamp: new Date().toISOString(),
+            });
+          }
+        }
 
         // if we have saved anonymous code and server sent empty code, restore the saved code
         // this handles anonymous refresh (login transition is handled by backend via previous_session_id)
@@ -315,7 +348,7 @@ class AlgoraveWebSocket {
         const payload = message.payload as AgentResponsePayload;
         setAIGenerating(false);
 
-        if (payload.code && payload.is_actionable) {
+        if (payload.code && payload.is_code_response) {
           setCode(payload.code, true);
           addToHistory("assistant", payload.code);
         }
