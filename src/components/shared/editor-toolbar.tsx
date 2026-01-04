@@ -1,25 +1,13 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useAudioStore } from "@/lib/stores/audio";
-import { useEditorStore } from "@/lib/stores/editor";
-import { useWebSocketStore } from "@/lib/stores/websocket";
-import {
-  Play,
-  Square,
-  Cloud,
-  Loader2,
-  Plus,
-  Share2,
-} from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAudioStore } from '@/lib/stores/audio';
+import { useWebSocketStore } from '@/lib/stores/websocket';
+import { Play, Square, Cloud, Loader2, Plus, Share2 } from 'lucide-react';
 
-type SaveStatus = "saved" | "saving" | "unsaved";
+type SaveStatus = 'saved' | 'saving' | 'unsaved';
 
 interface EditorToolbarProps {
   onPlay: () => void;
@@ -43,11 +31,10 @@ export function EditorToolbar({
   showSave = false,
   showNew = false,
   showShare = false,
-  saveStatus = "saved",
+  saveStatus = 'saved',
   isViewer = false,
 }: EditorToolbarProps) {
   const { isPlaying, isInitialized } = useAudioStore();
-  const { isAIGenerating } = useEditorStore();
   const { status } = useWebSocketStore();
 
   return (
@@ -55,11 +42,10 @@ export function EditorToolbar({
       <div className="flex items-center gap-1">
         <Button
           size="sm"
-          variant={isPlaying ? "secondary" : "default"}
+          variant={isPlaying ? 'secondary' : 'default'}
           onClick={onPlay}
           disabled={!isInitialized || isViewer}
-          title={isViewer ? "Only hosts can control playback" : "Play (Ctrl+Enter)"}
-        >
+          title={isViewer ? 'Only hosts can control playback' : 'Play (Ctrl+Enter)'}>
           <Play className="h-3.5 w-3.5 mr-1" />
           Play
         </Button>
@@ -68,8 +54,7 @@ export function EditorToolbar({
           variant="outline"
           onClick={onStop}
           disabled={!isPlaying || isViewer}
-          title={isViewer ? "Only hosts can control playback" : "Stop (Ctrl+.)"}
-        >
+          title={isViewer ? 'Only hosts can control playback' : 'Stop (Ctrl+.)'}>
           <Square className="h-3.5 w-3.5 mr-1" />
           Stop
         </Button>
@@ -79,12 +64,6 @@ export function EditorToolbar({
 
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <ConnectionIndicator status={status} />
-        {isAIGenerating && (
-          <span className="flex items-center gap-1">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            AI generating...
-          </span>
-        )}
       </div>
 
       <div className="flex-1" />
@@ -96,16 +75,15 @@ export function EditorToolbar({
               size="icon-round-sm"
               variant="outline"
               onClick={onSave}
-              disabled={saveStatus === "saving"}
-              className="text-muted-foreground hover:text-foreground"
-            >
+              disabled={saveStatus === 'saving'}
+              className="text-muted-foreground hover:text-foreground">
               <SaveIndicator status={saveStatus} />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {saveStatus === "saved" && "All changes saved"}
-            {saveStatus === "saving" && "Saving..."}
-            {saveStatus === "unsaved" && "Unsaved changes"}
+            {saveStatus === 'saved' && 'All changes saved'}
+            {saveStatus === 'saving' && 'Saving...'}
+            {saveStatus === 'unsaved' && 'Unsaved changes'}
           </TooltipContent>
         </Tooltip>
       )}
@@ -117,8 +95,7 @@ export function EditorToolbar({
               size="icon-round-sm"
               variant="outline"
               onClick={onNew}
-              className="text-muted-foreground hover:text-foreground"
-            >
+              className="text-muted-foreground hover:text-foreground">
               <Plus className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -133,8 +110,7 @@ export function EditorToolbar({
               size="icon-round-sm"
               variant="outline"
               onClick={onShare}
-              className="text-muted-foreground hover:text-foreground"
-            >
+              className="text-muted-foreground hover:text-foreground">
               <Share2 className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -146,11 +122,11 @@ export function EditorToolbar({
 }
 
 function SaveIndicator({ status }: { status: SaveStatus }) {
-  if (status === "saving") {
+  if (status === 'saving') {
     return <Loader2 className="h-4 w-4 animate-spin" />;
   }
 
-  if (status === "unsaved") {
+  if (status === 'unsaved') {
     return <Cloud className="h-4 w-4 text-yellow-500" />;
   }
 
@@ -161,13 +137,13 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
 function ConnectionIndicator({
   status,
 }: {
-  status: "connected" | "connecting" | "disconnected" | "reconnecting";
+  status: 'connected' | 'connecting' | 'disconnected' | 'reconnecting';
 }) {
   const statusConfig = {
-    connected: { color: "bg-green-500", text: "Connected" },
-    connecting: { color: "bg-yellow-500", text: "Connecting..." },
-    reconnecting: { color: "bg-yellow-500", text: "Reconnecting..." },
-    disconnected: { color: "bg-red-500", text: "Disconnected" },
+    connected: { color: 'bg-green-400', text: 'Connected' },
+    connecting: { color: 'bg-yellow-500', text: 'Connecting...' },
+    reconnecting: { color: 'bg-yellow-500', text: 'Reconnecting...' },
+    disconnected: { color: 'bg-red-500', text: 'Disconnected' },
   };
 
   const { color, text } = statusConfig[status];

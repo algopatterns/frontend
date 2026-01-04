@@ -50,10 +50,9 @@ export function SessionChatPanel({
     <div className="flex flex-col h-full">
       <ParticipantsList />
 
-      <div className="flex-1 overflow-y-auto p-3 border-t">
+      <div className="flex-1 overflow-y-auto p-3">
         {chatMessages.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-8">
-            <p>No messages yet.</p>
             <p className="mt-1">Join the party!</p>
           </div>
         ) : (

@@ -139,4 +139,9 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+
+  /* remove bottom margin from system messages when followed by another system message */
+  [data-message-type="system"] + [data-message-type="system"] {
+    margin-top: -1.5rem;
+  }
 }

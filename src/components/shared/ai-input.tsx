@@ -61,7 +61,7 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
               <X className="h-3 w-3" />
             </Button>
           </div>
-          <div className="max-h-48 overflow-y-auto p-3 space-y-2">
+          <div className="max-h-96 overflow-y-auto p-3 space-y-2">
             {aiMessages.map(msg => (
               <ChatMessage key={msg.id} message={msg} compact />
             ))}

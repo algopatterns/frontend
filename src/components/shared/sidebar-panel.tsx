@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SamplesPanel } from './samples-panel';
 import { SessionChatPanel } from './session-chat-panel';
-import { Music, MessageCircle } from 'lucide-react';
+import { Headphones, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarPanelProps {
@@ -55,7 +55,7 @@ export function SidebarPanel({
                 'data-[state=active]:bg-transparent data-[state=active]:h-9':
                   !isViewer && showChat,
               })}>
-              <Music className="h-4 w-4 mr-1" />
+              <Headphones className="h-4 w-4 mr-1" />
               Samples
             </TabsTrigger>
           )}
