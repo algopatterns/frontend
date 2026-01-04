@@ -14,9 +14,14 @@ import {
 import { useInfinitePublicStrudels, usePublicTags } from "@/lib/hooks/use-strudels";
 import { Eye, GitFork, Loader2, Search, Filter, X } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useEditorStore } from "@/lib/stores/editor";
+import { useUIStore } from "@/lib/stores/ui";
+import { EDITOR } from "@/lib/constants";
 
 export default function ExplorePage() {
   const router = useRouter();
+  const { isDirty, code, currentStrudelId } = useEditorStore();
+  const { setPendingForkId } = useUIStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -75,7 +80,15 @@ export default function ExplorePage() {
   }, []);
 
   const handleFork = (strudelId: string) => {
-    router.push(`/?fork=${strudelId}`);
+    const hasUnsavedChanges = isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
+
+    if (hasUnsavedChanges) {
+      // Show confirmation dialog
+      setPendingForkId(strudelId);
+    } else {
+      // Fork directly
+      router.push(`/?fork=${strudelId}`);
+    }
   };
 
   const toggleTag = (tag: string) => {

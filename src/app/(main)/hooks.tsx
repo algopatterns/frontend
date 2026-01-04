@@ -77,6 +77,32 @@ export const useEditor = ({ strudelId, forkStrudelId, urlSessionId, urlInviteTok
 
   const loadedStrudelIdRef = useRef<string | null>(null);
   const forkedStrudelIdRef = useRef<string | null>(null);
+  const previousStrudelIdRef = useRef<string | null | undefined>(undefined);
+
+  // Create new session when switching between strudels to prevent conversation history overlap
+  useEffect(() => {
+    // Skip on first render (undefined means not initialized yet)
+    if (previousStrudelIdRef.current === undefined) {
+      previousStrudelIdRef.current = strudelId || null;
+      return;
+    }
+
+    const currentId = strudelId || null;
+    const previousId = previousStrudelIdRef.current;
+
+    // If strudel ID changed (including from null to something or vice versa)
+    if (currentId !== previousId) {
+      previousStrudelIdRef.current = currentId;
+
+      // Don't create new session if joining via invite or forking
+      if (urlInviteToken || forkStrudelId) {
+        return;
+      }
+
+      // Force new session so conversation history doesn't overlap
+      wsClient.reconnectWithNewSession();
+    }
+  }, [strudelId, urlInviteToken, forkStrudelId]);
 
   // Restore strudel ID from localStorage if navigating back to editor without URL param
   useEffect(() => {

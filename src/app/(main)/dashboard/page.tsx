@@ -15,11 +15,33 @@ import { StrudelFormDialog } from '@/components/shared/strudel-form-dialog';
 import { useDashboard } from './hooks';
 import { Settings, Pencil, Loader2 } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
+import { useEditorStore } from '@/lib/stores/editor';
+import { useUIStore } from '@/lib/stores/ui';
+import { EDITOR } from '@/lib/constants';
 
 function DashboardContent() {
   const { strudels, isLoading, isFetchingNextPage, loadMoreRef, router } = useDashboard();
   const [selectedStrudel, setSelectedStrudel] = useState<Strudel | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const { isDirty, code, currentStrudelId } = useEditorStore();
+  const { setPendingOpenStrudelId } = useUIStore();
+
+  const handleOpenStrudel = (strudelId: string) => {
+    // If opening the same strudel, just navigate
+    if (strudelId === currentStrudelId) {
+      router.push(`/?id=${strudelId}`);
+      return;
+    }
+
+    const hasUnsavedChanges = isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
+
+    if (hasUnsavedChanges) {
+      setPendingOpenStrudelId(strudelId);
+    } else {
+      router.push(`/?id=${strudelId}`);
+    }
+  };
 
   return (
     <AuthGuard>
@@ -69,7 +91,7 @@ function DashboardContent() {
                         size="icon-round-sm"
                         variant="outline"
                         className="text-muted-foreground hover:text-foreground"
-                        onClick={() => router.push(`/?id=${strudel.id}`)}>
+                        onClick={() => handleOpenStrudel(strudel.id)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </div>

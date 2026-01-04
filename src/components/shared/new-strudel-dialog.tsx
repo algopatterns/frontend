@@ -14,7 +14,6 @@ import { useUIStore } from '@/lib/stores/ui';
 import { useAuthStore } from '@/lib/stores/auth';
 import { useEditorStore } from '@/lib/stores/editor';
 import { wsClient } from '@/lib/websocket/client';
-import { storage } from '@/lib/utils/storage';
 import { EDITOR } from '@/lib/constants';
 
 export function NewStrudelDialog() {
@@ -57,17 +56,13 @@ export function NewStrudelDialog() {
   };
 
   const handleStartNew = () => {
-    // clear storage and disconnect
-    storage.clearSessionId();
-    wsClient.disconnect();
-
     // reset editor state
     setCode(EDITOR.DEFAULT_CODE, true);
     setCurrentStrudel(null, null);
     clearHistory();
 
-    // reconnect to get a fresh session
-    wsClient.connect();
+    // force new session so conversation history doesn't overlap
+    wsClient.reconnectWithNewSession();
 
     // clear URL (remove strudel ID)
     router.replace('/', { scroll: false });

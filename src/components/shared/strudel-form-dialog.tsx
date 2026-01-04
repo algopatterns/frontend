@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useCreateStrudel, useUpdateStrudel } from "@/lib/hooks/use-strudels";
 import { useEditorStore } from "@/lib/stores/editor";
+import { useUIStore } from "@/lib/stores/ui";
 import type { Strudel } from "@/lib/api/strudels/types";
 
 interface StrudelFormDialogProps {
@@ -36,6 +37,7 @@ export function StrudelFormDialog({
   const createStrudel = useCreateStrudel();
   const updateStrudel = useUpdateStrudel();
   const { code, conversationHistory, setCurrentStrudel, markSaved } = useEditorStore();
+  const { pendingForkId, setPendingForkId, pendingOpenStrudelId, setPendingOpenStrudelId } = useUIStore();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -101,7 +103,17 @@ export function StrudelFormDialog({
 
         setCurrentStrudel(newStrudel.id, newStrudel.title);
         markSaved();
-        router.replace(`/?id=${newStrudel.id}`, { scroll: false });
+
+        // If we have a pending action, navigate to that instead of saved strudel
+        if (pendingForkId) {
+          setPendingForkId(null);
+          router.push(`/?fork=${pendingForkId}`);
+        } else if (pendingOpenStrudelId) {
+          setPendingOpenStrudelId(null);
+          router.push(`/?id=${pendingOpenStrudelId}`);
+        } else {
+          router.replace(`/?id=${newStrudel.id}`, { scroll: false });
+        }
       } else if (strudel) {
         await updateStrudel.mutateAsync({
           id: strudel.id,

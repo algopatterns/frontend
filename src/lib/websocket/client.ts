@@ -562,6 +562,25 @@ class AlgoraveWebSocket {
     useWebSocketStore.getState().reset();
   }
 
+  /**
+   * Force a new session by disconnecting and reconnecting without a session ID.
+   * This ensures conversation history doesn't overlap between strudels.
+   */
+  reconnectWithNewSession() {
+    this.shouldReconnect = false;
+    this.cleanup();
+
+    // Clear stored session ID so we get a fresh session
+    storage.clearSessionId();
+
+    // Reset WebSocket store state
+    useWebSocketStore.getState().reset();
+
+    // Connect without session ID = backend creates new session
+    this.shouldReconnect = true;
+    this.connect({});
+  }
+
   get isConnected() {
     return this.ws?.readyState === WebSocket.OPEN;
   }

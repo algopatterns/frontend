@@ -10,6 +10,8 @@ import { LogoutConfirmDialog } from "@/components/shared/logout-confirm-dialog";
 import { NewStrudelDialog } from "@/components/shared/new-strudel-dialog";
 import { SaveStrudelDialog } from "@/components/shared/save-strudel-dialog";
 import { InviteDialog } from "@/components/shared/invite-dialog";
+import { ForkConfirmDialog } from "@/components/shared/fork-confirm-dialog";
+import { OpenStrudelConfirmDialog } from "@/components/shared/open-strudel-confirm-dialog";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -27,6 +29,8 @@ export function Providers({ children }: { children: ReactNode }) {
           <NewStrudelDialog />
           <SaveStrudelDialog />
           <InviteDialog />
+          <ForkConfirmDialog />
+          <OpenStrudelConfirmDialog />
           <Toaster />
         </AuthHydration>
       </QueryProvider>

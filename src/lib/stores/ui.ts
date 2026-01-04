@@ -8,6 +8,8 @@ interface UIState {
   isNewStrudelDialogOpen: boolean;
   isSaveStrudelDialogOpen: boolean;
   isSidebarOpen: boolean;
+  pendingForkId: string | null;
+  pendingOpenStrudelId: string | null;
 
   toggleChatPanel: () => void;
   setChatPanelOpen: (open: boolean) => void;
@@ -18,6 +20,8 @@ interface UIState {
   setSaveStrudelDialogOpen: (open: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
+  setPendingForkId: (id: string | null) => void;
+  setPendingOpenStrudelId: (id: string | null) => void;
 }
 
 export const useUIStore = create<UIState>(set => ({
@@ -28,8 +32,12 @@ export const useUIStore = create<UIState>(set => ({
   isNewStrudelDialogOpen: false,
   isSaveStrudelDialogOpen: false,
   isSidebarOpen: false,
+  pendingForkId: null,
+  pendingOpenStrudelId: null,
 
   setSidebarOpen: isSidebarOpen => set({ isSidebarOpen }),
+  setPendingForkId: pendingForkId => set({ pendingForkId }),
+  setPendingOpenStrudelId: pendingOpenStrudelId => set({ pendingOpenStrudelId }),
   setChatPanelOpen: isChatPanelOpen => set({ isChatPanelOpen }),
   setInviteDialogOpen: isInviteDialogOpen => set({ isInviteDialogOpen }),
   setLoginModalOpen: isLoginModalOpen => set({ isLoginModalOpen }),
