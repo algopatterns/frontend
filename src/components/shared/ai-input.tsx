@@ -50,8 +50,15 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
       {isExpanded && aiMessages.length > 0 && (
         <div className="border-b">
           <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
-            <span className="text-xs font-medium text-muted-foreground">
-              AI Assistant
+            <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+              {isAIGenerating ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Tinkering...
+                </>
+              ) : (
+                "AI Assistant"
+              )}
             </span>
             <Button
               size="icon"

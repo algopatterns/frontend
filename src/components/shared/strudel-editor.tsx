@@ -86,6 +86,12 @@ export function StrudelEditor({ initialCode = '', onCodeChange, readOnly = false
   const { setPlaying, setInitialized, setError } = useAudioStore();
   const wsStatus = useWebSocketStore(state => state.status);
   const sessionStateReceived = useWebSocketStore(state => state.sessionStateReceived);
+  const hasEverConnected = useRef(false);
+
+  // track if we've ever successfully connected (to avoid showing loader on reconnect)
+  if (sessionStateReceived && !hasEverConnected.current) {
+    hasEverConnected.current = true;
+  }
 
   useEffect(() => {
     onCodeChangeRef.current = onCodeChange;
@@ -321,7 +327,7 @@ export function StrudelEditor({ initialCode = '', onCodeChange, readOnly = false
         ref={containerRef}
         className="strudel-editor h-full w-full overflow-hidden rounded-none"
       />
-      {(wsStatus === 'connecting' || (wsStatus === 'connected' && !sessionStateReceived)) && (
+      {!hasEverConnected.current && (wsStatus === 'connecting' || (wsStatus === 'connected' && !sessionStateReceived)) && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

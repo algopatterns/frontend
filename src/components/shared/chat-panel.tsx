@@ -2,9 +2,11 @@
 
 import { useRef, useEffect } from "react";
 import { useWebSocketStore } from "@/lib/stores/websocket";
+import { useEditorStore } from "@/lib/stores/editor";
 import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
 import { ParticipantsList } from "./participants-list";
+import { Loader2 } from "lucide-react";
 
 interface ChatPanelProps {
   onSendMessage: (message: string) => void;
@@ -18,17 +20,35 @@ export function ChatPanel({
   disabled = false,
 }: ChatPanelProps) {
   const { messages } = useWebSocketStore();
+  const { isAIGenerating } = useEditorStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMessagesLengthRef = useRef(messages.length);
 
-  // auto-scroll to bottom on new messages
+  // auto-scroll to bottom only on agent responses
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > prevMessagesLengthRef.current) {
+      const lastMessage = messages[messages.length - 1];
+      
+      if (lastMessage?.type === "assistant") {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    prevMessagesLengthRef.current = messages.length;
   }, [messages]);
 
   return (
     <div className="flex flex-col h-full border-l border-t bg-background">
       <div className="p-3 border-b">
-        <h2 className="font-medium">Chat & AI Assistant</h2>
+        <h2 className="font-medium flex items-center gap-2">
+          {isAIGenerating ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading...
+            </>
+          ) : (
+            "Chat & AI Assistant"
+          )}
+        </h2>
       </div>
 
       <ParticipantsList />

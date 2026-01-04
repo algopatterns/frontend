@@ -43,7 +43,7 @@ export const useEditor = ({ strudelId, forkStrudelId, urlSessionId, urlInviteTok
   const { token } = useAuthStore();
   const { evaluate, stop } = useStrudelAudio();
   const { saveStatus, handleSave, isAuthenticated } = useAutosave();
-  const { setCode, setCurrentStrudel, currentStrudelId, markSaved } = useEditorStore();
+  const { setCode, setCurrentStrudel, currentStrudelId, markSaved, setConversationHistory } = useEditorStore();
   const { isChatPanelOpen, toggleChatPanel, setNewStrudelDialogOpen } = useUIStore();
   
   // check if we have a stored viewer session (for refresh reconnection)
@@ -145,6 +145,7 @@ export const useEditor = ({ strudelId, forkStrudelId, urlSessionId, urlInviteTok
       loadedStrudelIdRef.current = strudelId;
       setCurrentStrudel(ownStrudel.id, ownStrudel.title);
       setCode(ownStrudel.code, true);
+      setConversationHistory(ownStrudel.conversation_history || []);
       // Mark as saved so lastSavedCode is set correctly for dirty state
       markSaved();
 

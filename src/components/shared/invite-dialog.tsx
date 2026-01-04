@@ -21,7 +21,7 @@ import {
   useSession,
   useSetDiscoverable,
 } from "@/lib/hooks/use-sessions";
-import { Copy, Check, Trash2, Users, Eye, Loader2, Radio, Circle } from "lucide-react";
+import { Copy, Check, Trash2, Users, Eye, Loader2 } from "lucide-react";
 import type { SessionRole } from "@/lib/api/sessions/types";
 
 type InviteRole = "co-author" | "viewer";
@@ -54,13 +54,6 @@ export function InviteDialog() {
     } catch (err) {
       console.error("Failed to toggle live status:", err);
     }
-  };
-
-  const handleClose = () => {
-    setInviteDialogOpen(false);
-    setRole("co-author");
-    setMaxUses("");
-    setCopiedToken(null);
   };
 
   const handleCreateInvite = async () => {
@@ -125,11 +118,7 @@ export function InviteDialog() {
           <div className="flex items-center justify-between p-3 rounded-none border bg-muted/30">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                {isLive ? (
-                  <Radio className="h-4 w-4 text-red-500" />
-                ) : (
-                  <Circle className="h-4 w-4 text-muted-foreground" />
-                )}
+                <span className={`h-3 w-3 rounded-full ${isLive ? "bg-green-500" : "bg-red-500"}`} />
                 <span className="font-medium">
                   {isLive ? "Live" : "Go Live"}
                 </span>
@@ -149,7 +138,7 @@ export function InviteDialog() {
               {setDiscoverable.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : isLive ? (
-                "Stop"
+                "End Live"
               ) : (
                 "Go Live"
               )}

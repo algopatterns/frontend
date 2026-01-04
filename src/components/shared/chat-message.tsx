@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import { Highlight, themes } from 'prism-react-renderer';
 import type { ChatMessage as ChatMessageType } from '@/lib/websocket/types';
+import { Fragment } from 'react';
 
 // color palette for random user colors in sidebar chat
 const userColors = [
@@ -33,7 +34,7 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ message, compact = false }: ChatMessageProps) {
-  const { type, content, displayName, clarifyingQuestions, timestamp, isActionable } =
+  const { type, content, displayName, clarifyingQuestions, timestamp, isCodeResponse } =
     message;
 
   const formattedTime = new Date(timestamp).toLocaleTimeString([], {
@@ -70,39 +71,47 @@ export function ChatMessage({ message, compact = false }: ChatMessageProps) {
             {formattedTime}
           </span>
         </div>
-        {content &&
-          (isActionable ? (
-            <Highlight theme={themes.duotoneDark} code={`/* generated */\n\n${content}`} language="javascript">
-              {({ style, tokens, getLineProps, getTokenProps }) => (
-                <pre
-                  className={cn(
-                    'whitespace-pre-wrap font-mono overflow-x-auto grayscale-100',
-                    compact ? 'text-[13px]' : 'text-sm'
-                  )}
-                  style={{
-                    ...style,
-                    background: 'transparent',
-                    backgroundColor: 'transparent',
-                  }}>
-                  {tokens.map((line, i) => (
-                    <div key={i} {...getLineProps({ line })}>
-                      {line.map((token, key) => (
-                        <span key={key} {...getTokenProps({ token })} />
-                      ))}
-                    </div>
-                  ))}
-                </pre>
-              )}
-            </Highlight>
-          ) : (
-            <p
-              className={cn(
-                'whitespace-pre-wrap text-foreground/70',
-                compact ? 'text-[13px]' : 'text-sm'
-              )}>
-              {content}
-            </p>
-          ))}
+
+        {content && (
+          <>
+            {isCodeResponse ? (
+              <Highlight
+                theme={themes.duotoneDark}
+                code={`/* generated */\n\n${content}`}
+                language="javascript">
+                {({ style, tokens, getLineProps, getTokenProps }) => (
+                  <pre
+                    className={cn(
+                      'whitespace-pre-wrap font-mono overflow-x-auto grayscale-100',
+                      compact ? 'text-[13px]' : 'text-sm'
+                    )}
+                    style={{
+                      ...style,
+                      background: 'transparent',
+                      backgroundColor: 'transparent',
+                    }}>
+                    {tokens.map((line, i) => (
+                      <div key={i} {...getLineProps({ line })}>
+                        {line.map((token, key) => (
+                          <span key={key} {...getTokenProps({ token })} />
+                        ))}
+                      </div>
+                    ))}
+                  </pre>
+                )}
+              </Highlight>
+            ) : (
+              <p
+                className={cn(
+                  'whitespace-pre-wrap text-foreground/70',
+                  compact ? 'text-[13px]' : 'text-sm'
+                )}>
+                {content}
+              </p>
+            )}
+          </>
+        )}
+
         {clarifyingQuestions && clarifyingQuestions.length > 0 && (
           <div className={cn('space-y-1', compact ? 'mt-1' : 'mt-2')}>
             <p
@@ -133,7 +142,9 @@ export function ChatMessage({ message, compact = false }: ChatMessageProps) {
         <span
           className={cn(
             'font-medium',
-            compact ? 'text-rose-300/70 text-[12px]' : `${getUserColor(displayName || 'You')} text-xs`
+            compact
+              ? 'text-rose-300/70 text-[12px]'
+              : `${getUserColor(displayName || 'You')} text-xs`
           )}>
           {displayName || 'You'}
         </span>

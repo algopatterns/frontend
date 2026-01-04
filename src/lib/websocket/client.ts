@@ -287,15 +287,20 @@ class AlgoraveWebSocket {
         if (payload.conversation_history?.length) {
           setConversationHistory(payload.conversation_history);
 
-          // also add to messages for UI display
-          for (const msg of payload.conversation_history) {
+          // sort by timestamp and add to messages for UI display
+          const sortedHistory = [...payload.conversation_history].sort(
+            (a, b) => a.timestamp - b.timestamp
+          );
+
+          for (const msg of sortedHistory) {
             addMessage({
-              id: crypto.randomUUID(),
+              id: msg.id,
               type: msg.role === "assistant" ? "assistant" : "user",
               content: msg.content,
+              displayName: msg.display_name,
               isAIRequest: msg.role === "user",
-              isActionable: msg.role === "assistant",
-              timestamp: new Date().toISOString(),
+              isCodeResponse: msg.is_code_response,
+              timestamp: new Date(msg.timestamp).toISOString(),
             });
           }
         }
@@ -367,6 +372,7 @@ class AlgoraveWebSocket {
           type: "assistant",
           content: payload.code || "",
           isActionable: payload.is_actionable,
+          isCodeResponse: payload.is_code_response,
           clarifyingQuestions: payload.clarifying_questions,
           timestamp: message.timestamp,
         });

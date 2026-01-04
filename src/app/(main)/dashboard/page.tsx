@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import {
   Card,
@@ -11,10 +11,15 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AuthGuard } from '@/components/shared/auth-guard';
+import { StrudelFormDialog } from '@/components/shared/strudel-form-dialog';
 import { useDashboard } from './hooks';
+import { Settings, Pencil } from 'lucide-react';
+import type { Strudel } from '@/lib/api/strudels/types';
 
 function DashboardContent() {
   const { data, isLoading, router } = useDashboard();
+  const [selectedStrudel, setSelectedStrudel] = useState<Strudel | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <AuthGuard>
@@ -44,17 +49,33 @@ function DashboardContent() {
             ))}
           </div>
         ) : data?.strudels && data.strudels.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {data.strudels.map(strudel => (
               <Card
                 key={strudel.id}
-                className="cursor-pointer hover:border-primary transition-colors"
-                onClick={() => router.push(`/?id=${strudel.id}`)}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{strudel.title}</CardTitle>
-                  <CardDescription>
-                    {new Date(strudel.updated_at).toLocaleDateString()}
-                  </CardDescription>
+                className="rounded-md">
+                <CardHeader className="relative">
+                  <div className="absolute -top-1 right-4 flex gap-1">
+                    <Button
+                      size="icon-round-sm"
+                      variant="outline"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setSelectedStrudel(strudel);
+                        setSettingsOpen(true);
+                      }}>
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon-round-sm"
+                      variant="outline"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => router.push(`/?id=${strudel.id}`)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <CardDescription>{new Date(strudel.updated_at).toLocaleDateString()}</CardDescription>
+                  <CardTitle className="text-lg truncate max-w-[70%]">{strudel.title}</CardTitle>
                 </CardHeader>
 
                 <CardContent>
@@ -106,6 +127,13 @@ function DashboardContent() {
             </CardContent>
           </Card>
         )}
+
+        <StrudelFormDialog
+          strudel={selectedStrudel}
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          mode="edit"
+        />
       </div>
     </AuthGuard>
   );

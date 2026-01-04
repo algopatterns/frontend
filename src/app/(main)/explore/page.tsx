@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { usePublicStrudels } from "@/lib/hooks/use-strudels";
+import { Eye, GitFork } from "lucide-react";
 
 export default function ExplorePage() {
   const router = useRouter();
@@ -37,12 +38,21 @@ export default function ExplorePage() {
           ))}
         </div>
       ) : data?.strudels && data.strudels.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {data.strudels.map((strudel) => (
-            <Card key={strudel.id}>
-              <CardHeader>
-                <CardTitle className="text-lg">{strudel.title}</CardTitle>
-                <CardDescription>{strudel.description}</CardDescription>
+            <Card key={strudel.id} className="rounded-md">
+              <CardHeader className="relative">
+                <div className="absolute -top-1 right-4 flex gap-1">
+                  <Button size="icon-round-sm" variant="outline" className="text-muted-foreground hover:text-foreground">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon-round-sm" variant="outline" className="text-muted-foreground hover:text-foreground" onClick={() => handleFork(strudel.id)}>
+                    <GitFork className="h-4 w-4" />
+                  </Button>
+                </div>
+                <CardDescription>{new Date(strudel.updated_at).toLocaleDateString()}</CardDescription>
+                <CardTitle className="text-lg truncate max-w-[70%]">{strudel.title}</CardTitle>
+                <CardDescription className="line-clamp-1 max-w-[75%] -mt-1">{strudel.description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <pre className="text-xs bg-muted p-2 rounded overflow-hidden text-ellipsis whitespace-nowrap mb-3">
@@ -50,7 +60,7 @@ export default function ExplorePage() {
                   {strudel.code.length > 100 && "..."}
                 </pre>
                 {strudel.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
+                  <div className="flex flex-wrap gap-1">
                     {strudel.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
@@ -61,14 +71,6 @@ export default function ExplorePage() {
                     ))}
                   </div>
                 )}
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    Preview
-                  </Button>
-                  <Button size="sm" className="flex-1" onClick={() => handleFork(strudel.id)}>
-                    Fork
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           ))}

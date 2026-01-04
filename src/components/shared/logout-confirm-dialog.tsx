@@ -35,7 +35,7 @@ export function LogoutConfirmDialog() {
             you reconnect.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2">
           <Button variant="ghost" onClick={handleCancel}>
             Cancel
           </Button>

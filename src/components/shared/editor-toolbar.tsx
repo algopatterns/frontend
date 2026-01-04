@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAudioStore } from '@/lib/stores/audio';
 import { useWebSocketStore } from '@/lib/stores/websocket';
-import { Play, Square, Cloud, Loader2, Plus, Share2 } from 'lucide-react';
+import { Play, Square, Cloud, Loader2, Plus, Share2, Activity } from 'lucide-react';
 
 type SaveStatus = 'saved' | 'saving' | 'unsaved';
 
@@ -45,6 +45,7 @@ export function EditorToolbar({
           variant={isPlaying ? 'secondary' : 'default'}
           onClick={onPlay}
           disabled={!isInitialized || isViewer}
+          className="rounded-none"
           title={isViewer ? 'Only hosts can control playback' : 'Play (Ctrl+Enter)'}>
           <Play className="h-3.5 w-3.5 mr-1" />
           Play
@@ -54,6 +55,7 @@ export function EditorToolbar({
           variant="outline"
           onClick={onStop}
           disabled={!isPlaying || isViewer}
+          className="rounded-none"
           title={isViewer ? 'Only hosts can control playback' : 'Stop (Ctrl+.)'}>
           <Square className="h-3.5 w-3.5 mr-1" />
           Stop
@@ -140,18 +142,13 @@ function ConnectionIndicator({
   status: 'connected' | 'connecting' | 'disconnected' | 'reconnecting';
 }) {
   const statusConfig = {
-    connected: { color: 'bg-green-400', text: 'Connected' },
-    connecting: { color: 'bg-yellow-500', text: 'Connecting...' },
-    reconnecting: { color: 'bg-yellow-500', text: 'Reconnecting...' },
-    disconnected: { color: 'bg-red-500', text: 'Disconnected' },
+    connected: { icon: <Activity className="h-3.5 w-3.5" />, className: 'text-muted-foreground' },
+    connecting: { icon: <Activity className="h-3.5 w-3.5 animate-pulse" />, className: 'text-yellow-500' },
+    reconnecting: { icon: <Activity className="h-3.5 w-3.5 animate-pulse" />, className: 'text-yellow-500' },
+    disconnected: { icon: <Activity className="h-3.5 w-3.5" />, className: 'text-red-500' },
   };
 
-  const { color, text } = statusConfig[status];
+  const { icon, className } = statusConfig[status];
 
-  return (
-    <span className="flex items-center gap-1.5">
-      <span className={`h-2 w-2 rounded-full ${color}`} />
-      <span className="text-xs">{text}</span>
-    </span>
-  );
+  return <span className={className}>{icon}</span>;
 }
