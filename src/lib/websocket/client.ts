@@ -269,7 +269,16 @@ class AlgoraveWebSocket {
               type: "chat",
               content: msg.content,
               displayName: msg.display_name,
-              timestamp: new Date(msg.timestamp).toISOString(),
+              timestamp: (() => {
+                // handle string timestamps, seconds, or milliseconds
+                if (typeof msg.timestamp === "string") {
+                  return new Date(msg.timestamp).toISOString();
+                }
+                // if numeric and < 1e12, assume seconds
+                return new Date(
+                  msg.timestamp < 1e12 ? msg.timestamp * 1000 : msg.timestamp
+                ).toISOString();
+              })(),
             });
           }
         }

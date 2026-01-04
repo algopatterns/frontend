@@ -20,7 +20,7 @@ export function ChatPanel({
   const { messages } = useWebSocketStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom on new messages
+  // auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -34,14 +34,19 @@ export function ChatPanel({
       <ParticipantsList />
 
       <div className="flex-1 overflow-y-auto p-3 border-t">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground text-sm py-8">
-            <p>No messages yet.</p>
-            <p className="mt-1">Ask AI to help you create music!</p>
-          </div>
-        ) : (
-          messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)
-        )}
+        {(() => {
+          const chatMessages = messages.filter(
+            (msg) => msg.type !== "assistant" && !msg.isAIRequest
+          );
+          return chatMessages.length === 0 ? (
+            <div className="text-center text-muted-foreground text-sm py-8">
+              <p>No messages yet.</p>
+              <p className="mt-1">Start chatting with other participants!</p>
+            </div>
+          ) : (
+            chatMessages.map((msg) => <ChatMessage key={msg.id} message={msg} />)
+          );
+        })()}
         <div ref={messagesEndRef} />
       </div>
 

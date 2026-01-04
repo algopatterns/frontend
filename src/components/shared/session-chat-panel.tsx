@@ -20,9 +20,9 @@ export function SessionChatPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
 
-  // filter to only chat and system messages (no AI)
+  // filter to only chat and system messages (no ai-related conversations)
   const chatMessages = messages.filter(
-    msg => msg.type === 'chat' || msg.type === 'system' || msg.type === 'user'
+    msg => (msg.type === 'chat' || msg.type === 'system') && !msg.isAIRequest
   );
 
   // auto-scroll to bottom on new messages

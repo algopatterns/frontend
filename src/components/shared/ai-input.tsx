@@ -4,7 +4,15 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useWebSocketStore } from '@/lib/stores/websocket';
-import { Sparkles, Send, Loader2, X, ChevronUp, ChevronDown } from 'lucide-react';
+import {
+  Sparkles,
+  Send,
+  Loader2,
+  X,
+  ChevronUp,
+  ChevronDown,
+  Settings,
+} from 'lucide-react';
 import { ChatMessage } from './chat-message';
 
 interface AIInputProps {
@@ -71,6 +79,22 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
       )}
 
       <div className="p-3">
+        {isAIGenerating ? (
+          <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Processing...
+          </p>
+        ) : (
+          <a
+            href="https://algorave.ai/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+            <Settings className="h-3.5 w-3.5" />
+            configure
+          </a>
+        )}
+
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 px-3 py-2 flex-1 rounded-none border bg-muted/30">
             <Sparkles className="h-4 w-4 text-primary shrink-0" />
@@ -108,13 +132,6 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
             )}
           </Button>
         </div>
-
-        {isAIGenerating && (
-          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            AI is generating...
-          </p>
-        )}
       </div>
     </div>
   );
