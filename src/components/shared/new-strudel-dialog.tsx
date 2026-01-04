@@ -86,7 +86,7 @@ export function NewStrudelDialog() {
               clear the editor to start fresh.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2">
             <Button variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
@@ -113,7 +113,7 @@ export function NewStrudelDialog() {
               : 'Start fresh with a new strudel session.'}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2">
           <Button variant="ghost" onClick={handleClose}>
             Cancel
           </Button>

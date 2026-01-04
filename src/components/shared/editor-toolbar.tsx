@@ -14,7 +14,6 @@ import {
   Play,
   Square,
   Cloud,
-  CloudOff,
   Loader2,
   FilePlus,
   Share2,

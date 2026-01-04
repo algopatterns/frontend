@@ -1,14 +1,22 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Copy, Check, ChevronDown, Search, Play, Download, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { SAMPLE_DATA, ALL_SAMPLES } from "@/lib/data/samples";
-import { previewSample } from "./strudel-editor";
+import { useState, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Copy,
+  Check,
+  ChevronDown,
+  Search,
+  Play,
+  Download,
+  Loader2,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { SAMPLE_DATA, ALL_SAMPLES } from '@/lib/data/samples';
+import { previewSample } from './strudel-editor';
 
-// Track which samples have been loaded (persists across renders)
+// track which samples have been loaded (persists across renders)
 const loadedSamples = new Set<string>();
 
 interface SampleItemProps {
@@ -43,21 +51,19 @@ function SampleItem({ name }: SampleItemProps) {
   return (
     <div
       className="flex items-center justify-between py-1 px-3 hover:bg-muted/50 group cursor-pointer"
-      onClick={handleCopy}
-    >
+      onClick={handleCopy}>
       <code className="text-xs font-mono">{name}</code>
       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button
           size="icon"
           variant="ghost"
           className="h-5 w-5"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             handlePlay();
           }}
-          title={isLoaded ? "Preview sample" : "Load and preview sample"}
-          disabled={isLoading}
-        >
+          title={isLoaded ? 'Preview sample' : 'Load and preview sample'}
+          disabled={isLoading}>
           {isLoading ? (
             <Loader2 className="h-3 w-3 animate-spin" />
           ) : isLoaded ? (
@@ -70,12 +76,11 @@ function SampleItem({ name }: SampleItemProps) {
           size="icon"
           variant="ghost"
           className="h-5 w-5"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             handleCopy();
           }}
-          title="Copy to clipboard"
-        >
+          title="Copy to clipboard">
           {copied ? (
             <Check className="h-3 w-3 text-green-500" />
           ) : (
@@ -95,7 +100,13 @@ interface CategorySectionProps {
   searchQuery: string;
 }
 
-function CategorySection({ title, samples, isOpen, onToggle, searchQuery }: CategorySectionProps) {
+function CategorySection({
+  title,
+  samples,
+  isOpen,
+  onToggle,
+  searchQuery,
+}: CategorySectionProps) {
   const filteredSamples = useMemo(() => {
     if (!searchQuery) return samples;
     return samples.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -108,10 +119,9 @@ function CategorySection({ title, samples, isOpen, onToggle, searchQuery }: Cate
       <button
         onClick={onToggle}
         className={cn(
-          "flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors text-left",
-          isOpen && "bg-muted/30 border-b"
-        )}
-      >
+          'flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors text-left',
+          isOpen && 'bg-muted/30 border-b'
+        )}>
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm">{title}</span>
           <span className="text-xs text-muted-foreground">
@@ -120,14 +130,14 @@ function CategorySection({ title, samples, isOpen, onToggle, searchQuery }: Cate
         </div>
         <ChevronDown
           className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform",
-            isOpen && "rotate-180"
+            'h-4 w-4 text-muted-foreground transition-transform',
+            isOpen && 'rotate-180'
           )}
         />
       </button>
       {isOpen && (
         <div className="max-h-64 overflow-y-auto bg-muted/40">
-          {filteredSamples.slice(0, 50).map((sample) => (
+          {filteredSamples.slice(0, 50).map(sample => (
             <SampleItem key={sample} name={sample} />
           ))}
           {filteredSamples.length > 50 && (
@@ -150,7 +160,14 @@ interface SubCategorySectionProps {
   searchQuery: string;
 }
 
-function SubCategorySection({ title, data, defaultOpen = null, isOpen, onToggle, searchQuery }: SubCategorySectionProps) {
+function SubCategorySection({
+  title,
+  data,
+  defaultOpen = null,
+  isOpen,
+  onToggle,
+  searchQuery,
+}: SubCategorySectionProps) {
   const [openSubCategory, setOpenSubCategory] = useState<string | null>(defaultOpen);
 
   const filteredCategories = useMemo((): Record<string, readonly string[]> => {
@@ -176,46 +193,49 @@ function SubCategorySection({ title, data, defaultOpen = null, isOpen, onToggle,
       <button
         onClick={onToggle}
         className={cn(
-          "flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors text-left",
-          isOpen && "bg-muted/30 border-b"
-        )}
-      >
+          'flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors text-left',
+          isOpen && 'bg-muted/30 border-b'
+        )}>
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm">{title}</span>
-          <span className="text-xs text-muted-foreground">
-            ({totalCount})
-          </span>
+          <span className="text-xs text-muted-foreground">({totalCount})</span>
         </div>
+
         <ChevronDown
           className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform",
-            isOpen && "rotate-180"
+            'h-4 w-4 text-muted-foreground transition-transform',
+            isOpen && 'rotate-180'
           )}
         />
       </button>
+
       {isOpen && (
         <div>
           {Object.entries(filteredCategories).map(([category, samples], index) => (
             <div key={category}>
               <button
-                onClick={() => setOpenSubCategory(openSubCategory === category ? null : category)}
+                onClick={() =>
+                  setOpenSubCategory(openSubCategory === category ? null : category)
+                }
                 className={cn(
-                  "flex items-center justify-between w-full px-3 py-2 hover:bg-muted/30 text-left border-t border-t-transparent",
-                  openSubCategory === category && index > 0 && "border-t-border",
-                  openSubCategory === category && "bg-muted/20 border-b"
-                )}
-              >
-                <span className="text-xs font-medium text-muted-foreground">{category}</span>
+                  'flex items-center justify-between w-full px-3 py-2 hover:bg-muted/30 text-left border-t border-t-transparent',
+                  openSubCategory === category && index > 0 && 'border-t-border',
+                  openSubCategory === category && 'bg-muted/20 border-b'
+                )}>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {category}
+                </span>
+
                 <ChevronDown
                   className={cn(
-                    "h-3 w-3 text-muted-foreground transition-transform",
-                    openSubCategory === category && "rotate-180"
+                    'h-3 w-3 text-muted-foreground transition-transform',
+                    openSubCategory === category && 'rotate-180'
                   )}
                 />
               </button>
               {openSubCategory === category && (
                 <div className="max-h-48 overflow-y-auto bg-muted/40 border-b">
-                  {samples.map((sample) => (
+                  {samples.map(sample => (
                     <SampleItem key={sample} name={sample} />
                   ))}
                 </div>
@@ -229,24 +249,27 @@ function SubCategorySection({ title, data, defaultOpen = null, isOpen, onToggle,
 }
 
 export function SamplesPanel() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(["samples"]));
+  const [searchQuery, setSearchQuery] = useState('');
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(['samples']));
 
   const toggleCategory = (category: string) => {
-    setOpenCategories((prev) => {
+    setOpenCategories(prev => {
       const next = new Set(prev);
+
       if (next.has(category)) {
         next.delete(category);
       } else {
         next.add(category);
       }
+
       return next;
     });
   };
 
-  // When searching, show all matching results in a flat list
+  // when searching, show all matching results in a flat list
   const searchResults = useMemo(() => {
     if (!searchQuery) return null;
+
     return ALL_SAMPLES.filter(s =>
       s.toLowerCase().includes(searchQuery.toLowerCase())
     ).slice(0, 50);
@@ -262,7 +285,7 @@ export function SamplesPanel() {
             type="text"
             placeholder="Search samples..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             className="pl-8 h-8 text-sm"
           />
         </div>
@@ -277,10 +300,12 @@ export function SamplesPanel() {
               </p>
             ) : (
               <>
-                {searchResults.map((sample) => (
+                {searchResults.map(sample => (
                   <SampleItem key={sample} name={sample} />
                 ))}
-                {ALL_SAMPLES.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase())).length > 50 && (
+                {ALL_SAMPLES.filter(s =>
+                  s.toLowerCase().includes(searchQuery.toLowerCase())
+                ).length > 50 && (
                   <p className="text-xs text-muted-foreground text-center py-2">
                     Showing first 50 results. Refine your search for more.
                   </p>
@@ -293,41 +318,63 @@ export function SamplesPanel() {
             <CategorySection
               title="Samples"
               samples={SAMPLE_DATA.samples}
-              isOpen={openCategories.has("samples")}
-              onToggle={() => toggleCategory("samples")}
+              isOpen={openCategories.has('samples')}
+              onToggle={() => toggleCategory('samples')}
               searchQuery={searchQuery}
             />
             <SubCategorySection
               title="Drum Machines"
               data={SAMPLE_DATA.drums}
               defaultOpen="Basic"
-              isOpen={openCategories.has("drums")}
-              onToggle={() => toggleCategory("drums")}
+              isOpen={openCategories.has('drums')}
+              onToggle={() => toggleCategory('drums')}
               searchQuery={searchQuery}
             />
             <SubCategorySection
               title="Synths"
               data={SAMPLE_DATA.synths}
               defaultOpen="Basic Waveforms"
-              isOpen={openCategories.has("synths")}
-              onToggle={() => toggleCategory("synths")}
+              isOpen={openCategories.has('synths')}
+              onToggle={() => toggleCategory('synths')}
               searchQuery={searchQuery}
             />
             <CategorySection
               title="Wavetables"
               samples={SAMPLE_DATA.wavetables}
-              isOpen={openCategories.has("wavetables")}
-              onToggle={() => toggleCategory("wavetables")}
+              isOpen={openCategories.has('wavetables')}
+              onToggle={() => toggleCategory('wavetables')}
               searchQuery={searchQuery}
             />
           </>
         )}
       </div>
 
-      <div className="p-2 border-t">
-        <p className="text-xs text-muted-foreground text-center">
-          Click sample to copy
-        </p>
+      <div className="px-3 py-2 border-t h-footer flex items-center justify-center">
+        <div className="flex items-center gap-4 opacity-80">
+          <a
+            href="https://strudel.cc"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            GITHUB
+          </a>
+
+          <a
+            href="https://github.com/algoraveai/server/blob/main/LICENSE"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            AGPL-V3
+          </a>
+
+          <a
+            href="https://strudel.cc"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            STRUDEL
+          </a>
+        </div>
       </div>
     </div>
   );
