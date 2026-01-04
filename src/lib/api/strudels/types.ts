@@ -1,10 +1,23 @@
-// Agent message for conversation history
+// Pagination
+export interface Pagination {
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
+export interface PaginationParams {
+  limit?: number;
+  offset?: number;
+}
+
+// agent message for conversation history
 export interface AgentMessage {
   role: "user" | "assistant";
   content: string;
 }
 
-// Strudel entity
+// strudel entity
 export interface Strudel {
   id: string;
   user_id: string;
@@ -19,7 +32,7 @@ export interface Strudel {
   updated_at: string;
 }
 
-// Request types
+// request types
 export interface CreateStrudelRequest {
   title: string;
   code: string;
@@ -40,7 +53,8 @@ export interface UpdateStrudelRequest {
   conversation_history?: AgentMessage[];
 }
 
-// Response types
+// response types
 export interface StrudelsListResponse {
   strudels: Strudel[];
+  pagination: Pagination;
 }

@@ -1,13 +1,16 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sessionsApi } from "@/lib/api/sessions";
 import type {
   CreateSessionRequest,
   CreateInviteTokenRequest,
   SetDiscoverableRequest,
   JoinSessionRequest,
+  LiveSessionsListResponse,
 } from "@/lib/api/sessions/types";
+
+const DEFAULT_PAGE_SIZE = 20;
 
 export const sessionKeys = {
   all: ["sessions"] as const,
@@ -128,6 +131,20 @@ export function useLiveSessions(params?: { limit?: number }) {
   return useQuery({
     queryKey: [...sessionKeys.live(), params],
     queryFn: () => sessionsApi.getLive(params),
+    refetchInterval: 30000,
+  });
+}
+
+export function useInfiniteLiveSessions(pageSize = DEFAULT_PAGE_SIZE) {
+  return useInfiniteQuery({
+    queryKey: [...sessionKeys.live(), "infinite"],
+    queryFn: ({ pageParam = 0 }) =>
+      sessionsApi.getLive({ limit: pageSize, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: LiveSessionsListResponse) =>
+      lastPage.pagination.has_more
+        ? lastPage.pagination.offset + lastPage.pagination.limit
+        : undefined,
     refetchInterval: 30000,
   });
 }

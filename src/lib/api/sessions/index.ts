@@ -16,6 +16,7 @@ import type {
   ParticipantsListResponse,
   MessagesResponse,
   MessageResponse,
+  PaginationParams,
 } from './types';
 
 export const sessionsApi = {
@@ -64,7 +65,7 @@ export const sessionsApi = {
     });
   },
 
-  // Invite tokens
+  // invite tokens
   createInvite: (sessionId: string, data: CreateInviteTokenRequest) => {
     const url = `/api/v1/sessions/${sessionId}/invite`;
     return apiClient.post<InviteToken>(url, data, {
@@ -88,12 +89,11 @@ export const sessionsApi = {
     return apiClient.post<JoinSessionResponse>('/api/v1/sessions/join', data);
   },
 
-  getLive: (params?: { limit?: number }) => {
+  getLive: (params?: PaginationParams) => {
     const searchParams = new URLSearchParams();
-    
-    if (params?.limit) {
-      searchParams.set('limit', params.limit.toString());
-    }
+
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
 
     const query = searchParams.toString();
     const url = `/api/v1/sessions/live${query ? `?${query}` : ''}`;

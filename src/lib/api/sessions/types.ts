@@ -1,3 +1,7 @@
+import type { Pagination, PaginationParams } from '../strudels/types';
+
+export type { Pagination, PaginationParams };
+
 export type SessionRole = "host" | "co-author" | "viewer";
 export type ParticipantStatus = "active" | "left";
 
@@ -96,6 +100,7 @@ export interface LiveSession {
 
 export interface LiveSessionsListResponse {
   sessions: LiveSession[];
+  pagination: Pagination;
 }
 
 export interface SessionsListResponse {

@@ -13,11 +13,11 @@ import { Button } from '@/components/ui/button';
 import { AuthGuard } from '@/components/shared/auth-guard';
 import { StrudelFormDialog } from '@/components/shared/strudel-form-dialog';
 import { useDashboard } from './hooks';
-import { Settings, Pencil } from 'lucide-react';
+import { Settings, Pencil, Loader2 } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
 
 function DashboardContent() {
-  const { data, isLoading, router } = useDashboard();
+  const { strudels, isLoading, isFetchingNextPage, loadMoreRef, router } = useDashboard();
   const [selectedStrudel, setSelectedStrudel] = useState<Strudel | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -48,57 +48,67 @@ function DashboardContent() {
               </Card>
             ))}
           </div>
-        ) : data?.strudels && data.strudels.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {data.strudels.map(strudel => (
-              <Card
-                key={strudel.id}
-                className="rounded-md">
-                <CardHeader className="relative">
-                  <div className="absolute -top-1 right-4 flex gap-1">
-                    <Button
-                      size="icon-round-sm"
-                      variant="outline"
-                      className="text-muted-foreground hover:text-foreground"
-                      onClick={() => {
-                        setSelectedStrudel(strudel);
-                        setSettingsOpen(true);
-                      }}>
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon-round-sm"
-                      variant="outline"
-                      className="text-muted-foreground hover:text-foreground"
-                      onClick={() => router.push(`/?id=${strudel.id}`)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <CardDescription>{new Date(strudel.updated_at).toLocaleDateString()}</CardDescription>
-                  <CardTitle className="text-lg truncate max-w-[70%]">{strudel.title}</CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                  <pre className="text-xs bg-muted p-2 rounded overflow-hidden text-ellipsis whitespace-nowrap">
-                    {strudel.code.slice(0, 100)}
-                    {strudel.code.length > 100 && '...'}
-                  </pre>
-
-                  {strudel.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {strudel.tags.slice(0, 3).map(tag => (
-                        <span
-                          key={tag}
-                          className="text-xs bg-secondary px-2 py-0.5 rounded">
-                          {tag}
-                        </span>
-                      ))}
+        ) : strudels.length > 0 ? (
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              {strudels.map(strudel => (
+                <Card key={strudel.id} className="rounded-md">
+                  <CardHeader className="relative">
+                    <div className="absolute -top-1 right-4 flex gap-1">
+                      <Button
+                        size="icon-round-sm"
+                        variant="outline"
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          setSelectedStrudel(strudel);
+                          setSettingsOpen(true);
+                        }}>
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon-round-sm"
+                        variant="outline"
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={() => router.push(`/?id=${strudel.id}`)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <CardDescription>
+                      {new Date(strudel.updated_at).toLocaleDateString()}
+                    </CardDescription>
+                    <CardTitle className="text-lg truncate max-w-[70%]">
+                      {strudel.title}
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent>
+                    <pre className="text-xs bg-muted p-2 rounded overflow-hidden text-ellipsis whitespace-nowrap">
+                      {strudel.code.slice(0, 100)}
+                      {strudel.code.length > 100 && '...'}
+                    </pre>
+
+                    {strudel.tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {strudel.tags.slice(0, 3).map(tag => (
+                          <span
+                            key={tag}
+                            className="text-xs bg-secondary px-2 py-0.5 rounded">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div ref={loadMoreRef} className="flex justify-center pt-8">
+              {isFetchingNextPage && (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              )}
+            </div>
+          </>
         ) : (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">

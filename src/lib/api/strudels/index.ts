@@ -4,12 +4,20 @@ import type {
   CreateStrudelRequest,
   UpdateStrudelRequest,
   StrudelsListResponse,
+  PaginationParams,
 } from './types';
 import type { MessageResponse } from '../sessions/types';
 
 export const strudelsApi = {
-  list: () => {
-    const url = '/api/v1/strudels';
+  list: (params?: PaginationParams) => {
+    const searchParams = new URLSearchParams();
+
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
+
+    const query = searchParams.toString();
+    const url = `/api/v1/strudels${query ? `?${query}` : ''}`;
+
     return apiClient.get<StrudelsListResponse>(url, {
       requireAuth: true,
     });
@@ -43,12 +51,11 @@ export const strudelsApi = {
     });
   },
 
-  listPublic: (params?: { limit?: number }) => {
+  listPublic: (params?: PaginationParams) => {
     const searchParams = new URLSearchParams();
 
-    if (params?.limit) {
-      searchParams.set('limit', params.limit.toString());
-    }
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
 
     const query = searchParams.toString();
     return apiClient.get<StrudelsListResponse>(
