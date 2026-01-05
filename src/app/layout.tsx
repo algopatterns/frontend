@@ -9,8 +9,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Algorave - Strudel, community, collaboration and AI",
-  description: "Create live music with strudel with AI assistance and collaborate in real-time.",
+  title: "Algorave | Live code music with friends using strudel",
+  description: "Create live music with strudel with and collaborate in real-time.",
   icons: {
     icon: "/favicon.ico",
   },

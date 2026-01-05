@@ -420,9 +420,11 @@ export async function resumeAudioContext(): Promise<boolean> {
   if (!getAudioContextFn) return false;
   try {
     const ctx = getAudioContextFn();
+    
     if (ctx.state === 'suspended') {
       await ctx.resume();
     }
+
     return ctx.state === 'running';
   } catch (e) {
     console.warn('[strudel] Failed to resume audio context:', e);

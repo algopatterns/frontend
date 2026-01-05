@@ -1,6 +1,5 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { Highlight, themes } from 'prism-react-renderer';
 import type { AgentMessage } from '@/lib/api/strudels/types';
 

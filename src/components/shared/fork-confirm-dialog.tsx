@@ -37,7 +37,7 @@ export function ForkConfirmDialog() {
   const isReforkingSameStrudel =
     pendingForkId && currentDraftId === `fork_${pendingForkId}`;
 
-  // Clear pending fork if user navigates away from explore page
+  // clear pending fork if user navigates away from explore page
   useEffect(() => {
     if (pendingForkId && pathname !== '/explore') {
       setPendingForkId(null);
@@ -61,11 +61,11 @@ export function ForkConfirmDialog() {
   };
 
   const handleSaveFirst = () => {
-    // Keep pendingForkId so we can fork after saving
+    // keep pendingForkId so we can fork after saving
     setSaveStrudelDialogOpen(true);
   };
 
-  // Not authenticated - prompt to login or fork anyway
+  // not authenticated - prompt to login or fork anyway
   if (!isAuthenticated) {
     const description = isReforkingSameStrudel
       ? 'Your changes to this fork will be overwritten with the original. Sign in to save first, or continue as a guest.'
@@ -94,7 +94,7 @@ export function ForkConfirmDialog() {
     );
   }
 
-  // Authenticated with unsaved changes
+  // authenticated with unsaved changes
   if (hasUnsavedChanges) {
     const title = isReforkingSameStrudel ? 'Re-fork Strudel' : 'Unsaved Changes';
     const description = isReforkingSameStrudel
@@ -126,7 +126,7 @@ export function ForkConfirmDialog() {
     );
   }
 
-  // Authenticated, no unsaved changes - just fork
-  // This shouldn't normally be shown since we skip the dialog in this case
+  // authenticated, no unsaved changes - just fork
+  // this shouldn't normally be shown since we skip the dialog in this case
   return null;
 }

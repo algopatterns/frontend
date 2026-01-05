@@ -114,7 +114,6 @@ export function InviteDialog() {
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Go Live toggle */}
           <div className="flex items-center justify-between p-3 rounded-none border bg-muted/30">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
@@ -147,7 +146,6 @@ export function InviteDialog() {
 
           <Separator />
 
-          {/* Create new invite */}
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Role</Label>
@@ -208,7 +206,6 @@ export function InviteDialog() {
             </Button>
           </div>
 
-          {/* Existing invites */}
           {invites.length > 0 && (
             <div className="space-y-2">
               <Label>Active Invites</Label>

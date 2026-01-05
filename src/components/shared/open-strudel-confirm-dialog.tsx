@@ -29,7 +29,7 @@ export function OpenStrudelConfirmDialog() {
   const hasUnsavedChanges =
     isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
 
-  // Clear pending open if user navigates away from dashboard
+  // clear pending open if user navigates away from dashboard
   useEffect(() => {
     if (pendingOpenStrudelId && pathname !== '/dashboard') {
       setPendingOpenStrudelId(null);
@@ -48,7 +48,7 @@ export function OpenStrudelConfirmDialog() {
   };
 
   const handleSaveFirst = () => {
-    // Keep pendingOpenStrudelId so we can open after saving
+    // keep pendingOpenStrudelId so we can open after saving
     setSaveStrudelDialogOpen(true);
   };
 
