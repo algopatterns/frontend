@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SamplesPanel } from './samples-panel';
 import { SessionChatPanel } from './session-chat-panel';
@@ -21,10 +21,21 @@ export function SidebarPanel({
   isViewer = false,
 }: SidebarPanelProps) {
   const [selectedTab, setSelectedTab] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // avoid hydration mismatch by only applying conditional logic after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // compute effective tab: if viewer has samples selected but can't see it, force chat
+  // use stable default ('samples') until mounted to avoid hydration mismatch
   const effectiveTab = (() => {
-    // user hasn't selected anything yet - use default
+    if (!mounted) {
+      return 'samples'; // stable default for SSR
+    }
+
+    // user hasn't selected anything yet - use default based on role
     if (selectedTab === null) {
       return isViewer && showChat ? 'chat' : 'samples';
     }
@@ -45,27 +56,27 @@ export function SidebarPanel({
         className="flex flex-col h-full">
         <TabsList
           className={cn('w-full rounded-none border-b bg-transparent h-12', {
-            'flex items-center px-1.5 gap-1.5': !isViewer && showChat,
-            'p-0': isViewer || !showChat,
+            'flex items-center px-1.5 gap-1.5': mounted && !isViewer && showChat,
+            'p-0': mounted && (isViewer || !showChat),
           })}>
-          {!isViewer && (
+          {(!mounted || !isViewer) && (
             <TabsTrigger
               value="samples"
               className={cn('flex-1 rounded-none border-none shadow-none', {
                 'data-[state=active]:bg-transparent data-[state=active]:h-9':
-                  !isViewer && showChat,
+                  mounted && !isViewer && showChat,
               })}>
               <Headphones className="h-4 w-4 mr-1" />
               Samples
             </TabsTrigger>
           )}
 
-          {showChat && (
+          {(!mounted || showChat) && (
             <TabsTrigger
               value="chat"
               className={cn('flex-1 rounded-none border-none shadow-none', {
                 'data-[state=active]:bg-transparent data-[state=active]:h-9':
-                  !isViewer && showChat,
+                  mounted && !isViewer && showChat,
               })}>
               <MessageCircle className="h-4 w-4 mr-1" />
               Chat
@@ -73,7 +84,8 @@ export function SidebarPanel({
           )}
         </TabsList>
 
-        {!isViewer && (
+        {/* Always render both TabsContent to avoid hydration mismatch */}
+        {(!mounted || !isViewer) && (
           <TabsContent
             value="samples"
             className="flex-1 overflow-hidden mt-0 data-[state=inactive]:hidden">
@@ -81,7 +93,7 @@ export function SidebarPanel({
           </TabsContent>
         )}
 
-        {showChat && (
+        {(!mounted || showChat) && (
           <TabsContent
             value="chat"
             className="flex-1 overflow-hidden mt-0 data-[state=inactive]:hidden">
