@@ -177,4 +177,9 @@ export const storage = {
   generateDraftId: (): string => {
     return `draft_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   },
+
+  getLatestDraft: (): Draft | null => {
+    const drafts = storage.getAllDrafts();
+    return drafts.length > 0 ? drafts[0] : null;
+  },
 };

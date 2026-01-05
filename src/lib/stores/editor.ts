@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 import { storage } from '@/lib/utils/storage';
+import { useAuthStore } from '@/lib/stores/auth';
+
+// debounce draft saves to avoid excessive writes
+let draftSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+const DRAFT_SAVE_DEBOUNCE_MS = 1000;
 
 interface EditorState {
   code: string;
@@ -82,16 +87,62 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   setCode: (code, fromRemote = false) => {
     const state = get();
-    return set({
+    const result = set({
       code,
       isDirty: !fromRemote && code !== state.lastSavedCode,
       ...(fromRemote ? { lastSyncedCode: code } : {}),
     });
+
+    // save draft for anonymous users on local code changes
+    if (!fromRemote) {
+      const hasToken = !!useAuthStore.getState().token;
+      if (!hasToken) {
+        // debounce draft saves
+        if (draftSaveTimeout) {
+          clearTimeout(draftSaveTimeout);
+        }
+        draftSaveTimeout = setTimeout(() => {
+          const { currentDraftId, conversationHistory } = get();
+          const draftId = currentDraftId || storage.generateDraftId();
+
+          if (!currentDraftId) {
+            // store the new draft ID
+            storage.setCurrentDraftId(draftId);
+            set({ currentDraftId: draftId });
+          }
+
+          storage.setDraft({
+            id: draftId,
+            code,
+            conversationHistory,
+            updatedAt: Date.now(),
+          });
+        }, DRAFT_SAVE_DEBOUNCE_MS);
+      }
+    }
+
+    return result;
   },
 
   addToHistory: (role, content) => {
-    return set(state => ({
+    const result = set(state => ({
       conversationHistory: [...state.conversationHistory, { role, content }],
     }));
+
+    // save draft for anonymous users when conversation updates
+    const hasToken = !!useAuthStore.getState().token;
+    if (!hasToken) {
+      const { currentDraftId, code, conversationHistory } = get();
+      if (currentDraftId) {
+        storage.setDraft({
+          id: currentDraftId,
+          code,
+          conversationHistory,
+          updatedAt: Date.now(),
+        });
+      }
+    }
+
+    return result;
   },
 }));

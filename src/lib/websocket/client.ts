@@ -55,6 +55,9 @@ class AlgoraveWebSocket {
   // maps request_id -> pending request with resolve/reject/timeout
   private pendingRequests = new Map<string, PendingRequest>();
 
+  // track current switch_strudel request to prevent race conditions
+  private currentSwitchRequestId: string | null = null;
+
   // track initial load to distinguish from reconnects for session_state
   private initialLoadComplete = false;
 
@@ -288,6 +291,7 @@ class AlgoraveWebSocket {
                 if (typeof msg.timestamp === "string") {
                   return new Date(msg.timestamp).toISOString();
                 }
+                
                 // if numeric and < 1e12, assume seconds
                 return new Date(
                   msg.timestamp < 1e12 ? msg.timestamp * 1000 : msg.timestamp
@@ -322,28 +326,61 @@ class AlgoraveWebSocket {
         // determine if we should restore code from this session_state
         // - skipCodeRestoration: explicitly skip (e.g., forking)
         // - initial load: always restore (first session_state after connect)
-        // - after switch_strudel: restore if request_id matches pending request
+        // - after switch_strudel: only restore if request_id matches current switch request
         // - reconnect: don't restore (no matching request_id)
+        // - stale response: don't restore (request_id doesn't match current switch)
         const requestId = payload.request_id;
-        const isMatchingResponse = requestId && this.pendingRequests.has(requestId);
+        const isCurrentSwitchResponse = requestId && requestId === this.currentSwitchRequestId;
         const shouldRestoreCode =
           !this.skipCodeRestoration &&
-          (!this.initialLoadComplete || isMatchingResponse);
+          (!this.initialLoadComplete || isCurrentSwitchResponse);
+
+        // check for draft restoration for anonymous users on initial load
+        // always restore the latest draft (works across tabs/new windows)
+        const latestDraft = storage.getLatestDraft();
+        const shouldRestoreFromDraft =
+          !hasToken &&
+          !this.initialLoadComplete &&
+          !payload.code &&
+          latestDraft;
+
+        let restoredFromDraft = false;
 
         if (this.skipCodeRestoration) {
           this.skipCodeRestoration = false;
         } else if (shouldRestoreCode) {
-          const code = payload.code || EDITOR.DEFAULT_CODE;
-          setCode(code, true);
+          if (shouldRestoreFromDraft && latestDraft) {
+            // anonymous user - restore latest draft from localStorage
+            restoredFromDraft = true;
+            setCode(latestDraft.code, true);
+            setCurrentDraftId(latestDraft.id);
+            if (latestDraft.conversationHistory?.length) {
+              setConversationHistory(latestDraft.conversationHistory.map((msg, i) => ({
+                id: `restored-${i}`,
+                role: msg.role,
+                content: msg.content,
+                timestamp: latestDraft.updatedAt,
+                is_code_response: msg.role === 'assistant',
+              })));
+            }
+            // sync restored draft to server
+            this.sendCodeUpdate(latestDraft.code);
+          } else {
+            const code = payload.code || EDITOR.DEFAULT_CODE;
+            setCode(code, true);
 
-          // if we had to use default code, sync it with the server
-          if (!payload.code) {
-            this.sendCodeUpdate(code);
+            // if we had to use default code, sync it with the server
+            if (!payload.code) {
+              this.sendCodeUpdate(code);
+            }
           }
         }
 
-        // mark initial load complete
+        // mark initial load complete and clear current switch request
         this.initialLoadComplete = true;
+        if (isCurrentSwitchResponse) {
+          this.currentSwitchRequestId = null;
+        }
 
         // resolve pending request if this is a response to switch_strudel
         if (requestId) {
@@ -351,31 +388,31 @@ class AlgoraveWebSocket {
         }
 
         // only store session ID for authenticated users
-        // anonymous sessions are ephemeral - code is saved separately
+        // anonymous users restore from localStorage drafts instead
         if (hasToken) {
           storage.setSessionId(message.session_id);
         }
 
-        // sync draft to localStorage
-        // for saved strudels: use strudel ID as draft ID
-        // for unsaved work: use existing draft ID or generate new one
-        const finalCode = payload.code || EDITOR.DEFAULT_CODE;
-        const draftId = currentStrudelId || currentDraftId || storage.generateDraftId();
+        // sync draft to localStorage (skip if we just restored from existing draft)
+        if (!restoredFromDraft) {
+          const finalCode = payload.code || EDITOR.DEFAULT_CODE;
+          const draftId = currentStrudelId || currentDraftId || storage.generateDraftId();
 
-        if (!currentDraftId && !currentStrudelId) {
-          // new unsaved draft - set the draft ID
-          setCurrentDraftId(draftId);
+          if (!currentDraftId && !currentStrudelId) {
+            // new unsaved draft - set the draft ID
+            setCurrentDraftId(draftId);
+          }
+
+          storage.setDraft({
+            id: draftId,
+            code: finalCode,
+            conversationHistory: payload.conversation_history?.map(msg => ({
+              role: msg.role,
+              content: msg.content,
+            })) || [],
+            updatedAt: Date.now(),
+          });
         }
-
-        storage.setDraft({
-          id: draftId,
-          code: finalCode,
-          conversationHistory: payload.conversation_history?.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          })) || [],
-          updatedAt: Date.now(),
-        });
 
         setSessionStateReceived(true);
         break;
@@ -615,7 +652,7 @@ class AlgoraveWebSocket {
    * Reject all pending requests (called on disconnect).
    */
   private rejectAllPendingRequests(error: Error) {
-    for (const [requestId, pending] of this.pendingRequests) {
+    for (const [, pending] of this.pendingRequests) {
       clearTimeout(pending.timeoutId);
       pending.reject(error);
     }
@@ -664,14 +701,30 @@ class AlgoraveWebSocket {
    * - Pass null for fresh scratch context
    * - Pass null with code/conversationHistory to restore from localStorage
    * Returns a Promise that resolves when session_state is received.
+   * Cancels any in-flight switch request to prevent race conditions.
    */
   sendSwitchStrudel(
     strudelId: string | null,
     code?: string,
     conversationHistory?: Array<{ role: string; content: string }>
   ): Promise<SessionStatePayload> {
+    // cancel any in-flight switch request
+    if (this.currentSwitchRequestId) {
+      const pending = this.pendingRequests.get(this.currentSwitchRequestId);
+      if (pending) {
+        clearTimeout(pending.timeoutId);
+        pending.reject(new Error("Superseded by new switch request"));
+        this.pendingRequests.delete(this.currentSwitchRequestId);
+      }
+    }
+
+    // generate request ID and track as current
+    const requestId = crypto.randomUUID();
+    this.currentSwitchRequestId = requestId;
+
     const payload: Record<string, unknown> = {
       strudel_id: strudelId,
+      request_id: requestId,
     };
 
     if (code !== undefined) {
@@ -682,7 +735,30 @@ class AlgoraveWebSocket {
       payload.conversation_history = conversationHistory;
     }
 
-    return this.sendWithReply<SessionStatePayload>("switch_strudel", payload);
+    // manually handle request tracking (don't use sendWithReply since we need custom ID)
+    return new Promise((resolve, reject) => {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        this.currentSwitchRequestId = null;
+        reject(new Error("WebSocket not connected"));
+        return;
+      }
+
+      const timeoutId = setTimeout(() => {
+        this.pendingRequests.delete(requestId);
+        if (this.currentSwitchRequestId === requestId) {
+          this.currentSwitchRequestId = null;
+        }
+        reject(new Error("Request timeout: switch_strudel"));
+      }, REQUEST_TIMEOUT_MS);
+
+      this.pendingRequests.set(requestId, {
+        resolve: resolve as (value: unknown) => void,
+        reject,
+        timeoutId,
+      });
+
+      this.send("switch_strudel", payload);
+    });
   }
 
   private startPing() {
@@ -706,6 +782,7 @@ class AlgoraveWebSocket {
     this.rejectAllPendingRequests(new Error("WebSocket disconnected"));
     // reset state for fresh start on next connect
     this.initialLoadComplete = false;
+    this.currentSwitchRequestId = null;
     useWebSocketStore.getState().reset();
   }
 

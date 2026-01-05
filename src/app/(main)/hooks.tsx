@@ -219,6 +219,15 @@ export const useEditor = ({
       setCode(publicStrudel.code, true);
       setConversationHistory([]);
 
+      // save fork to localStorage immediately (for anonymous users)
+      storage.setDraft({
+        id: newDraftId,
+        code: publicStrudel.code,
+        conversationHistory: [],
+        updatedAt: Date.now(),
+        title: `Fork of ${publicStrudel.title}`,
+      });
+
       // clear fork param from URL
       router.replace('/', { scroll: false });
 

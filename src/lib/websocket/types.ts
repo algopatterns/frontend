@@ -139,7 +139,6 @@ export interface ErrorPayload {
   error: string;
   message: string;
   details?: string;
-  // included when error is response to a specific request
   request_id?: string;
 }
 
