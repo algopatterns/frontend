@@ -378,10 +378,11 @@ describe('Draft Restoration Logic', () => {
       setCurrentDraftId('draft-1');
       addToHistory('user', 'test');
 
-      // reset should clear everything
+      // reset should clear everything back to initial state
+      // (initial state now includes default code from localStorage check)
       reset();
       const state = useEditorStore.getState();
-      expect(state.code).toBe('');
+      expect(state.code).toBe('// default code');
       expect(state.isDirty).toBe(false);
       expect(state.currentStrudelId).toBeNull();
       expect(state.currentDraftId).toBeNull();
@@ -775,24 +776,26 @@ describe('Draft Restoration Logic', () => {
   });
 
   /**
-   * Tests for the session state machine (src/lib/websocket/session-state-machine.ts).
-   * This tests the complete decision flow including draft save decisions.
+   * tests for the session state machine (src/lib/websocket/session-state-machine.ts).
+   * this tests the complete decision flow including draft save decisions.
    *
-   * Key bug fix tested: draft should NOT be saved when:
-   * - We restored from draft (would overwrite with stale server code)
-   * - We skipped code update (no code change happened)
+   * key bug fix tested: draft should NOT be saved when:
+   * - we restored from draft (would overwrite with stale server code)
+   * - we skipped code update (no code change happened)
    */
   describe('session state machine', () => {
     const createMockPayload = (code?: string) => ({
       code: code ?? '',
-      your_role: 'host',
+      your_role: 'host', 
       participants: [],
       conversation_history: [],
       chat_history: [],
       request_id: undefined,
     });
 
-    const createContext = (overrides: Partial<SessionStateContext> = {}): SessionStateContext => ({
+    const createContext = (
+      overrides: Partial<SessionStateContext> = {}
+    ): SessionStateContext => ({
       hasToken: false,
       currentStrudelId: null,
       currentDraftId: null,
@@ -802,6 +805,7 @@ describe('Draft Restoration Logic', () => {
       skipCodeRestoration: false,
       requestId: null,
       currentSwitchRequestId: null,
+      // @ts-expect-error - mock payload
       payload: createMockPayload(),
       serverCode: null,
       defaultCode: '// default',
@@ -839,12 +843,15 @@ describe('Draft Restoration Logic', () => {
           conversationHistory: [],
           updatedAt: Date.now(),
         };
+
         const ctx = createContext({
           hasToken: false,
           latestDraft: draft,
         });
+
         const action = decideCodeAction(ctx);
         expect(action.type).toBe('RESTORE_DRAFT');
+        
         if (action.type === 'RESTORE_DRAFT') {
           expect(action.draft).toEqual(draft);
         }

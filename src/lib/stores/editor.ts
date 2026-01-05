@@ -1,9 +1,42 @@
 import { create } from 'zustand';
 import { storage } from '@/lib/utils/storage';
+import { EDITOR } from '@/lib/constants';
 
 // debounce draft saves to avoid excessive writes
 let draftSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 const DRAFT_SAVE_DEBOUNCE_MS = 1000;
+
+/**
+ * loads initial code from localStorage draft (sync, for immediate display).
+ * falls back to default code if no draft exists.
+ *
+ * this is a visual optimization - the state machine will still make the
+ * authoritative decision when session_state arrives from the server.
+ */
+function getInitialCodeFromDraft(): { code: string; draftId: string | null } {
+  if (typeof window === 'undefined') {
+    return { code: EDITOR.DEFAULT_CODE, draftId: null };
+  }
+
+  // try current tab's draft first (sessionStorage has draft ID)
+  const currentDraftId = storage.getCurrentDraftId();
+  if (currentDraftId) {
+    const currentDraft = storage.getDraft(currentDraftId);
+    if (currentDraft) {
+      return { code: currentDraft.code, draftId: currentDraftId };
+    }
+  }
+
+  // fallback to latest draft (cross-tab, anonymous users)
+  const latestDraft = storage.getLatestDraft();
+  if (latestDraft) {
+    return { code: latestDraft.code, draftId: latestDraft.id };
+  }
+
+  return { code: EDITOR.DEFAULT_CODE, draftId: null };
+}
+
+const initialDraft = getInitialCodeFromDraft();
 
 interface EditorState {
   code: string;
@@ -32,17 +65,17 @@ interface EditorState {
 }
 
 const initialState = {
-  code: '',
+  code: initialDraft.code,
   cursorLine: 1,
   cursorCol: 0,
   isDirty: false,
-  lastSyncedCode: '',
-  lastSavedCode: '',
+  lastSyncedCode: initialDraft.code,
+  lastSavedCode: initialDraft.code,
   isAIGenerating: false,
   conversationHistory: [] as Array<{ role: string; content: string }>,
   currentStrudelId: null as string | null,
   currentStrudelTitle: null as string | null,
-  currentDraftId: null as string | null,
+  currentDraftId: initialDraft.draftId,
 };
 
 export const useEditorStore = create<EditorState>((set, get) => ({

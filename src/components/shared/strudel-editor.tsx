@@ -82,15 +82,26 @@ export function StrudelEditor({ initialCode = '', onCodeChange, readOnly = false
   const onCodeChangeRef = useRef(onCodeChange);
   const readOnlyRef = useRef(readOnly);
 
-  const { code, setCode } = useEditorStore();
+  const { code, setCode, currentStrudelId } = useEditorStore();
   const { setPlaying, setInitialized, setError } = useAudioStore();
   const wsStatus = useWebSocketStore(state => state.status);
   const sessionStateReceived = useWebSocketStore(state => state.sessionStateReceived);
-  const hasEverConnected = useRef(false);
+  const hasReceivedStrudelCode = useRef(false);
 
-  // track if we've ever successfully connected (to avoid showing loader on reconnect)
-  if (sessionStateReceived && !hasEverConnected.current) {
-    hasEverConnected.current = true;
+  // check URL for strudel ID to show overlay before auth hydrates
+  // this prevents flash of draft code when loading a saved strudel
+  const urlStrudelId = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('id')
+    : null;
+  const effectiveStrudelId = currentStrudelId || urlStrudelId;
+
+  // track when we've received the strudel's code (to hide overlay)
+  if (effectiveStrudelId && sessionStateReceived && !hasReceivedStrudelCode.current) {
+    hasReceivedStrudelCode.current = true;
+  }
+  // reset when strudel changes
+  if (!effectiveStrudelId) {
+    hasReceivedStrudelCode.current = false;
   }
 
   useEffect(() => {
@@ -321,17 +332,22 @@ export function StrudelEditor({ initialCode = '', onCodeChange, readOnly = false
     }
   }, [code]);
 
+  // show loading overlay only when loading a saved strudel (prevents flash from draft to strudel code)
+  // uses effectiveStrudelId to catch URL param before auth hydrates
+  const isLoadingStrudel = effectiveStrudelId && !hasReceivedStrudelCode.current &&
+    (wsStatus === 'connecting' || (wsStatus === 'connected' && !sessionStateReceived));
+
   return (
     <div className="relative h-full w-full">
       <div
         ref={containerRef}
         className="strudel-editor h-full w-full overflow-hidden rounded-none"
       />
-      {!hasEverConnected.current && (wsStatus === 'connecting' || (wsStatus === 'connected' && !sessionStateReceived)) && (
+      {isLoadingStrudel && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Connecting...</p>
+            <p className="text-sm text-muted-foreground">Loading strudel...</p>
           </div>
         </div>
       )}
