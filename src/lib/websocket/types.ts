@@ -11,8 +11,7 @@ export type ClientMessageType =
   | "chat_message"
   | "play"
   | "stop"
-  | "ping"
-  | "switch_strudel";
+  | "ping";
 
 export type ServerMessageType =
   | "session_state"
@@ -45,13 +44,6 @@ export interface ChatMessagePayload {
   message: string;
 }
 
-export interface SwitchStrudelPayload {
-  strudel_id: string | null;
-  request_id: string;
-  code?: string;
-  conversation_history?: Array<{ role: string; content: string }>;
-}
-
 // server payloads
 export interface SessionStateChatMessage {
   display_name: string;
@@ -79,7 +71,6 @@ export interface SessionStatePayload {
     display_name: string;
     role: SessionRole;
   }>;
-  // echoed from switch_strudel request for correlation
   request_id?: string;
 }
 

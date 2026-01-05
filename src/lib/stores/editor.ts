@@ -99,11 +99,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     // persist to localStorage for navigation/refresh recovery
     if (currentStrudelId) {
       storage.setCurrentStrudelId(currentStrudelId);
+      // clear draft ID when switching to a saved strudel
+      storage.clearCurrentDraftId();
     } else {
       storage.clearCurrentStrudelId();
     }
 
-    return set({ currentStrudelId, currentStrudelTitle });
+    return set({
+      currentStrudelId,
+      currentStrudelTitle,
+      // clear draft ID when switching to a saved strudel
+      ...(currentStrudelId ? { currentDraftId: null } : {}),
+    });
   },
 
   setCurrentDraftId: (currentDraftId) => {

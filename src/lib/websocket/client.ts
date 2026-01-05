@@ -54,12 +54,6 @@ class AlgoraveWebSocket {
   // maps request_id -> pending request with resolve/reject/timeout
   private pendingRequests = new Map<string, PendingRequest>();
 
-  // track current switch_strudel request to prevent race conditions
-  private currentSwitchRequestId: string | null = null;
-
-  // track strudel ID from current switch_strudel (for draft saving before store updates)
-  private currentSwitchStrudelId: string | null = null;
-
   // track initial load to distinguish from reconnects for session_state
   private initialLoadComplete = false;
 
@@ -336,14 +330,14 @@ class AlgoraveWebSocket {
 
         const ctx: SessionStateContext = {
           hasToken,
-          currentStrudelId: this.currentSwitchStrudelId || currentStrudelId,
+          currentStrudelId: currentStrudelId,
           currentDraftId: currentDraftId ?? null,
           latestDraft: storage.getLatestDraft(),
           currentDraft: storedDraftId ? storage.getDraft(storedDraftId) : null,
           initialLoadComplete: this.initialLoadComplete,
           skipCodeRestoration: this.skipCodeRestoration,
           requestId,
-          currentSwitchRequestId: this.currentSwitchRequestId,
+          currentSwitchRequestId: null, // no longer used
           payload,
           serverCode: payload.code || null,
           defaultCode: EDITOR.DEFAULT_CODE,
@@ -418,7 +412,7 @@ class AlgoraveWebSocket {
           const { draftId, code } = decision.draftSave;
 
           // set draft ID in store if it's a new draft (not a strudel backup)
-          if (!currentDraftId && !this.currentSwitchStrudelId && !currentStrudelId) {
+          if (!currentDraftId && !currentStrudelId) {
             setCurrentDraftId(draftId);
           }
 
@@ -435,18 +429,6 @@ class AlgoraveWebSocket {
 
         // mark initial load complete
         this.initialLoadComplete = true;
-
-        // clear switch tracking
-        const isCurrentSwitchResponse = requestId && requestId === this.currentSwitchRequestId;
-        if (isCurrentSwitchResponse) {
-          this.currentSwitchRequestId = null;
-          this.currentSwitchStrudelId = null;
-        }
-
-        // resolve pending request if this is a response to switch_strudel
-        if (requestId) {
-          this.resolvePendingRequest(requestId, payload);
-        }
 
         // only store session ID for authenticated users
         if (hasToken) {
@@ -666,73 +648,6 @@ class AlgoraveWebSocket {
   }
 
   /**
-   * Switch strudel context within the same session.
-   * - Pass strudelId to load a saved strudel (auth users only)
-   * - Pass null for fresh scratch context
-   * - Pass null with code/conversationHistory to restore from localStorage
-   * Returns a Promise that resolves when session_state is received.
-   * Cancels any in-flight switch request to prevent race conditions.
-   */
-  sendSwitchStrudel(
-    strudelId: string | null,
-    code?: string,
-    conversationHistory?: Array<{ role: string; content: string }>
-  ): Promise<SessionStatePayload> {
-    // cancel any in-flight switch request
-    if (this.currentSwitchRequestId) {
-      const pending = this.pendingRequests.get(this.currentSwitchRequestId);
-      if (pending) {
-        clearTimeout(pending.timeoutId);
-        pending.reject(new Error("Superseded by new switch request"));
-        this.pendingRequests.delete(this.currentSwitchRequestId);
-      }
-    }
-
-    // generate request ID and track as current
-    const requestId = crypto.randomUUID();
-    this.currentSwitchRequestId = requestId;
-    this.currentSwitchStrudelId = strudelId;
-
-    const payload: Record<string, unknown> = {
-      strudel_id: strudelId,
-      request_id: requestId,
-    };
-
-    if (code !== undefined) {
-      payload.code = code;
-    }
-
-    if (conversationHistory !== undefined) {
-      payload.conversation_history = conversationHistory;
-    }
-
-    // manually handle request tracking (don't use sendWithReply since we need custom ID)
-    return new Promise((resolve, reject) => {
-      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-        this.currentSwitchRequestId = null;
-        reject(new Error("WebSocket not connected"));
-        return;
-      }
-
-      const timeoutId = setTimeout(() => {
-        this.pendingRequests.delete(requestId);
-        if (this.currentSwitchRequestId === requestId) {
-          this.currentSwitchRequestId = null;
-        }
-        reject(new Error("Request timeout: switch_strudel"));
-      }, REQUEST_TIMEOUT_MS);
-
-      this.pendingRequests.set(requestId, {
-        resolve: resolve as (value: unknown) => void,
-        reject,
-        timeoutId,
-      });
-
-      this.send("switch_strudel", payload);
-    });
-  }
-
-  /**
    * Restore editor state from localStorage when WS connection fails.
    * Used as fallback so user isn't blocked from working.
    */
@@ -776,8 +691,6 @@ class AlgoraveWebSocket {
     this.rejectAllPendingRequests(new Error("WebSocket disconnected"));
     // reset state for fresh start on next connect
     this.initialLoadComplete = false;
-    this.currentSwitchRequestId = null;
-    this.currentSwitchStrudelId = null;
     useWebSocketStore.getState().reset();
   }
 

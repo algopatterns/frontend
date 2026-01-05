@@ -98,7 +98,7 @@ export const useEditor = ({
   const forkedStrudelIdRef = useRef<string | null>(null);
   const previousStrudelIdRef = useRef<string | null | undefined>(undefined);
 
-  // switch strudel context when navigating between strudels
+  // track strudel navigation for ref updates
   useEffect(() => {
     const currentId = strudelId || null;
     const previousId = previousStrudelIdRef.current;
@@ -106,34 +106,14 @@ export const useEditor = ({
     // first render initialization
     if (previousId === undefined) {
       previousStrudelIdRef.current = currentId;
-
-      // if mounting with a strudel ID, switch to it after connection
-      if (currentId && !urlInviteToken && !forkStrudelId) {
-        wsClient.onceConnected(() => {
-          wsClient.sendSwitchStrudel(currentId).catch(() => {});
-        });
-      }
       return;
     }
 
-    // if strudel ID changed (including from null to something or vice versa)
+    // update ref when strudel ID changes
     if (currentId !== previousId) {
       previousStrudelIdRef.current = currentId;
-
-      // don't switch context if joining via invite or forking
-      if (urlInviteToken || forkStrudelId) {
-        return;
-      }
-
-      // switch strudel context within same session
-      if (currentId) {
-        wsClient.onceConnected(() => {
-          wsClient.sendSwitchStrudel(currentId).catch(() => {});
-        });
-      }
-      // note: switching to null (fresh scratch) is handled by new-strudel-dialog
     }
-  }, [strudelId, urlInviteToken, forkStrudelId]);
+  }, [strudelId]);
 
   // restore strudel from localStorage if navigating back to editor without URL param
   useEffect(() => {
@@ -244,9 +224,9 @@ export const useEditor = ({
 
       toast.success(`Forked "${publicStrudel.title}" - save to create your own copy`);
 
-      // sync fork with backend
+      // sync forked code with session
       wsClient.onceConnected(() => {
-        wsClient.sendSwitchStrudel(null, publicStrudel.code, []).catch(() => {});
+        wsClient.sendCodeUpdate(publicStrudel.code);
       });
     }
   }, [

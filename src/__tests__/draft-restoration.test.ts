@@ -821,17 +821,6 @@ describe('Draft Restoration Logic', () => {
         expect(action.type).toBe('SKIP_CODE_UPDATE');
       });
 
-      it('should allow switch_strudel response even after initial load', () => {
-        const ctx = createContext({
-          initialLoadComplete: true,
-          requestId: 'req-123',
-          currentSwitchRequestId: 'req-123',
-          serverCode: 's("bd")',
-        });
-        const action = decideCodeAction(ctx);
-        expect(action.type).toBe('USE_SERVER_CODE');
-      });
-
       it('should restore draft for anonymous user', () => {
         const draft: Draft = {
           id: 'anon-draft',

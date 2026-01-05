@@ -27,7 +27,7 @@ export interface SessionStateContext {
   initialLoadComplete: boolean;
   skipCodeRestoration: boolean;
 
-  // request correlation
+  // request correlation (deprecated - kept for compatibility)
   requestId: string | null;
   currentSwitchRequestId: string | null;
 
@@ -62,8 +62,8 @@ export interface SessionStateDecision {
  * determines what action to take when session_state is received.
  *
  * decision matrix:
- * 1. skipCodeRestoration=true → skip (e.g., forking)
- * 2. not initial load AND not matching switch request → skip (reconnect/stale)
+ * 1. skipCodeRestoration=true → skip (e.g., forking, starting new)
+ * 2. not initial load → skip (reconnect/stale)
  * 3. live session (has participants) → use server code (single source of truth)
  * 4. solo anonymous with draft → restore from draft
  * 5. solo auth without strudel, with draft → restore from draft
@@ -79,26 +79,21 @@ export function decideCodeAction(ctx: SessionStateContext): SessionStateAction {
     currentDraft,
     initialLoadComplete,
     skipCodeRestoration,
-    requestId,
-    currentSwitchRequestId,
     payload,
     serverCode,
     defaultCode,
   } = ctx;
 
-  // 1. explicit skip requested (e.g., forking)
+  // 1. explicit skip requested (e.g., forking, starting new)
   if (skipCodeRestoration) {
     return { type: 'SKIP_CODE_UPDATE', reason: 'skipCodeRestoration flag set' };
   }
 
-  // 2. check if we should process this session_state at all
-  const isCurrentSwitchResponse = requestId && requestId === currentSwitchRequestId;
-  const shouldProcessCode = !initialLoadComplete || isCurrentSwitchResponse;
-
-  if (!shouldProcessCode) {
+  // 2. only process session_state on initial load (skip on reconnect)
+  if (initialLoadComplete) {
     return {
       type: 'SKIP_CODE_UPDATE',
-      reason: `reconnect or stale response (initialLoadComplete=${initialLoadComplete}, isCurrentSwitch=${isCurrentSwitchResponse})`
+      reason: 'reconnect - initial load already complete'
     };
   }
 

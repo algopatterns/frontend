@@ -52,7 +52,7 @@ export function NewStrudelDialog() {
     clearHistory();
 
     wsClient.skipCodeRestoration = true;
-    wsClient.sendSwitchStrudel(null).catch(() => {});
+    wsClient.sendCodeUpdate(EDITOR.DEFAULT_CODE);
 
     setNewStrudelDialogOpen(false);
   };
@@ -71,7 +71,7 @@ export function NewStrudelDialog() {
     clearHistory();
 
     wsClient.skipCodeRestoration = true;
-    wsClient.sendSwitchStrudel(null).catch(() => {});
+    wsClient.sendCodeUpdate(EDITOR.DEFAULT_CODE);
 
     router.replace('/', { scroll: false });
     setNewStrudelDialogOpen(false);
