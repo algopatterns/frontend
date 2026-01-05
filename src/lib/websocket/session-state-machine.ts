@@ -7,7 +7,7 @@ import type { SessionStatePayload } from './types';
  * handles the complex decision logic for what to do when session_state arrives.
  * uses explicit states and actions to prevent race conditions and make debugging easier.
  * 
- * please do not edit without understanding technicalities and implications @agent and @contributors i beg y'all, it took a few hours.
+ * please do not edit without understanding technicalities @agent and @contributors i beg y'all, it took a few hours.
  */
 
 // context available when making decisions
@@ -64,11 +64,12 @@ export interface SessionStateDecision {
  * decision matrix:
  * 1. skipCodeRestoration=true → skip (e.g., forking)
  * 2. not initial load AND not matching switch request → skip (reconnect/stale)
- * 3. anonymous with draft → restore from draft
- * 4. auth without strudel, with draft → restore from draft
- * 5. auth with strudel → use server code (strudel is authoritative)
- * 6. server has code → use server code
- * 7. fallback to default → use default code
+ * 3. live session (has participants) → use server code (single source of truth)
+ * 4. solo anonymous with draft → restore from draft
+ * 5. solo auth without strudel, with draft → restore from draft
+ * 6. auth with strudel → use server code (strudel is authoritative)
+ * 7. server has code → use server code
+ * 8. fallback to default → use default code
  */
 export function decideCodeAction(ctx: SessionStateContext): SessionStateAction {
   const {
@@ -80,6 +81,7 @@ export function decideCodeAction(ctx: SessionStateContext): SessionStateAction {
     skipCodeRestoration,
     requestId,
     currentSwitchRequestId,
+    payload,
     serverCode,
     defaultCode,
   } = ctx;
@@ -100,16 +102,39 @@ export function decideCodeAction(ctx: SessionStateContext): SessionStateAction {
     };
   }
 
-  // 3. anonymous user with draft → restore from draft
+  // 3. live session detection - server is single source of truth when there are participants
+  // this prevents localStorage from interfering with collaborative sessions
+  const isLiveSession = payload.participants && payload.participants.length > 0;
+
+  if (isLiveSession) {
+    // in live sessions, always use server code - it's authoritative
+    if (serverCode) {
+      return {
+        type: 'USE_SERVER_CODE',
+        code: serverCode,
+        reason: `live session with ${payload.participants.length} participant(s) - server is authoritative`
+      };
+    }
+    // live session but no server code (shouldn't happen, but fallback)
+    return {
+      type: 'USE_DEFAULT_CODE',
+      code: defaultCode,
+      reason: 'live session but no server code'
+    };
+  }
+
+  // from here on, we know it's a solo session (no other participants)
+
+  // 4. solo anonymous user with draft → restore from draft
   if (!hasToken && latestDraft) {
     return {
       type: 'RESTORE_DRAFT',
       draft: latestDraft,
-      reason: 'anonymous user with localStorage draft'
+      reason: 'solo anonymous user with localStorage draft'
     };
   }
 
-  // 4. auth user without strudel, with draft → restore from draft
+  // 5. solo auth user without strudel, with draft → restore from draft
   // prefer currentDraft (same tab) over latestDraft (cross-tab)
   if (hasToken && !currentStrudelId) {
     const draftToRestore = currentDraft || latestDraft;
@@ -117,12 +142,12 @@ export function decideCodeAction(ctx: SessionStateContext): SessionStateAction {
       return {
         type: 'RESTORE_DRAFT',
         draft: draftToRestore,
-        reason: `auth user with unsaved draft (${currentDraft ? 'currentDraft' : 'latestDraft'})`
+        reason: `solo auth user with unsaved draft (${currentDraft ? 'currentDraft' : 'latestDraft'})`
       };
     }
   }
 
-  // 5. auth user with strudel → use server code (strudel is authoritative)
+  // 6. auth user with strudel → use server code (strudel is authoritative)
   if (hasToken && currentStrudelId && serverCode) {
     return {
       type: 'USE_SERVER_CODE',
@@ -131,7 +156,7 @@ export function decideCodeAction(ctx: SessionStateContext): SessionStateAction {
     };
   }
 
-  // 6. server has code → use it
+  // 7. server has code → use it
   if (serverCode) {
     return {
       type: 'USE_SERVER_CODE',
@@ -140,7 +165,7 @@ export function decideCodeAction(ctx: SessionStateContext): SessionStateAction {
     };
   }
 
-  // 7. fallback to default
+  // 8. fallback to default
   return {
     type: 'USE_DEFAULT_CODE',
     code: defaultCode,
@@ -211,11 +236,14 @@ export function processSessionState(ctx: SessionStateContext): SessionStateDecis
   const codeAction = decideCodeAction(ctx);
   const draftSave = decideDraftSave(ctx, codeAction);
 
+  const isLiveSession = ctx.payload.participants && ctx.payload.participants.length > 0;
+
   return {
     codeAction,
     draftSave,
     debug: {
       context: {
+        isLiveSession,
         hasToken: ctx.hasToken,
         currentStrudelId: ctx.currentStrudelId,
         currentDraftId: ctx.currentDraftId,
@@ -226,6 +254,8 @@ export function processSessionState(ctx: SessionStateContext): SessionStateDecis
         hasServerCode: ctx.serverCode !== null,
         requestId: ctx.requestId,
         currentSwitchRequestId: ctx.currentSwitchRequestId,
+        participantCount: ctx.payload.participants?.length ?? 0,
+        yourRole: ctx.payload.your_role,
       } as Partial<SessionStateContext>,
       timestamp: Date.now(),
     },

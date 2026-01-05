@@ -1022,5 +1022,118 @@ describe('Draft Restoration Logic', () => {
         }
       });
     });
+
+    describe('live session behavior', () => {
+      it('should use server code in live session even if user has draft', () => {
+        const userDraft: Draft = {
+          id: 'my-draft',
+          code: 's("hh*4")',
+          conversationHistory: [],
+          updatedAt: Date.now(),
+        };
+
+        const ctx = createContext({
+          hasToken: false, // anonymous joiner
+          latestDraft: userDraft,
+          serverCode: 's("bd", "sd").fast(2)', // host's code
+          // @ts-expect-error - mock payload with participants
+          payload: {
+            code: 's("bd", "sd").fast(2)',
+            your_role: 'viewer',
+            participants: [{ id: 'host-123', display_name: 'Host', role: 'host' }],
+            conversation_history: [],
+            chat_history: [],
+          },
+        });
+
+        const action = decideCodeAction(ctx);
+
+        // Should use server code, NOT restore from draft
+        expect(action.type).toBe('USE_SERVER_CODE');
+        expect(action.reason).toContain('live session');
+        expect(action.reason).toContain('1 participant');
+      });
+
+      it('should use server code for host in live session with participants', () => {
+        const hostDraft: Draft = {
+          id: 'host-draft',
+          code: 's("old code")',
+          conversationHistory: [],
+          updatedAt: Date.now(),
+        };
+
+        const ctx = createContext({
+          hasToken: true, // authenticated host
+          latestDraft: hostDraft,
+          serverCode: 's("current live code")',
+          // @ts-expect-error - mock payload with participants
+          payload: {
+            code: 's("current live code")',
+            your_role: 'host',
+            participants: [
+              { id: 'viewer-1', display_name: 'Viewer 1', role: 'viewer' },
+              { id: 'viewer-2', display_name: 'Viewer 2', role: 'viewer' },
+            ],
+            conversation_history: [],
+            chat_history: [],
+          },
+        });
+
+        const action = decideCodeAction(ctx);
+
+        // Even host should use server code in live session
+        expect(action.type).toBe('USE_SERVER_CODE');
+        expect(action.reason).toContain('2 participant');
+      });
+
+      it('should restore draft for solo session (no participants)', () => {
+        const soloDraft: Draft = {
+          id: 'solo-draft',
+          code: 's("my solo work")',
+          conversationHistory: [],
+          updatedAt: Date.now(),
+        };
+
+        const ctx = createContext({
+          hasToken: false,
+          latestDraft: soloDraft,
+          serverCode: 's("bd")', // some server code
+          // @ts-expect-error - mock payload with no participants
+          payload: {
+            code: 's("bd")',
+            your_role: 'host',
+            participants: [], // empty = solo session
+            conversation_history: [],
+            chat_history: [],
+          },
+        });
+
+        const action = decideCodeAction(ctx);
+
+        // Solo session should restore from draft
+        expect(action.type).toBe('RESTORE_DRAFT');
+        expect(action.reason).toContain('solo');
+      });
+
+      it('should include live session info in debug context', () => {
+        const ctx = createContext({
+          serverCode: 's("bd")',
+          // @ts-expect-error - mock payload
+          payload: {
+            code: 's("bd")',
+            your_role: 'viewer',
+            participants: [{ id: 'host', display_name: 'Host', role: 'host' }],
+            conversation_history: [],
+            chat_history: [],
+          },
+        });
+
+        const decision = processSessionState(ctx);
+
+        expect(decision.debug.context.isLiveSession).toBe(true);
+        expect(decision.debug.context.participantCount).toBe(1);
+        expect(decision.debug.context.yourRole).toBe('viewer');
+      });
+    });
   });
 });
