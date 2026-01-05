@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useStrudelAudio } from '@/lib/hooks/use-strudel-audio';
 import { useWebSocket } from '@/lib/hooks/use-websocket';
 import { useAutosave } from '@/lib/hooks/use-autosave';
+import { useAgentGenerate } from '@/lib/hooks/use-agent';
 import { useStrudel, usePublicStrudel } from '@/lib/hooks/use-strudels';
 import { useSessionInvites } from '@/lib/hooks/use-sessions';
 import { useUIStore } from '@/lib/stores/ui';
@@ -35,7 +36,7 @@ export const useEditor = ({
   urlInviteToken,
   urlDisplayName,
 }: UseEditorOptions = {}) => {
-  // set skip flag before webSocket connects
+  // set skip flag before websocket connects
   // this prevents session_state from restoring old code when forking
   useLayoutEffect(() => {
     if (forkStrudelId && !strudelId) {
@@ -57,6 +58,7 @@ export const useEditor = ({
     setConversationHistory,
   } = useEditorStore();
   const { isChatPanelOpen, toggleChatPanel, setNewStrudelDialogOpen } = useUIStore();
+  const agentGenerate = useAgentGenerate();
 
   // check if we have a stored viewer session (for refresh reconnection)
   const storedViewerSession =
@@ -65,7 +67,6 @@ export const useEditor = ({
 
   const {
     sendCode,
-    sendAgentRequest,
     sendChatMessage,
     sendPlay,
     sendStop,
@@ -331,8 +332,8 @@ export const useEditor = ({
   );
 
   const handleSendAIRequest = useCallback(
-    (query: string) => sendAgentRequest(query),
-    [sendAgentRequest]
+    (query: string) => agentGenerate.mutate(query),
+    [agentGenerate]
   );
 
   const handleSendMessage = useCallback(

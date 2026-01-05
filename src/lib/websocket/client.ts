@@ -8,8 +8,6 @@ import type {
   WebSocketMessage,
   SessionStatePayload,
   CodeUpdateBroadcastPayload,
-  AgentRequestBroadcastPayload,
-  AgentResponsePayload,
   ChatMessageBroadcastPayload,
   UserJoinedPayload,
   UserLeftPayload,
@@ -267,7 +265,7 @@ class AlgoraveWebSocket {
       clearMessages,
     } = useWebSocketStore.getState();
     
-    const { setCode, setAIGenerating, addToHistory, setConversationHistory, currentStrudelId, currentDraftId, setCurrentDraftId } = useEditorStore.getState();
+    const { setCode, setConversationHistory, currentStrudelId, currentDraftId, setCurrentDraftId } = useEditorStore.getState();
 
     switch (message.type) {
       case "session_state": {
@@ -465,51 +463,6 @@ class AlgoraveWebSocket {
         break;
       }
 
-      case "agent_request": {
-        const payload = message.payload as AgentRequestBroadcastPayload;
-        setAIGenerating(true);
-        
-        addMessage({
-          id: crypto.randomUUID(),
-          type: "user",
-          content: payload.user_query,
-          displayName: payload.display_name,
-          isAIRequest: true,
-          timestamp: message.timestamp,
-        });
-
-        addToHistory("user", payload.user_query);
-
-        break;
-      }
-
-      case "agent_response": {
-        const payload = message.payload as AgentResponsePayload;
-        setAIGenerating(false);
-
-        if (payload.code && payload.is_code_response) {
-          setCode(payload.code, true);
-          addToHistory("assistant", payload.code);
-        }
-
-        addMessage({
-          id: crypto.randomUUID(),
-          type: "assistant",
-          content: payload.code || "",
-          isActionable: payload.is_actionable,
-          isCodeResponse: payload.is_code_response,
-          clarifyingQuestions: payload.clarifying_questions,
-          timestamp: message.timestamp,
-        });
-
-        // resolve pending request if this is a response to our agent_request
-        if (payload.request_id) {
-          this.resolvePendingRequest(payload.request_id, payload);
-        }
-
-        break;
-      }
-
       case "chat_message": {
         const payload = message.payload as ChatMessageBroadcastPayload;
 
@@ -561,10 +514,6 @@ class AlgoraveWebSocket {
       case "error": {
         const payload = message.payload as ErrorPayload;
         setError(payload.message);
-
-        if (payload.error === "too_many_requests") {
-          setAIGenerating(false);
-        }
 
         // reject pending request if error has matching request_id
         if (payload.request_id) {
@@ -702,26 +651,6 @@ class AlgoraveWebSocket {
 
   sendCodeUpdate(code: string, cursorLine?: number, cursorCol?: number) {
     this.send("code_update", { code, cursor_line: cursorLine, cursor_col: cursorCol });
-  }
-
-  /**
-   * Send an AI agent request and wait for the response.
-   * Returns a Promise that resolves with the agent response.
-   */
-  sendAgentRequest(
-    query: string,
-    editorState: string,
-    conversationHistory?: Array<{ role: string; content: string }>,
-    provider?: "anthropic" | "openai",
-    providerApiKey?: string
-  ): Promise<AgentResponsePayload> {
-    return this.sendWithReply<AgentResponsePayload>("agent_request", {
-      user_query: query,
-      editor_state: editorState,
-      conversation_history: conversationHistory || [],
-      ...(provider && { provider }),
-      ...(providerApiKey && { provider_api_key: providerApiKey }),
-    });
   }
 
   sendChatMessage(message: string) {

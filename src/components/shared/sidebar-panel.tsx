@@ -1,11 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SamplesPanel } from './samples-panel';
 import { SessionChatPanel } from './session-chat-panel';
 import { Headphones, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// hydration-safe mount detection using useSyncExternalStore
+const subscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 interface SidebarPanelProps {
   showChat: boolean;
@@ -21,12 +26,8 @@ export function SidebarPanel({
   isViewer = false,
 }: SidebarPanelProps) {
   const [selectedTab, setSelectedTab] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  // avoid hydration mismatch by only applying conditional logic after mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // returns false on server, true on client - avoids hydration mismatch
+  const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   // compute effective tab: if viewer has samples selected but can't see it, force chat
   // use stable default ('samples') until mounted to avoid hydration mismatch

@@ -8,7 +8,6 @@ export type ConnectionStatus =
 
 export type ClientMessageType =
   | "code_update"
-  | "agent_request"
   | "chat_message"
   | "play"
   | "stop"
@@ -18,8 +17,6 @@ export type ClientMessageType =
 export type ServerMessageType =
   | "session_state"
   | "code_update"
-  | "agent_request"
-  | "agent_response"
   | "chat_message"
   | "user_joined"
   | "user_left"
@@ -42,15 +39,6 @@ export interface CodeUpdatePayload {
   code: string;
   cursor_line?: number;
   cursor_col?: number;
-}
-
-export interface AgentRequestPayload {
-  user_query: string;
-  request_id: string;
-  editor_state?: string;
-  conversation_history?: Array<{ role: string; content: string }>;
-  provider?: "anthropic" | "openai";
-  provider_api_key?: string;
 }
 
 export interface ChatMessagePayload {
@@ -100,23 +88,6 @@ export interface CodeUpdateBroadcastPayload {
   cursor_line?: number;
   cursor_col?: number;
   display_name: string;
-}
-
-export interface AgentRequestBroadcastPayload {
-  user_query: string;
-  display_name: string;
-}
-
-export interface AgentResponsePayload {
-  code?: string;
-  is_actionable: boolean;
-  is_code_response: boolean;
-  clarifying_questions?: string[];
-  docs_retrieved: number;
-  examples_retrieved: number;
-  model: string;
-  // echoed from agent_request for correlation
-  request_id?: string;
 }
 
 export interface ChatMessageBroadcastPayload {

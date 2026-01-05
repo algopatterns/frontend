@@ -19,7 +19,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { autoConnect = true } = options;
   const { status, sessionId, error, participants, messages, myRole } =
     useWebSocketStore();
-  const { code, cursorLine, cursorCol, conversationHistory } = useEditorStore();
+  const { cursorLine, cursorCol } = useEditorStore();
   const { hasHydrated } = useAuthStore();
 
   // track if we initiated a connection
@@ -89,23 +89,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     [cursorLine, cursorCol]
   );
 
-  const sendAgentRequest = useCallback(
-    (
-      query: string,
-      provider?: "anthropic" | "openai",
-      providerApiKey?: string
-    ) => {
-      wsClient.sendAgentRequest(
-        query,
-        code,
-        conversationHistory,
-        provider,
-        providerApiKey
-      ).catch(() => {});
-    },
-    [code, conversationHistory]
-  );
-
   const sendChatMessage = useCallback((message: string) => {
     wsClient.sendChatMessage(message);
   }, []);
@@ -147,7 +130,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     isCoAuthor: myRole === "co-author",
     isViewer: myRole === "viewer",
     sendCode,
-    sendAgentRequest,
     sendChatMessage,
     sendPlay,
     sendStop,
