@@ -2,7 +2,7 @@ import { useAuthStore } from "@/lib/stores/auth";
 import { useWebSocketStore } from "@/lib/stores/websocket";
 import { useEditorStore } from "@/lib/stores/editor";
 import { storage } from "@/lib/utils/storage";
-import { shouldRestoreFromDraft, pickDraftToRestore } from "@/lib/utils/draft-restoration";
+import { processSessionState, type SessionStateContext } from "./session-state-machine";
 import { WS_BASE_URL, WEBSOCKET, EDITOR } from "@/lib/constants";
 import type {
   WebSocketMessage,
@@ -332,96 +332,91 @@ class AlgoraveWebSocket {
           }
         }
 
-        // determine if we should restore code from this session_state
-        // - skipCodeRestoration: explicitly skip (e.g., forking)
-        // - initial load: always restore (first session_state after connect)
-        // - after switch_strudel: only restore if request_id matches current switch request
-        // - reconnect: don't restore (no matching request_id)
-        // - stale response: don't restore (request_id doesn't match current switch)
-        const requestId = payload.request_id;
-        const isCurrentSwitchResponse = requestId && requestId === this.currentSwitchRequestId;
-        const shouldRestoreCode =
-          !this.skipCodeRestoration &&
-          (!this.initialLoadComplete || isCurrentSwitchResponse);
-
-        // check for draft restoration on initial load
+        // use state machine to decide what to do with code
         const storedDraftId = storage.getCurrentDraftId();
-        const latestDraft = storage.getLatestDraft();
-        const currentDraft = storedDraftId ? storage.getDraft(storedDraftId) : null;
+        const requestId = payload.request_id ?? null;
 
-        const shouldRestore = shouldRestoreFromDraft({
+        const ctx: SessionStateContext = {
           hasToken,
-          currentStrudelId,
-          latestDraft,
-          currentDraft,
+          currentStrudelId: this.currentSwitchStrudelId || currentStrudelId,
+          currentDraftId: currentDraftId ?? null,
+          latestDraft: storage.getLatestDraft(),
+          currentDraft: storedDraftId ? storage.getDraft(storedDraftId) : null,
           initialLoadComplete: this.initialLoadComplete,
-        });
+          skipCodeRestoration: this.skipCodeRestoration,
+          requestId,
+          currentSwitchRequestId: this.currentSwitchRequestId,
+          payload,
+          serverCode: payload.code || null,
+          defaultCode: EDITOR.DEFAULT_CODE,
+        };
 
-        let restoredFromDraft = false;
+        const decision = processSessionState(ctx);
 
+        // log decision for debugging
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[SessionState] Decision:', {
+            action: decision.codeAction.type,
+            reason: decision.codeAction.reason,
+            draftSave: decision.draftSave,
+            debug: decision.debug.context,
+          });
+        }
+
+        // clear skip flag after reading it
         if (this.skipCodeRestoration) {
           this.skipCodeRestoration = false;
-        } else if (shouldRestoreCode) {
-          const draftToRestore = pickDraftToRestore({ hasToken, latestDraft, currentDraft });
+        }
 
-          if (shouldRestore && draftToRestore) {
-            // restore from localStorage draft
-            restoredFromDraft = true;
-            setCode(draftToRestore.code, true);
-            setCurrentDraftId(draftToRestore.id);
-            if (draftToRestore.conversationHistory?.length) {
-              setConversationHistory(draftToRestore.conversationHistory.map((msg, i) => ({
+        // execute code action
+        switch (decision.codeAction.type) {
+          case 'RESTORE_DRAFT': {
+            const draft = decision.codeAction.draft;
+            setCode(draft.code, true);
+            setCurrentDraftId(draft.id);
+            if (draft.conversationHistory?.length) {
+              setConversationHistory(draft.conversationHistory.map((msg, i) => ({
                 id: `restored-${i}`,
                 role: msg.role,
                 content: msg.content,
-                timestamp: draftToRestore.updatedAt,
+                timestamp: draft.updatedAt,
                 is_code_response: msg.role === 'assistant',
               })));
             }
             // sync restored draft to server
-            this.sendCodeUpdate(draftToRestore.code);
-          } else {
-            const code = payload.code || EDITOR.DEFAULT_CODE;
-            setCode(code, true);
-
-            // if we had to use default code, sync it with the server
-            if (!payload.code) {
-              this.sendCodeUpdate(code);
-            }
+            this.sendCodeUpdate(draft.code);
+            break;
           }
+
+          case 'USE_SERVER_CODE': {
+            setCode(decision.codeAction.code, true);
+            break;
+          }
+
+          case 'USE_DEFAULT_CODE': {
+            setCode(decision.codeAction.code, true);
+            // sync default code to server
+            this.sendCodeUpdate(decision.codeAction.code);
+            break;
+          }
+
+          case 'SKIP_CODE_UPDATE':
+            // do nothing
+            break;
         }
 
-        // mark initial load complete and clear current switch request
-        this.initialLoadComplete = true;
-        if (isCurrentSwitchResponse) {
-          this.currentSwitchRequestId = null;
-        }
+        // execute draft save decision
+        if (decision.draftSave.shouldSave) {
+          const { draftId, code } = decision.draftSave;
 
-        // resolve pending request if this is a response to switch_strudel
-        if (requestId) {
-          this.resolvePendingRequest(requestId, payload);
-        }
-
-        // only store session ID for authenticated users
-        // anonymous users restore from localStorage drafts instead
-        if (hasToken) {
-          storage.setSessionId(message.session_id);
-        }
-
-        // sync draft to localStorage (skip if we just restored from existing draft)
-        if (!restoredFromDraft) {
-          const finalCode = payload.code || EDITOR.DEFAULT_CODE;
-          // use strudel ID from switch request (store may not be updated yet), then store, then sessionStorage
-          const draftId = this.currentSwitchStrudelId || currentStrudelId || currentDraftId || storedDraftId || storage.generateDraftId();
-
+          // set draft ID in store if it's a new draft (not a strudel backup)
           if (!currentDraftId && !this.currentSwitchStrudelId && !currentStrudelId) {
-            // only set draft ID for actual drafts, not strudel backups
             setCurrentDraftId(draftId);
           }
 
           storage.setDraft({
             id: draftId,
-            code: finalCode,
+            code,
             conversationHistory: payload.conversation_history?.map(msg => ({
               role: msg.role,
               content: msg.content,
@@ -430,9 +425,24 @@ class AlgoraveWebSocket {
           });
         }
 
-        // clear switch strudel tracking
+        // mark initial load complete
+        this.initialLoadComplete = true;
+
+        // clear switch tracking
+        const isCurrentSwitchResponse = requestId && requestId === this.currentSwitchRequestId;
         if (isCurrentSwitchResponse) {
+          this.currentSwitchRequestId = null;
           this.currentSwitchStrudelId = null;
+        }
+
+        // resolve pending request if this is a response to switch_strudel
+        if (requestId) {
+          this.resolvePendingRequest(requestId, payload);
+        }
+
+        // only store session ID for authenticated users
+        if (hasToken) {
+          storage.setSessionId(message.session_id);
         }
 
         setSessionStateReceived(true);

@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { storage, Draft } from '@/lib/utils/storage';
 import { shouldRestoreFromDraft, pickDraftToRestore } from '@/lib/utils/draft-restoration';
+import {
+  processSessionState,
+  decideCodeAction,
+  decideDraftSave,
+  type SessionStateContext,
+} from '@/lib/websocket/session-state-machine';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useAuthStore } from '@/lib/stores/auth';
 
@@ -764,6 +770,249 @@ describe('Draft Restoration Logic', () => {
         const latest = storage.getLatestDraft();
         expect(latest?.id).toBe('recent-work');
         expect(latest?.code).toBe('s("bd", "sd", "hh")');
+      });
+    });
+  });
+
+  /**
+   * Tests for the session state machine (src/lib/websocket/session-state-machine.ts).
+   * This tests the complete decision flow including draft save decisions.
+   *
+   * Key bug fix tested: draft should NOT be saved when:
+   * - We restored from draft (would overwrite with stale server code)
+   * - We skipped code update (no code change happened)
+   */
+  describe('session state machine', () => {
+    const createMockPayload = (code?: string) => ({
+      code: code ?? '',
+      your_role: 'host',
+      participants: [],
+      conversation_history: [],
+      chat_history: [],
+      request_id: undefined,
+    });
+
+    const createContext = (overrides: Partial<SessionStateContext> = {}): SessionStateContext => ({
+      hasToken: false,
+      currentStrudelId: null,
+      currentDraftId: null,
+      latestDraft: null,
+      currentDraft: null,
+      initialLoadComplete: false,
+      skipCodeRestoration: false,
+      requestId: null,
+      currentSwitchRequestId: null,
+      payload: createMockPayload(),
+      serverCode: null,
+      defaultCode: '// default',
+      ...overrides,
+    });
+
+    describe('decideCodeAction', () => {
+      it('should skip when skipCodeRestoration is true', () => {
+        const ctx = createContext({ skipCodeRestoration: true });
+        const action = decideCodeAction(ctx);
+        expect(action.type).toBe('SKIP_CODE_UPDATE');
+      });
+
+      it('should skip on reconnect (initialLoadComplete=true)', () => {
+        const ctx = createContext({ initialLoadComplete: true });
+        const action = decideCodeAction(ctx);
+        expect(action.type).toBe('SKIP_CODE_UPDATE');
+      });
+
+      it('should allow switch_strudel response even after initial load', () => {
+        const ctx = createContext({
+          initialLoadComplete: true,
+          requestId: 'req-123',
+          currentSwitchRequestId: 'req-123',
+          serverCode: 's("bd")',
+        });
+        const action = decideCodeAction(ctx);
+        expect(action.type).toBe('USE_SERVER_CODE');
+      });
+
+      it('should restore draft for anonymous user', () => {
+        const draft: Draft = {
+          id: 'anon-draft',
+          code: 's("hh")',
+          conversationHistory: [],
+          updatedAt: Date.now(),
+        };
+        const ctx = createContext({
+          hasToken: false,
+          latestDraft: draft,
+        });
+        const action = decideCodeAction(ctx);
+        expect(action.type).toBe('RESTORE_DRAFT');
+        if (action.type === 'RESTORE_DRAFT') {
+          expect(action.draft).toEqual(draft);
+        }
+      });
+
+      it('should restore draft for auth user without strudel', () => {
+        const draft: Draft = {
+          id: 'auth-draft',
+          code: 's("cp")',
+          conversationHistory: [],
+          updatedAt: Date.now(),
+        };
+        const ctx = createContext({
+          hasToken: true,
+          currentStrudelId: null,
+          currentDraft: draft,
+        });
+        const action = decideCodeAction(ctx);
+        expect(action.type).toBe('RESTORE_DRAFT');
+      });
+
+      it('should use server code for auth user with strudel', () => {
+        const ctx = createContext({
+          hasToken: true,
+          currentStrudelId: 'strudel-123',
+          serverCode: 's("bd", "sd")',
+        });
+        const action = decideCodeAction(ctx);
+        expect(action.type).toBe('USE_SERVER_CODE');
+        expect(action.reason).toContain('strudel');
+      });
+
+      it('should use default code when no draft and no server code', () => {
+        const ctx = createContext({
+          hasToken: false,
+          latestDraft: null,
+          serverCode: null,
+          defaultCode: '// default',
+        });
+        const action = decideCodeAction(ctx);
+        expect(action.type).toBe('USE_DEFAULT_CODE');
+      });
+    });
+
+    describe('decideDraftSave - BUG FIX TESTS', () => {
+      it('should NOT save draft when restored from draft', () => {
+        const draft: Draft = {
+          id: 'restored-draft',
+          code: 's("hh")',
+          conversationHistory: [],
+          updatedAt: Date.now(),
+        };
+
+        const ctx = createContext({ latestDraft: draft });
+        const codeAction = { type: 'RESTORE_DRAFT' as const, draft, reason: 'test' };
+        const saveDecision = decideDraftSave(ctx, codeAction);
+
+        expect(saveDecision.shouldSave).toBe(false);
+        expect(saveDecision.reason).toContain('restored from draft');
+      });
+
+      it('should NOT save draft when code update skipped', () => {
+        const ctx = createContext();
+        const codeAction = { type: 'SKIP_CODE_UPDATE' as const, reason: 'reconnect' };
+        const saveDecision = decideDraftSave(ctx, codeAction);
+
+        expect(saveDecision.shouldSave).toBe(false);
+      });
+
+      it('should save draft when using server code', () => {
+        const ctx = createContext({
+          currentStrudelId: 'strudel-123',
+          serverCode: 's("bd")',
+        });
+        const codeAction = { type: 'USE_SERVER_CODE' as const, code: 's("bd")', reason: 'server' };
+        const saveDecision = decideDraftSave(ctx, codeAction);
+
+        expect(saveDecision.shouldSave).toBe(true);
+        if (saveDecision.shouldSave) {
+          expect(saveDecision.code).toBe('s("bd")');
+        }
+      });
+
+      it('should NOT save default code when draft exists (prevents overwrite bug)', () => {
+        const existingDraft: Draft = {
+          id: 'existing',
+          code: 's("hh*4")',
+          conversationHistory: [],
+          updatedAt: Date.now(),
+        };
+
+        const ctx = createContext({
+          latestDraft: existingDraft,
+          defaultCode: '// default',
+        });
+        const codeAction = { type: 'USE_DEFAULT_CODE' as const, code: '// default', reason: 'fallback' };
+        const saveDecision = decideDraftSave(ctx, codeAction);
+
+        // This is the key bug fix - don't overwrite existing draft with default code
+        expect(saveDecision.shouldSave).toBe(false);
+        expect(saveDecision.reason).toContain('not overwriting');
+      });
+
+      it('should save default code only when no draft exists', () => {
+        const ctx = createContext({
+          latestDraft: null,
+          currentDraft: null,
+          defaultCode: '// default',
+        });
+        const codeAction = { type: 'USE_DEFAULT_CODE' as const, code: '// default', reason: 'fallback' };
+        const saveDecision = decideDraftSave(ctx, codeAction);
+
+        expect(saveDecision.shouldSave).toBe(true);
+      });
+    });
+
+    describe('processSessionState - integration', () => {
+      it('should return complete decision with debug info', () => {
+        const draft: Draft = {
+          id: 'test-draft',
+          code: 's("bd")',
+          conversationHistory: [],
+          updatedAt: Date.now(),
+        };
+
+        const ctx = createContext({
+          hasToken: false,
+          latestDraft: draft,
+        });
+
+        const decision = processSessionState(ctx);
+
+        expect(decision.codeAction.type).toBe('RESTORE_DRAFT');
+        expect(decision.draftSave.shouldSave).toBe(false);
+        expect(decision.debug.timestamp).toBeDefined();
+        expect(decision.debug.context).toBeDefined();
+      });
+
+      it('should handle the race condition scenario (strudel ID set before session_state)', () => {
+        // This tests the bug: when currentStrudelId is set due to race condition,
+        // server code should be used but draft should still be preserved
+        const existingDraft: Draft = {
+          id: 'my-work',
+          code: 's("hh*8").gain(0.5)',
+          conversationHistory: [],
+          updatedAt: Date.now(),
+        };
+
+        const ctx = createContext({
+          hasToken: true,
+          currentStrudelId: 'strudel-from-api', // Race condition: set before session_state
+          latestDraft: existingDraft,
+          serverCode: 's("bd")', // Server code for the strudel
+        });
+
+        const decision = processSessionState(ctx);
+
+        // Should use server code because strudel is authoritative
+        expect(decision.codeAction.type).toBe('USE_SERVER_CODE');
+
+        // Should save the strudel code as backup
+        expect(decision.draftSave.shouldSave).toBe(true);
+
+        // The existing draft in localStorage is NOT overwritten because
+        // we save with the strudel ID, not the draft ID
+        if (decision.draftSave.shouldSave) {
+          expect(decision.draftSave.draftId).toBe('strudel-from-api');
+        }
       });
     });
   });
