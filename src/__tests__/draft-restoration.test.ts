@@ -33,6 +33,7 @@ describe('Draft Restoration Logic', () => {
     localStorage.clear();
     sessionStorage.clear();
     vi.clearAllMocks();
+    
     // reset zustand stores
     useEditorStore.getState().reset();
   });
@@ -79,7 +80,7 @@ describe('Draft Restoration Logic', () => {
 
   describe('anonymous user draft restoration', () => {
     beforeEach(() => {
-      // Clear auth token to simulate anonymous user
+      // clear auth token to simulate anonymous user
       useAuthStore.getState().clearAuth();
     });
 
@@ -184,8 +185,8 @@ describe('Draft Restoration Logic', () => {
         conversationHistory: [],
         updatedAt: Date.now(),
       };
+
       storage.setDraft(draft);
-      // no strudelId, no draftId (new tab)
 
       const latestDraft = storage.getLatestDraft();
       expect(latestDraft).not.toBeNull();
@@ -201,6 +202,7 @@ describe('Draft Restoration Logic', () => {
         conversationHistory: [],
         updatedAt: Date.now(),
       };
+
       storage.setDraft(draft);
       storage.setCurrentDraftId(draftId);
 
@@ -283,7 +285,6 @@ describe('Draft Restoration Logic', () => {
         updatedAt: Date.now(),
         title: 'Fork of Something',
       });
-      // no sessionStorage draftId (new tab)
 
       // should get via latest draft
       const latest = storage.getLatestDraft();
@@ -476,7 +477,6 @@ describe('Draft Restoration Logic', () => {
 
         expect(result).toBe(true);
         expect(pickDraftToRestore({
-          hasToken: false,
           latestDraft: localDraft,
           currentDraft: null,
         })).toEqual(localDraft);
@@ -550,7 +550,6 @@ describe('Draft Restoration Logic', () => {
         };
 
         const picked = pickDraftToRestore({
-          hasToken: true,
           latestDraft,
           currentDraft,
         });
@@ -568,7 +567,6 @@ describe('Draft Restoration Logic', () => {
         };
 
         const picked = pickDraftToRestore({
-          hasToken: true,
           latestDraft,
           currentDraft: null, // new tab, no sessionStorage
         });
@@ -643,7 +641,6 @@ describe('Draft Restoration Logic', () => {
 
         // localStorage code should be used
         const draftToUse = pickDraftToRestore({
-          hasToken: false,
           latestDraft: localDraft,
           currentDraft: null,
         });
@@ -676,7 +673,6 @@ describe('Draft Restoration Logic', () => {
         expect(shouldRestore).toBe(true);
 
         const draftToUse = pickDraftToRestore({
-          hasToken: true,
           latestDraft: localDraft,
           currentDraft: localDraft,
         });
@@ -851,9 +847,43 @@ describe('Draft Restoration Logic', () => {
 
         const action = decideCodeAction(ctx);
         expect(action.type).toBe('RESTORE_DRAFT');
-        
+
         if (action.type === 'RESTORE_DRAFT') {
           expect(action.draft).toEqual(draft);
+        }
+      });
+
+      it('should prefer currentDraft over latestDraft for anonymous user (fork bug fix)', () => {
+        // BUG FIX: anonymous user forks a strudel, then refreshes
+        // the forked draft (currentDraft) should be used, not the old default (latestDraft)
+        const oldDefaultDraft: Draft = {
+          id: 'old-default',
+          code: '// default code',
+          conversationHistory: [],
+          updatedAt: Date.now() + 1000, // newer timestamp but wrong draft
+        };
+
+        const forkedDraft: Draft = {
+          id: 'forked-draft',
+          code: 's("bd", "sd").fast(2)', // forked code
+          conversationHistory: [],
+          updatedAt: Date.now(), // older timestamp but correct draft
+        };
+
+        const ctx = createContext({
+          hasToken: false,
+          latestDraft: oldDefaultDraft, // would incorrectly restore this before fix
+          currentDraft: forkedDraft, // should restore this
+        });
+
+        const action = decideCodeAction(ctx);
+        expect(action.type).toBe('RESTORE_DRAFT');
+
+        if (action.type === 'RESTORE_DRAFT') {
+          // should use currentDraft (forked), not latestDraft (old default)
+          expect(action.draft).toEqual(forkedDraft);
+          expect(action.draft.code).toBe('s("bd", "sd").fast(2)');
+          expect(action.reason).toContain('currentDraft');
         }
       });
 
@@ -1036,10 +1066,10 @@ describe('Draft Restoration Logic', () => {
           hasToken: false, // anonymous joiner
           latestDraft: userDraft,
           serverCode: 's("bd", "sd").fast(2)', // host's code
-          // @ts-expect-error - mock payload with participants
           payload: {
             code: 's("bd", "sd").fast(2)',
             your_role: 'viewer',
+            // @ts-expect-error - mock payload with participants
             participants: [{ id: 'host-123', display_name: 'Host', role: 'host' }],
             conversation_history: [],
             chat_history: [],
@@ -1048,7 +1078,7 @@ describe('Draft Restoration Logic', () => {
 
         const action = decideCodeAction(ctx);
 
-        // Should use server code, NOT restore from draft
+        // should use server code, NOT restore from draft
         expect(action.type).toBe('USE_SERVER_CODE');
         expect(action.reason).toContain('live session');
         expect(action.reason).toContain('1 participant');
@@ -1066,12 +1096,13 @@ describe('Draft Restoration Logic', () => {
           hasToken: true, // authenticated host
           latestDraft: hostDraft,
           serverCode: 's("current live code")',
-          // @ts-expect-error - mock payload with participants
           payload: {
             code: 's("current live code")',
             your_role: 'host',
             participants: [
+              // @ts-expect-error - mock payload with participants
               { id: 'viewer-1', display_name: 'Viewer 1', role: 'viewer' },
+              // @ts-expect-error - mock payload with participants
               { id: 'viewer-2', display_name: 'Viewer 2', role: 'viewer' },
             ],
             conversation_history: [],
@@ -1098,7 +1129,6 @@ describe('Draft Restoration Logic', () => {
           hasToken: false,
           latestDraft: soloDraft,
           serverCode: 's("bd")', // some server code
-          // @ts-expect-error - mock payload with no participants
           payload: {
             code: 's("bd")',
             your_role: 'host',
@@ -1118,10 +1148,10 @@ describe('Draft Restoration Logic', () => {
       it('should include live session info in debug context', () => {
         const ctx = createContext({
           serverCode: 's("bd")',
-          // @ts-expect-error - mock payload
           payload: {
             code: 's("bd")',
             your_role: 'viewer',
+            // @ts-expect-error - mock payload
             participants: [{ id: 'host', display_name: 'Host', role: 'host' }],
             conversation_history: [],
             chat_history: [],
@@ -1130,8 +1160,9 @@ describe('Draft Restoration Logic', () => {
 
         const decision = processSessionState(ctx);
 
-        expect(decision.debug.context.isLiveSession).toBe(true);
-        expect(decision.debug.context.participantCount).toBe(1);
+        // @ts-expect-error - mock
+        expect(decision.debug.context.isLiveSession).toBe(true); // @ts-expect-error - mock
+        expect(decision.debug.context.participantCount).toBe(1); // @ts-expect-error - mock 
         expect(decision.debug.context.yourRole).toBe('viewer');
       });
     });

@@ -27,10 +27,15 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
   return useMutation({
     mutationFn: async (query: string) => {
       // build request
+      // for saved strudels: server loads history from DB (strudel_messages table)
+      // for drafts: pass history from local store
+      const isSavedStrudel = !!currentStrudelId;
+
       const request: GenerateRequest = {
         user_query: query,
         editor_state: code,
-        conversation_history: conversationHistory,
+        // only pass conversation_history for drafts - saved strudels use server-side history
+        ...(!isSavedStrudel && { conversation_history: conversationHistory }),
         ...(options.provider && { provider: options.provider }),
         ...(options.providerApiKey && { provider_api_key: options.providerApiKey }),
         ...(currentStrudelId && { strudel_id: currentStrudelId }),

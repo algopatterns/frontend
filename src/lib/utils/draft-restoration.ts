@@ -38,22 +38,15 @@ export function shouldRestoreFromDraft(ctx: DraftRestorationContext): boolean {
 /**
  * Picks the appropriate draft to restore.
  *
- * Priority:
- * - Anonymous users: always use latestDraft (shared across tabs)
- * - Auth users: prefer currentDraft (same tab) over latestDraft (cross-tab)
+ * Priority for all users: prefer currentDraft (same tab) over latestDraft (cross-tab).
+ * This ensures forked drafts are restored correctly on refresh.
  */
 export function pickDraftToRestore(ctx: {
-  hasToken: boolean;
   latestDraft: Draft | null;
   currentDraft: Draft | null;
 }): Draft | null {
-  const { hasToken, latestDraft, currentDraft } = ctx;
+  const { latestDraft, currentDraft } = ctx;
 
-  // anonymous users get latest draft (no tab-specific tracking)
-  if (!hasToken) {
-    return latestDraft;
-  }
-
-  // auth users: prefer current tab's draft, fallback to latest
+  // prefer current tab's draft, fallback to latest
   return currentDraft || latestDraft;
 }

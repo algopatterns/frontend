@@ -102,9 +102,12 @@ export function decideCodeAction(ctx: SessionStateContext): SessionStateAction {
     };
   }
 
-  // 3. live session detection - server is single source of truth when there are participants
+  // 3. live session detection - server is single source of truth when collaborating
   // this prevents localStorage from interfering with collaborative sessions
-  const isLiveSession = payload.participants && payload.participants.length > 0;
+  // a session is "live" if: you're not the host (joined someone's session) OR there are other participants
+  const isLiveSession =
+    payload.your_role !== 'host' ||
+    (payload.participants && payload.participants.length > 1);
 
   if (isLiveSession) {
     // in live sessions, always use server code - it's authoritative
@@ -126,12 +129,16 @@ export function decideCodeAction(ctx: SessionStateContext): SessionStateAction {
   // from here on, we know it's a solo session (no other participants)
 
   // 4. solo anonymous user with draft → restore from draft
-  if (!hasToken && latestDraft) {
-    return {
-      type: 'RESTORE_DRAFT',
-      draft: latestDraft,
-      reason: 'solo anonymous user with localStorage draft'
-    };
+  // prefer currentDraft (same tab) over latestDraft (cross-tab) to handle forks correctly
+  if (!hasToken) {
+    const draftToRestore = currentDraft || latestDraft;
+    if (draftToRestore) {
+      return {
+        type: 'RESTORE_DRAFT',
+        draft: draftToRestore,
+        reason: `solo anonymous user with draft (${currentDraft ? 'currentDraft' : 'latestDraft'})`
+      };
+    }
   }
 
   // 5. solo auth user without strudel, with draft → restore from draft
