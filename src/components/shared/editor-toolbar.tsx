@@ -42,23 +42,23 @@ export function EditorToolbar({
       <div className="flex items-center gap-1">
         <Button
           size="sm"
-          variant={isPlaying ? 'secondary' : 'default'}
-          onClick={onPlay}
-          disabled={!isInitialized || isViewer}
-          className="rounded-none"
-          title={isViewer ? 'Only hosts can control playback' : 'Play (Ctrl+Enter)'}>
-          <Play className="h-3.5 w-3.5 mr-1" />
-          Play
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={onStop}
-          disabled={!isPlaying || isViewer}
-          className="rounded-none"
-          title={isViewer ? 'Only hosts can control playback' : 'Stop (Ctrl+.)'}>
-          <Square className="h-3.5 w-3.5 mr-1" />
-          Stop
+          variant={isPlaying ? 'outline' : 'default'}
+          onClick={isPlaying ? onStop : onPlay}
+          disabled={isViewer || (!isInitialized && !isPlaying)}
+          className="rounded-none min-w-20"
+          title={
+            isViewer
+              ? 'Only hosts can control playback'
+              : isPlaying
+              ? 'Stop (Ctrl+.)'
+              : 'Play (Ctrl+Enter)'
+          }>
+          {isPlaying ? (
+            <Square className="h-3 w-3" />
+          ) : (
+            <Play className="h-3 w-3" />
+          )}
+          {isPlaying ? 'Stop' : 'Play'}
         </Button>
       </div>
 
@@ -142,10 +142,22 @@ function ConnectionIndicator({
   status: 'connected' | 'connecting' | 'disconnected' | 'reconnecting';
 }) {
   const statusConfig = {
-    connected: { icon: <Activity className="h-3.5 w-3.5" />, className: 'text-muted-foreground' },
-    connecting: { icon: <Activity className="h-3.5 w-3.5 animate-pulse" />, className: 'text-yellow-500' },
-    reconnecting: { icon: <Activity className="h-3.5 w-3.5 animate-pulse" />, className: 'text-yellow-500' },
-    disconnected: { icon: <Activity className="h-3.5 w-3.5" />, className: 'text-red-500' },
+    connected: {
+      icon: <Activity className="h-3.5 w-3.5" />,
+      className: 'text-muted-foreground',
+    },
+    connecting: {
+      icon: <Activity className="h-3.5 w-3.5 animate-pulse" />,
+      className: 'text-yellow-500',
+    },
+    reconnecting: {
+      icon: <Activity className="h-3.5 w-3.5 animate-pulse" />,
+      className: 'text-yellow-500',
+    },
+    disconnected: {
+      icon: <Activity className="h-3.5 w-3.5" />,
+      className: 'text-red-500',
+    },
   };
 
   const { icon, className } = statusConfig[status];
