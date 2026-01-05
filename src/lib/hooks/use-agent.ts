@@ -3,7 +3,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { agentApi } from '@/lib/api/agent';
 import { useEditorStore } from '@/lib/stores/editor';
-import { useWebSocketStore } from '@/lib/stores/websocket';
 import { storage } from '@/lib/utils/storage';
 import type { GenerateRequest, GenerateResponse } from '@/lib/api/agent/types';
 
@@ -22,11 +21,8 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
     addToHistory,
   } = useEditorStore();
 
-  const { addMessage } = useWebSocketStore();
-
   return useMutation({
     mutationFn: async (query: string) => {
-      // build request
       // for saved strudels: server loads history from DB (strudel_messages table)
       // for drafts: pass history from local store
       const isSavedStrudel = !!currentStrudelId;
@@ -35,7 +31,12 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
         user_query: query,
         editor_state: code,
         // only pass conversation_history for drafts - saved strudels use server-side history
-        ...(!isSavedStrudel && { conversation_history: conversationHistory }),
+        ...(!isSavedStrudel && {
+          conversation_history: conversationHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+        }),
         ...(options.provider && { provider: options.provider }),
         ...(options.providerApiKey && { provider_api_key: options.providerApiKey }),
         ...(currentStrudelId && { strudel_id: currentStrudelId }),
@@ -48,54 +49,51 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
       setAIGenerating(true);
 
       // add user message to conversation history
-      addToHistory('user', query);
-
-      // add user message to chat UI
-      addMessage({
+      addToHistory({
         id: crypto.randomUUID(),
-        type: 'user',
+        role: 'user',
         content: query,
-        isAIRequest: true,
-        timestamp: new Date().toISOString(),
+        created_at: new Date().toISOString(),
       });
 
-      // save draft with updated conversation
       saveDraft();
     },
 
     onSuccess: (response: GenerateResponse) => {
       setAIGenerating(false);
 
-      // if response has code and is a code response, update editor
+      // update editor if code response
       if (response.code && response.is_code_response) {
         setCode(response.code, false);
-        addToHistory('assistant', response.code);
       }
 
-      // add assistant message to chat UI
-      addMessage({
-        id: crypto.randomUUID(),
-        type: 'assistant',
-        content: response.code || '',
-        isCodeResponse: response.is_code_response,
-        isActionable: response.is_actionable,
-        clarifyingQuestions: response.clarifying_questions,
-        timestamp: new Date().toISOString(),
-      });
+      // add assistant response to conversation history
+      const hasContent = response.code || response.clarifying_questions?.length;
+      if (hasContent) {
+        addToHistory({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: response.code || '',
+          is_actionable: response.is_actionable,
+          is_code_response: response.is_code_response,
+          clarifying_questions: response.clarifying_questions,
+          created_at: new Date().toISOString(),
+        });
+      }
 
-      // save draft with updated conversation
       saveDraft();
     },
 
     onError: (error: Error) => {
       setAIGenerating(false);
 
-      // add error message to chat UI
-      addMessage({
+      // add error message to conversation history
+      addToHistory({
         id: crypto.randomUUID(),
-        type: 'system',
-        content: `AI error: ${error.message}`,
-        timestamp: new Date().toISOString(),
+        role: 'assistant',
+        content: `Error: ${error.message}`,
+        is_code_response: false,
+        created_at: new Date().toISOString(),
       });
     },
   });

@@ -98,22 +98,24 @@ export const useEditor = ({
   const forkedStrudelIdRef = useRef<string | null>(null);
   const previousStrudelIdRef = useRef<string | null | undefined>(undefined);
 
-  // track strudel navigation for ref updates
+  // clear conversation when strudel changes to prevent bleed between strudels
   useEffect(() => {
     const currentId = strudelId || null;
     const previousId = previousStrudelIdRef.current;
 
-    // first render initialization
+    // first render - just initialize ref
     if (previousId === undefined) {
       previousStrudelIdRef.current = currentId;
       return;
     }
 
-    // update ref when strudel ID changes
+    // strudel changed - clear conversation immediately
+    // loading effect will set new conversation when data arrives
     if (currentId !== previousId) {
       previousStrudelIdRef.current = currentId;
+      setConversationHistory([]);
     }
-  }, [strudelId]);
+  }, [strudelId, setConversationHistory]);
 
   // restore strudel from localStorage if navigating back to editor without URL param
   useEffect(() => {
@@ -182,12 +184,7 @@ export const useEditor = ({
 
       // set code and conversation history from strudel
       setCode(ownStrudel.code, true);
-      setConversationHistory(
-        ownStrudel.conversation_history?.map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        })) || []
-      );
+      setConversationHistory(ownStrudel.conversation_history || []);
 
       // set strudel metadata
       setCurrentStrudel(ownStrudel.id, ownStrudel.title);

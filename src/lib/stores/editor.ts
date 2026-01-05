@@ -1,21 +1,22 @@
 import { create } from 'zustand';
 import { storage } from '@/lib/utils/storage';
 import { EDITOR } from '@/lib/constants';
+import type { AgentMessage } from '@/lib/api/strudels/types';
 
 // debounce draft saves to avoid excessive writes
 let draftSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 const DRAFT_SAVE_DEBOUNCE_MS = 1000;
 
-/**
- * loads initial code from localStorage draft (sync, for immediate display).
- * falls back to default code if no draft exists.
- *
- * this is a visual optimization - the state machine will still make the
- * authoritative decision when session_state arrives from the server.
- */
-function getInitialCodeFromDraft(): { code: string; draftId: string | null } {
+type InitialDraftState = {
+  code: string;
+  draftId: string | null;
+  conversationHistory: AgentMessage[];
+};
+
+// loads initial state from localStorage draft (sync, for immediate display)
+function getInitialStateFromDraft(): InitialDraftState {
   if (typeof window === 'undefined') {
-    return { code: EDITOR.DEFAULT_CODE, draftId: null };
+    return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [] };
   }
 
   // try current tab's draft first (sessionStorage has draft ID)
@@ -23,20 +24,28 @@ function getInitialCodeFromDraft(): { code: string; draftId: string | null } {
   if (currentDraftId) {
     const currentDraft = storage.getDraft(currentDraftId);
     if (currentDraft) {
-      return { code: currentDraft.code, draftId: currentDraftId };
+      return {
+        code: currentDraft.code,
+        draftId: currentDraftId,
+        conversationHistory: currentDraft.conversationHistory || [],
+      };
     }
   }
 
   // fallback to latest draft (cross-tab, anonymous users)
   const latestDraft = storage.getLatestDraft();
   if (latestDraft) {
-    return { code: latestDraft.code, draftId: latestDraft.id };
+    return {
+      code: latestDraft.code,
+      draftId: latestDraft.id,
+      conversationHistory: latestDraft.conversationHistory || [],
+    };
   }
 
-  return { code: EDITOR.DEFAULT_CODE, draftId: null };
+  return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [] };
 }
 
-const initialDraft = getInitialCodeFromDraft();
+const initialDraft = getInitialStateFromDraft();
 
 interface EditorState {
   code: string;
@@ -46,7 +55,7 @@ interface EditorState {
   lastSyncedCode: string;
   lastSavedCode: string;
   isAIGenerating: boolean;
-  conversationHistory: Array<{ role: string; content: string }>;
+  conversationHistory: AgentMessage[];
   currentStrudelId: string | null;
   currentStrudelTitle: string | null;
   currentDraftId: string | null;
@@ -58,8 +67,8 @@ interface EditorState {
   markSaved: () => void;
   setCurrentStrudel: (id: string | null, title: string | null) => void;
   setCurrentDraftId: (id: string | null) => void;
-  addToHistory: (role: string, content: string) => void;
-  setConversationHistory: (history: Array<{ role: string; content: string }>) => void;
+  addToHistory: (message: AgentMessage) => void;
+  setConversationHistory: (history: AgentMessage[]) => void;
   clearHistory: () => void;
   reset: () => void;
 }
@@ -72,7 +81,7 @@ const initialState = {
   lastSyncedCode: initialDraft.code,
   lastSavedCode: initialDraft.code,
   isAIGenerating: false,
-  conversationHistory: [] as Array<{ role: string; content: string }>,
+  conversationHistory: initialDraft.conversationHistory,
   currentStrudelId: null as string | null,
   currentStrudelTitle: null as string | null,
   currentDraftId: initialDraft.draftId,
@@ -161,12 +170,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return result;
   },
 
-  addToHistory: (role, content) => {
+  addToHistory: (message: AgentMessage) => {
     const result = set(state => ({
-      conversationHistory: [...state.conversationHistory, { role, content }],
+      conversationHistory: [...state.conversationHistory, message],
     }));
 
-    // save draft to localStorage when conversation updates (backup for all users)
+    // save draft to localStorage when conversation updates
     const { currentDraftId, currentStrudelId, code, conversationHistory } = get();
     const draftId = currentStrudelId || currentDraftId;
     if (draftId) {

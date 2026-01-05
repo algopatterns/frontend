@@ -52,20 +52,10 @@ export interface SessionStateChatMessage {
   timestamp: number;
 }
 
-export interface ConversationHistoryMessage {
-  id: string;
-  role: string;
-  content: string;
-  timestamp: number;
-  is_code_response: boolean;
-  display_name?: string;
-}
-
 export interface SessionStatePayload {
   code: string;
   your_role: SessionRole;
   chat_history?: SessionStateChatMessage[];
-  conversation_history?: ConversationHistoryMessage[];
   participants: Array<{
     user_id: string;
     display_name: string;

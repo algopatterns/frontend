@@ -20,10 +20,15 @@ export interface TagsResponse {
   tags: string[];
 }
 
-// agent message for conversation history
+// agent message for conversation history (full metadata from strudel_messages)
 export interface AgentMessage {
+  id?: string;
   role: "user" | "assistant";
   content: string;
+  is_actionable?: boolean;
+  is_code_response?: boolean;
+  clarifying_questions?: string[];
+  created_at?: string;
 }
 
 // strudel entity

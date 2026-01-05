@@ -259,7 +259,7 @@ class AlgoraveWebSocket {
       clearMessages,
     } = useWebSocketStore.getState();
     
-    const { setCode, setConversationHistory, currentStrudelId, currentDraftId, setCurrentDraftId } = useEditorStore.getState();
+    const { setCode, currentStrudelId, currentDraftId, setCurrentDraftId } = useEditorStore.getState();
 
     switch (message.type) {
       case "session_state": {
@@ -298,28 +298,6 @@ class AlgoraveWebSocket {
                   msg.timestamp < 1e12 ? msg.timestamp * 1000 : msg.timestamp
                 ).toISOString();
               })(),
-            });
-          }
-        }
-
-        // restore conversation history (for AI context and UI display)
-        if (payload.conversation_history?.length) {
-          setConversationHistory(payload.conversation_history);
-
-          // sort by timestamp and add to messages for UI display
-          const sortedHistory = [...payload.conversation_history].sort(
-            (a, b) => a.timestamp - b.timestamp
-          );
-
-          for (const msg of sortedHistory) {
-            addMessage({
-              id: msg.id,
-              type: msg.role === "assistant" ? "assistant" : "user",
-              content: msg.content,
-              displayName: msg.display_name,
-              isAIRequest: msg.role === "user",
-              isCodeResponse: msg.is_code_response,
-              timestamp: new Date(msg.timestamp).toISOString(),
             });
           }
         }
@@ -366,32 +344,14 @@ class AlgoraveWebSocket {
             const draft = decision.codeAction.draft;
             setCode(draft.code, true);
             setCurrentDraftId(draft.id);
-            if (draft.conversationHistory?.length) {
-              setConversationHistory(draft.conversationHistory.map((msg, i) => ({
-                id: `restored-${i}`,
-                role: msg.role,
-                content: msg.content,
-                timestamp: draft.updatedAt,
-                is_code_response: msg.role === 'assistant',
-              })));
-            }
-            // sync restored draft to server
+            // conversation history loaded separately via editor store initial state
             this.sendCodeUpdate(draft.code);
             break;
           }
 
           case 'USE_SERVER_CODE': {
             setCode(decision.codeAction.code, true);
-            // restore conversation history from server
-            if (payload.conversation_history?.length) {
-              setConversationHistory(payload.conversation_history.map((msg, i) => ({
-                id: `server-${i}`,
-                role: msg.role,
-                content: msg.content,
-                timestamp: Date.now(),
-                is_code_response: msg.role === 'assistant',
-              })));
-            }
+            // conversation history is loaded from REST API when loading strudels
             break;
           }
 
@@ -416,13 +376,12 @@ class AlgoraveWebSocket {
             setCurrentDraftId(draftId);
           }
 
+          // preserve existing conversation history if draft exists
+          const existingDraft = storage.getDraft(draftId);
           storage.setDraft({
             id: draftId,
             code,
-            conversationHistory: payload.conversation_history?.map(msg => ({
-              role: msg.role,
-              content: msg.content,
-            })) || [],
+            conversationHistory: existingDraft?.conversationHistory || [],
             updatedAt: Date.now(),
           });
         }
@@ -652,21 +611,13 @@ class AlgoraveWebSocket {
    * Used as fallback so user isn't blocked from working.
    */
   private restoreFromLocalStorage() {
-    const { setCode, setCurrentDraftId, setConversationHistory } = useEditorStore.getState();
+    const { setCode, setCurrentDraftId } = useEditorStore.getState();
     const latestDraft = storage.getLatestDraft();
 
     if (latestDraft) {
       setCode(latestDraft.code, true);
       setCurrentDraftId(latestDraft.id);
-      if (latestDraft.conversationHistory?.length) {
-        setConversationHistory(latestDraft.conversationHistory.map((msg, i) => ({
-          id: `restored-${i}`,
-          role: msg.role,
-          content: msg.content,
-          timestamp: latestDraft.updatedAt,
-          is_code_response: msg.role === 'assistant',
-        })));
-      }
+      // conversation history already loaded via editor store initial state
     }
   }
 

@@ -357,12 +357,12 @@ describe('Draft Restoration Logic', () => {
 
       expect(conversationHistory).toEqual([]);
 
-      addToHistory('user', 'make it faster');
+      addToHistory({ role: 'user', content: 'make it faster' });
       expect(useEditorStore.getState().conversationHistory).toEqual([
         { role: 'user', content: 'make it faster' },
       ]);
 
-      addToHistory('assistant', 's("bd").fast(2)');
+      addToHistory({ role: 'assistant', content: 's("bd").fast(2)' });
       expect(useEditorStore.getState().conversationHistory).toHaveLength(2);
 
       clearHistory();
@@ -377,7 +377,7 @@ describe('Draft Restoration Logic', () => {
       setCode('test code', false);
       setCurrentStrudel('strudel-1', 'Test');
       setCurrentDraftId('draft-1');
-      addToHistory('user', 'test');
+      addToHistory({ role: 'user', content: 'test' });
 
       // reset should clear everything back to initial state
       // (initial state now includes default code from localStorage check)
@@ -784,8 +784,7 @@ describe('Draft Restoration Logic', () => {
       code: code ?? '',
       your_role: 'host', 
       participants: [],
-      conversation_history: [],
-      chat_history: [],
+            chat_history: [],
       request_id: undefined,
     });
 
@@ -1060,8 +1059,7 @@ describe('Draft Restoration Logic', () => {
             your_role: 'viewer',
             // @ts-expect-error - mock payload with participants
             participants: [{ id: 'host-123', display_name: 'Host', role: 'host' }],
-            conversation_history: [],
-            chat_history: [],
+                        chat_history: [],
           },
         });
 
@@ -1094,8 +1092,7 @@ describe('Draft Restoration Logic', () => {
               // @ts-expect-error - mock payload with participants
               { id: 'viewer-2', display_name: 'Viewer 2', role: 'viewer' },
             ],
-            conversation_history: [],
-            chat_history: [],
+                        chat_history: [],
           },
         });
 
@@ -1122,8 +1119,7 @@ describe('Draft Restoration Logic', () => {
             code: 's("bd")',
             your_role: 'host',
             participants: [], // empty = solo session
-            conversation_history: [],
-            chat_history: [],
+                        chat_history: [],
           },
         });
 
@@ -1142,8 +1138,7 @@ describe('Draft Restoration Logic', () => {
             your_role: 'viewer',
             // @ts-expect-error - mock payload
             participants: [{ id: 'host', display_name: 'Host', role: 'host' }],
-            conversation_history: [],
-            chat_history: [],
+                        chat_history: [],
           },
         });
 

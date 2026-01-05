@@ -3,9 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useEditorStore } from '@/lib/stores/editor';
-import { useWebSocketStore } from '@/lib/stores/websocket';
 import { ArrowUp, Loader2, X, ChevronUp, ChevronDown } from 'lucide-react';
-import { ChatMessage } from './chat-message';
+import { AIMessage } from './ai-message';
 
 interface AIInputProps {
   onSendAIRequest: (query: string) => void;
@@ -15,21 +14,15 @@ interface AIInputProps {
 export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const { isAIGenerating } = useEditorStore();
-  const { messages } = useWebSocketStore();
+  const { isAIGenerating, conversationHistory } = useEditorStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // filter to only AI messages
-  const aiMessages = messages.filter(
-    msg => msg.type === 'assistant' || (msg.type === 'user' && msg.isAIRequest)
-  );
 
   // auto-scroll when expanded and new messages arrive
   useEffect(() => {
     if (isExpanded) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [aiMessages, isExpanded]);
+  }, [conversationHistory, isExpanded]);
 
   const handleSend = () => {
     if (!input.trim() || disabled || isAIGenerating) return;
@@ -47,7 +40,7 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
 
   return (
     <div className="border-t bg-background min-h-footer">
-      {isExpanded && aiMessages.length > 0 && (
+      {isExpanded && conversationHistory.length > 0 && (
         <div className="border-b">
           <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
             <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
@@ -69,8 +62,8 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
             </Button>
           </div>
           <div className="max-h-96 overflow-y-auto p-3 space-y-2">
-            {aiMessages.map(msg => (
-              <ChatMessage key={msg.id} message={msg} compact />
+            {conversationHistory.map(msg => (
+              <AIMessage key={msg.id || msg.created_at} message={msg} />
             ))}
             <div ref={messagesEndRef} />
           </div>
@@ -88,7 +81,7 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
             disabled={disabled || isAIGenerating}
             className="flex-1 bg-transparent text-sm focus:outline-none disabled:opacity-50"
           />
-          {aiMessages.length > 0 && (
+          {conversationHistory.length > 0 && (
             <button
               type="button"
               className="text-muted-foreground hover:text-foreground transition-colors shrink-0"

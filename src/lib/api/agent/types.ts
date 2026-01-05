@@ -6,7 +6,7 @@ export interface Message {
 export interface GenerateRequest {
   user_query: string;
   editor_state: string;
-  conversation_history: Message[];
+  conversation_history?: Message[];
   provider?: 'anthropic' | 'openai';
   provider_api_key?: string;
   strudel_id?: string;

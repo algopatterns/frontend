@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from '@/lib/constants';
+import type { AgentMessage } from '@/lib/api/strudels/types';
 
 const DRAFT_PREFIX = 'algorave_draft_';
 const CURRENT_DRAFT_ID_KEY = 'algorave_current_draft_id';
@@ -6,7 +7,7 @@ const CURRENT_DRAFT_ID_KEY = 'algorave_current_draft_id';
 export interface Draft {
   id: string;
   code: string;
-  conversationHistory: Array<{ role: string; content: string }>;
+  conversationHistory: AgentMessage[];
   updatedAt: number;
   title?: string;
 }
