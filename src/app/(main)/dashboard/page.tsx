@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { AuthGuard } from '@/components/shared/auth-guard';
 import { StrudelFormDialog } from '@/components/shared/strudel-form-dialog';
 import { useDashboard } from './hooks';
-import { Settings, Pencil, Loader2 } from 'lucide-react';
+import { Settings, Pencil, Loader2, Sparkles } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useUIStore } from '@/lib/stores/ui';
@@ -109,17 +109,21 @@ function DashboardContent() {
                       {strudel.code.length > 100 && '...'}
                     </pre>
 
-                    {strudel.tags?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {strudel.tags.slice(0, 3).map(tag => (
-                          <span
-                            key={tag}
-                            className="text-xs bg-secondary px-2 py-0.5 rounded">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {strudel.ai_contribution_score > 0.3 && (
+                        <span className="text-xs bg-violet-500/15 text-violet-400 px-2 py-0.5 rounded flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" />
+                          AI Assisted ({Math.round(strudel.ai_contribution_score * 100)}%)
+                        </span>
+                      )}
+                      {strudel.tags?.slice(0, 3).map(tag => (
+                        <span
+                          key={tag}
+                          className="text-xs bg-secondary px-2 py-0.5 rounded">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               ))}

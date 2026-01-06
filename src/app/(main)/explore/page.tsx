@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useInfinitePublicStrudels, usePublicTags } from "@/lib/hooks/use-strudels";
-import { Eye, GitFork, Loader2, Search, Filter, X } from "lucide-react";
+import { Eye, GitFork, Loader2, Search, Filter, X, Sparkles } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useEditorStore } from "@/lib/stores/editor";
 import { useUIStore } from "@/lib/stores/ui";
@@ -237,18 +237,22 @@ export default function ExplorePage() {
                     {strudel.code.slice(0, 100)}
                     {strudel.code.length > 100 && "..."}
                   </pre>
-                  {strudel.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {strudel.tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-xs bg-secondary px-2 py-0.5 rounded"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-1">
+                    {strudel.ai_contribution_score > 0.3 && (
+                      <span className="text-xs bg-violet-500/15 text-violet-400 px-2 py-0.5 rounded flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        AI Assisted ({Math.round(strudel.ai_contribution_score * 100)}%)
+                      </span>
+                    )}
+                    {strudel.tags?.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs bg-secondary px-2 py-0.5 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             ))}

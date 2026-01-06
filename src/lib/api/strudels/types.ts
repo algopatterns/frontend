@@ -41,6 +41,8 @@ export interface Strudel {
   tags: string[];
   categories: string[];
   is_public: boolean;
+  allow_training: boolean;
+  ai_contribution_score: number;
   conversation_history: AgentMessage[];
   created_at: string;
   updated_at: string;
@@ -54,6 +56,7 @@ export interface CreateStrudelRequest {
   tags?: string[];
   categories?: string[];
   is_public?: boolean;
+  allow_training?: boolean;
   conversation_history?: AgentMessage[];
 }
 
@@ -64,6 +67,7 @@ export interface UpdateStrudelRequest {
   tags?: string[];
   categories?: string[];
   is_public?: boolean;
+  allow_training?: boolean;
   conversation_history?: AgentMessage[];
 }
 

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -9,23 +9,24 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { useCreateStrudel, useUpdateStrudel } from "@/lib/hooks/use-strudels";
-import { useEditorStore } from "@/lib/stores/editor";
-import { useUIStore } from "@/lib/stores/ui";
-import { storage } from "@/lib/utils/storage";
-import type { Strudel } from "@/lib/api/strudels/types";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { useCreateStrudel, useUpdateStrudel } from '@/lib/hooks/use-strudels';
+import { useEditorStore } from '@/lib/stores/editor';
+import { useUIStore } from '@/lib/stores/ui';
+import { storage } from '@/lib/utils/storage';
+import type { Strudel } from '@/lib/api/strudels/types';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface StrudelFormDialogProps {
   strudel?: Strudel | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
 }
 
 // inner form component that remounts when key changes to reset state
@@ -35,29 +36,52 @@ function StrudelForm({
   onClose,
 }: {
   strudel?: Strudel | null;
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
   onClose: () => void;
 }) {
   const router = useRouter();
   const createStrudel = useCreateStrudel();
   const updateStrudel = useUpdateStrudel();
-  const { code, conversationHistory, currentDraftId, setCurrentStrudel, setCurrentDraftId, markSaved } = useEditorStore();
-  const { pendingForkId, setPendingForkId, pendingOpenStrudelId, setPendingOpenStrudelId } = useUIStore();
+  const {
+    code,
+    conversationHistory,
+    currentDraftId,
+    setCurrentStrudel,
+    setCurrentDraftId,
+    markSaved,
+  } = useEditorStore();
+  const {
+    pendingForkId,
+    setPendingForkId,
+    pendingOpenStrudelId,
+    setPendingOpenStrudelId,
+  } = useUIStore();
 
   // initialize state from props (only runs on mount due to key pattern)
-  const [title, setTitle] = useState(mode === "edit" && strudel ? strudel.title : "");
-  const [description, setDescription] = useState(mode === "edit" && strudel ? strudel.description || "" : "");
-  const [tags, setTags] = useState(mode === "edit" && strudel ? strudel.tags?.join(", ") || "" : "");
-  const [categories, setCategories] = useState(mode === "edit" && strudel ? strudel.categories?.join(", ") || "" : "");
-  const [isPublic, setIsPublic] = useState(mode === "edit" && strudel ? strudel.is_public : false);
-  const [error, setError] = useState("");
+  const [title, setTitle] = useState(mode === 'edit' && strudel ? strudel.title : '');
+  const [description, setDescription] = useState(
+    mode === 'edit' && strudel ? strudel.description || '' : ''
+  );
+  const [tags, setTags] = useState(
+    mode === 'edit' && strudel ? strudel.tags?.join(', ') || '' : ''
+  );
+  const [categories, setCategories] = useState(
+    mode === 'edit' && strudel ? strudel.categories?.join(', ') || '' : ''
+  );
+  const [isPublic, setIsPublic] = useState(
+    mode === 'edit' && strudel ? strudel.is_public : false
+  );
+  const [allowTraining, setAllowTraining] = useState(
+    mode === 'edit' && strudel ? strudel.allow_training : false
+  );
+  const [error, setError] = useState('');
 
-  const isCreate = mode === "create";
+  const isCreate = mode === 'create';
   const isPending = isCreate ? createStrudel.isPending : updateStrudel.isPending;
 
   const handleSave = async () => {
     if (!title.trim()) {
-      setError("Please enter a title");
+      setError('Please enter a title');
       return;
     }
 
@@ -65,14 +89,15 @@ function StrudelForm({
       title: title.trim(),
       description: description.trim() || undefined,
       tags: tags
-        .split(",")
-        .map((t) => t.trim())
+        .split(',')
+        .map(t => t.trim())
         .filter(Boolean),
       categories: categories
-        .split(",")
-        .map((c) => c.trim())
+        .split(',')
+        .map(c => c.trim())
         .filter(Boolean),
       is_public: isPublic,
+      allow_training: isPublic && allowTraining,
     };
 
     try {
@@ -80,8 +105,8 @@ function StrudelForm({
         const newStrudel = await createStrudel.mutateAsync({
           ...formData,
           code,
-          conversation_history: conversationHistory.map((h) => ({
-            role: h.role as "user" | "assistant",
+          conversation_history: conversationHistory.map(h => ({
+            role: h.role as 'user' | 'assistant',
             content: h.content,
           })),
         });
@@ -114,19 +139,19 @@ function StrudelForm({
 
       onClose();
     } catch (err) {
-      setError(`Failed to ${isCreate ? "save" : "update"} strudel. Please try again.`);
-      console.error(`Failed to ${isCreate ? "save" : "update"} strudel:`, err);
+      setError(`Failed to ${isCreate ? 'save' : 'update'} strudel. Please try again.`);
+      console.error(`Failed to ${isCreate ? 'save' : 'update'} strudel:`, err);
     }
   };
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{isCreate ? "Save Strudel" : "Strudel Settings"}</DialogTitle>
+        <DialogTitle>{isCreate ? 'Save Strudel' : 'Strudel Settings'}</DialogTitle>
         <DialogDescription>
           {isCreate
-            ? "Save your strudel to your library."
-            : "Update your strudel details and visibility."}
+            ? 'Save your strudel to your library.'
+            : 'Update your strudel details and visibility.'}
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-4 py-4">
@@ -136,9 +161,9 @@ function StrudelForm({
             id="strudel-title"
             placeholder="My awesome strudel"
             value={title}
-            onChange={(e) => {
+            onChange={e => {
               setTitle(e.target.value);
-              setError("");
+              setError('');
             }}
             autoFocus
           />
@@ -150,7 +175,7 @@ function StrudelForm({
             id="strudel-description"
             placeholder="A brief description of your strudel..."
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={e => setDescription(e.target.value)}
             rows={3}
           />
         </div>
@@ -161,7 +186,7 @@ function StrudelForm({
             id="strudel-tags"
             placeholder="ambient, chill, beats (comma separated)"
             value={tags}
-            onChange={(e) => setTags(e.target.value)}
+            onChange={e => setTags(e.target.value)}
           />
         </div>
 
@@ -171,17 +196,48 @@ function StrudelForm({
             id="strudel-categories"
             placeholder="music, experimental (comma separated)"
             value={categories}
-            onChange={(e) => setCategories(e.target.value)}
+            onChange={e => setCategories(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center justify-between mt-8">
+          <Label htmlFor="strudel-public">Private Strudel</Label>
+          <Switch
+            id="strudel-public"
+            checked={!isPublic}
+            onCheckedChange={checked => {
+              setIsPublic(!checked);
+
+              if (checked) {
+                setAllowTraining(false);
+              }
+            }}
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="strudel-public">Make public</Label>
-          <Switch
-            id="strudel-public"
-            checked={isPublic}
-            onCheckedChange={setIsPublic}
-          />
+          <Label
+            htmlFor="strudel-training"
+            className={!isPublic ? 'text-muted-foreground' : ''}>
+            CC Signals
+          </Label>
+
+          <Tooltip>
+            <TooltipTrigger>
+              <Switch
+                id="strudel-training"
+                checked={allowTraining}
+                onCheckedChange={setAllowTraining}
+                disabled={!isPublic}
+              />
+            </TooltipTrigger>
+
+            <TooltipContent side="left">
+              {isPublic
+                ? 'Let AI assistant learn from this strudel to help others'
+                : 'Only available for public strudels'}
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -191,7 +247,7 @@ function StrudelForm({
           Cancel
         </Button>
         <Button onClick={handleSave} disabled={isPending}>
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? 'Saving...' : 'Save'}
         </Button>
       </DialogFooter>
     </>
@@ -207,7 +263,7 @@ export function StrudelFormDialog({
   const handleClose = () => onOpenChange(false);
 
   // key resets form state when strudel or mode changes, or when dialog reopens
-  const formKey = `${strudel?.id ?? "new"}-${mode}-${open}`;
+  const formKey = `${strudel?.id ?? 'new'}-${mode}-${open}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
