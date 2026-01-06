@@ -12,12 +12,13 @@ type InitialDraftState = {
   draftId: string | null;
   conversationHistory: AgentMessage[];
   forkedFromId: string | null;
+  parentAllowTraining: boolean | null;
 };
 
 // loads initial state from localStorage draft (sync, for immediate display)
 function getInitialStateFromDraft(): InitialDraftState {
   if (typeof window === 'undefined') {
-    return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null };
+    return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null, parentAllowTraining: null };
   }
 
   // try current tab's draft first (sessionStorage has draft ID)
@@ -30,6 +31,7 @@ function getInitialStateFromDraft(): InitialDraftState {
         draftId: currentDraftId,
         conversationHistory: currentDraft.conversationHistory || [],
         forkedFromId: currentDraft.forkedFromId || null,
+        parentAllowTraining: currentDraft.parentAllowTraining ?? null,
       };
     }
   }
@@ -42,10 +44,11 @@ function getInitialStateFromDraft(): InitialDraftState {
       draftId: latestDraft.id,
       conversationHistory: latestDraft.conversationHistory || [],
       forkedFromId: latestDraft.forkedFromId || null,
+      parentAllowTraining: latestDraft.parentAllowTraining ?? null,
     };
   }
 
-  return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null };
+  return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null, parentAllowTraining: null };
 }
 
 const initialDraft = getInitialStateFromDraft();
@@ -63,6 +66,7 @@ interface EditorState {
   currentStrudelTitle: string | null;
   currentDraftId: string | null;
   forkedFromId: string | null;
+  parentAllowTraining: boolean | null;
 
   setCode: (code: string, fromRemote?: boolean) => void;
   setCursor: (line: number, col: number) => void;
@@ -72,6 +76,7 @@ interface EditorState {
   setCurrentStrudel: (id: string | null, title: string | null) => void;
   setCurrentDraftId: (id: string | null) => void;
   setForkedFromId: (id: string | null) => void;
+  setParentAllowTraining: (allowed: boolean | null) => void;
   addToHistory: (message: AgentMessage) => void;
   setConversationHistory: (history: AgentMessage[]) => void;
   clearHistory: () => void;
@@ -91,6 +96,7 @@ const initialState = {
   currentStrudelTitle: null as string | null,
   currentDraftId: initialDraft.draftId,
   forkedFromId: initialDraft.forkedFromId,
+  parentAllowTraining: initialDraft.parentAllowTraining,
 };
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -123,8 +129,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return set({
       currentStrudelId,
       currentStrudelTitle,
-      // clear draft ID and forked from when switching to a saved strudel
-      ...(currentStrudelId ? { currentDraftId: null, forkedFromId: null } : {}),
+      // clear draft ID, forked from, and parent restriction when switching to a saved strudel
+      ...(currentStrudelId ? { currentDraftId: null, forkedFromId: null, parentAllowTraining: null } : {}),
     });
   },
 
@@ -140,6 +146,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setForkedFromId: (forkedFromId) => set({ forkedFromId }),
+
+  setParentAllowTraining: (parentAllowTraining) => set({ parentAllowTraining }),
 
   setCode: (code, fromRemote = false) => {
     const state = get();

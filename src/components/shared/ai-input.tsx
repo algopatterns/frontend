@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useEditorStore } from '@/lib/stores/editor';
-import { ArrowUp, Loader2, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowUp, Loader2, X, ChevronUp, ChevronDown, ShieldAlert } from 'lucide-react';
 import { AIMessage } from './ai-message';
 import { toast } from 'sonner';
 
@@ -15,7 +15,10 @@ interface AIInputProps {
 export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const { isAIGenerating, conversationHistory, setCode } = useEditorStore();
+  const { isAIGenerating, conversationHistory, setCode, parentAllowTraining, forkedFromId } = useEditorStore();
+
+  // AI is blocked if this is a fork from a strudel that doesn't allow training
+  const isAIBlocked = forkedFromId && parentAllowTraining === false;
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleApplyCode = useCallback((code: string) => {
@@ -43,6 +46,22 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
       handleSend();
     }
   };
+
+  // show blocked message if AI is restricted for this fork
+  if (isAIBlocked) {
+    return (
+      <div className="border-t bg-background min-h-footer">
+        <div className="p-3 h-footer flex items-center">
+          <div className="bg-muted/30 border border-muted rounded-lg px-3 py-2 flex items-center gap-2 w-full">
+            <ShieldAlert className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-sm text-muted-foreground">
+              AI assistant disabled - original author restricted AI use for this strudel
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="border-t bg-background min-h-footer">

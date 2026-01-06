@@ -11,6 +11,7 @@ export interface Draft {
   updatedAt: number;
   title?: string;
   forkedFromId?: string;
+  parentAllowTraining?: boolean; // inherit training restriction from parent
 }
 
 export const storage = {

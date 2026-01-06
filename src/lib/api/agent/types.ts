@@ -10,6 +10,7 @@ export interface GenerateRequest {
   provider?: 'anthropic' | 'openai';
   provider_api_key?: string;
   strudel_id?: string;
+  forked_from_id?: string;
 }
 
 export interface GenerateResponse {

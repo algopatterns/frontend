@@ -16,6 +16,7 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
     code,
     conversationHistory,
     currentStrudelId,
+    forkedFromId,
     setCode,
     setAIGenerating,
     addToHistory,
@@ -40,6 +41,7 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
         ...(options.provider && { provider: options.provider }),
         ...(options.providerApiKey && { provider_api_key: options.providerApiKey }),
         ...(currentStrudelId && { strudel_id: currentStrudelId }),
+        ...(forkedFromId && { forked_from_id: forkedFromId }),
       };
 
       return agentApi.generate(request);

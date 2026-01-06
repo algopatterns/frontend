@@ -58,6 +58,10 @@ function StrudelForm({
     setPendingOpenStrudelId,
   } = useUIStore();
 
+  // check if parent strudel restricts training (for forks)
+  const draft = currentDraftId ? storage.getDraft(currentDraftId) : null;
+  const parentRestrictsTraining = draft?.parentAllowTraining === false;
+
   // initialize state from props (only runs on mount due to key pattern)
   const [title, setTitle] = useState(mode === 'edit' && strudel ? strudel.title : '');
   const [description, setDescription] = useState(
@@ -98,7 +102,7 @@ function StrudelForm({
         .map(c => c.trim())
         .filter(Boolean),
       is_public: isPublic,
-      allow_training: isPublic && allowTraining,
+      allow_training: isPublic && allowTraining && !parentRestrictsTraining,
     };
 
     try {
@@ -220,7 +224,7 @@ function StrudelForm({
         <div className="flex items-center justify-between">
           <Label
             htmlFor="strudel-training"
-            className={!isPublic ? 'text-muted-foreground' : ''}>
+            className={!isPublic || parentRestrictsTraining ? 'text-muted-foreground' : ''}>
             CC Signals
           </Label>
 
@@ -228,16 +232,18 @@ function StrudelForm({
             <TooltipTrigger>
               <Switch
                 id="strudel-training"
-                checked={allowTraining}
+                checked={parentRestrictsTraining ? false : allowTraining}
                 onCheckedChange={setAllowTraining}
-                disabled={!isPublic}
+                disabled={!isPublic || parentRestrictsTraining}
               />
             </TooltipTrigger>
 
             <TooltipContent side="left">
-              {isPublic
-                ? 'Let AI assistant learn from this strudel to help others'
-                : 'Only available for public strudels'}
+              {parentRestrictsTraining
+                ? 'Original author disabled AI training for this strudel'
+                : isPublic
+                  ? 'Let AI assistant learn from this strudel to help others'
+                  : 'Only available for public strudels'}
             </TooltipContent>
           </Tooltip>
         </div>
