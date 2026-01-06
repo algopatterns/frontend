@@ -20,6 +20,21 @@ export interface TagsResponse {
   tags: string[];
 }
 
+// reference to a strudel used as AI context
+export interface StrudelReference {
+  id: string;
+  title: string;
+  author_name: string;
+  url: string;
+}
+
+// reference to documentation used as AI context
+export interface DocReference {
+  page_name: string;
+  section_title?: string;
+  url: string;
+}
+
 // agent message for conversation history (full metadata from strudel_messages)
 export interface AgentMessage {
   id?: string;
@@ -28,6 +43,8 @@ export interface AgentMessage {
   is_actionable?: boolean;
   is_code_response?: boolean;
   clarifying_questions?: string[];
+  strudel_references?: StrudelReference[];
+  doc_references?: DocReference[];
   created_at?: string;
 }
 

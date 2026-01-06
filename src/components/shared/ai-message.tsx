@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import { Highlight, themes } from 'prism-react-renderer';
 import { Button } from '@/components/ui/button';
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy, ExternalLink } from 'lucide-react';
 import type { AgentMessage } from '@/lib/api/strudels/types';
+import Link from 'next/link';
+
+// default strudel docs URL when no specific page URL is available
+const STRUDEL_DOCS_URL = 'https://strudel.cc/learn';
 
 interface AIMessageProps {
   message: AgentMessage;
@@ -14,7 +18,7 @@ interface AIMessageProps {
 export function AIMessage({ message, onApplyCode }: AIMessageProps) {
   const [copied, setCopied] = useState(false);
   const [applied, setApplied] = useState(false);
-  const { role, content, is_code_response, clarifying_questions, created_at } = message;
+  const { role, content, is_code_response, clarifying_questions, strudel_references, doc_references, created_at } = message;
 
   const handleCopy = async () => {
     if (!content) return;
@@ -137,6 +141,37 @@ export function AIMessage({ message, onApplyCode }: AIMessageProps) {
               <li key={i}>{q}</li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* References section */}
+      {(strudel_references?.length || doc_references?.length) && (
+        <div className="mt-3 pt-2 border-t border-muted/30">
+          <p className="text-muted-foreground text-[10px] mb-1">Referenced:</p>
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {strudel_references?.map((ref) => (
+              <Link
+                key={ref.id}
+                href={ref.url}
+                className="text-[11px] text-teal-400/70 hover:text-teal-300 hover:underline inline-flex items-center gap-1"
+              >
+                {ref.title} <span className="text-muted-foreground">by {ref.author_name}</span>
+              </Link>
+            ))}
+            {doc_references?.map((ref, i) => (
+              <a
+                key={i}
+                href={ref.url || STRUDEL_DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] text-orange-400/70 hover:text-orange-300 hover:underline inline-flex items-center gap-1"
+              >
+                {ref.page_name}
+                {ref.section_title && <span className="text-muted-foreground">({ref.section_title})</span>}
+                <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </div>

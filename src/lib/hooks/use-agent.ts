@@ -80,6 +80,8 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
           is_actionable: response.is_actionable,
           is_code_response: response.is_code_response,
           clarifying_questions: response.clarifying_questions,
+          strudel_references: response.strudel_references,
+          doc_references: response.doc_references,
           created_at: new Date().toISOString(),
         });
       }
