@@ -85,7 +85,6 @@ export function SidebarPanel({
           )}
         </TabsList>
 
-        {/* Always render both TabsContent to avoid hydration mismatch */}
         {(!mounted || !isViewer) && (
           <TabsContent
             value="samples"

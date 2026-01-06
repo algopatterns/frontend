@@ -15,7 +15,7 @@ const SAMPLE_SOURCES = {
     'https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/strudel.json',
 } as const;
 
-// instrument shortcuts to add to Pattern prototype (maps to .s('instrument'))
+// instrument shortcuts to add to pattern prototype (maps to .s('instrument'))
 const INSTRUMENT_SHORTCUTS = [
   'piano',
   'guitar',
@@ -35,7 +35,7 @@ const INSTRUMENT_SHORTCUTS = [
   'sitar',
 ] as const;
 
-// drum machine shorthand aliases (tr808 -> RolandTR808, etc.)
+// drum machine shorthand aliases
 const DRUM_MACHINE_ALIASES: Record<string, string> = {
   // roland TR series
   tr505: 'RolandTR505',
@@ -129,7 +129,7 @@ export function StrudelEditor({
 
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get('id');
-    
+
     if (id) {
       setUrlStrudelId(id);
     }
@@ -141,6 +141,7 @@ export function StrudelEditor({
   if (effectiveStrudelId && sessionStateReceived && !hasReceivedStrudelCode.current) {
     hasReceivedStrudelCode.current = true;
   }
+
   // reset when strudel changes
   if (!effectiveStrudelId) {
     hasReceivedStrudelCode.current = false;
@@ -153,6 +154,7 @@ export function StrudelEditor({
   // update read-only state
   useEffect(() => {
     readOnlyRef.current = readOnly;
+
     if (strudelMirrorInstance) {
       strudelMirrorInstance.reconfigureExtension?.('isEditable', !readOnly);
     }
@@ -162,11 +164,14 @@ export function StrudelEditor({
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const msg = event.reason?.message || '';
+
       if (SUPPRESSED_ERROR_PATTERNS.some(pattern => msg.includes(pattern))) {
         event.preventDefault();
       }
     };
+
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
     return () =>
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
   }, []);
@@ -204,19 +209,29 @@ export function StrudelEditor({
 
         // store audio context and superdough for sample preview
         getAudioContextFn = getAudioContext;
-        // superdough is re-exported from @strudel/webaudio but not in types
-        superdoughFn = (webaudioModule as Record<string, unknown>)
-          .superdough as typeof superdoughFn;
-        const { evalScope, silence } = coreModule;
 
-        if (!containerRef.current || !isMounted) return;
+        // superdough is re-exported from @strudel/webaudio but not in types
+        type WebaudioModule = Record<string, unknown>;
+        type SuperdoughFn = (
+          value: WebaudioModule,
+          time: number,
+          duration?: number
+        ) => Promise<void>;
+
+        superdoughFn = (webaudioModule as WebaudioModule).superdough as SuperdoughFn;
+
+        if (!containerRef.current || !isMounted) {
+          return;
+        }
+
+        const { evalScope, silence } = coreModule;
 
         containerRef.current.innerHTML = '';
 
         const mirror = new StrudelMirror({
+          transpiler,
           defaultOutput: webaudioOutput,
           getTime: () => getAudioContext().currentTime,
-          transpiler,
           root: containerRef.current,
           initialCode: initialCode || code || EDITOR.DEFAULT_CODE,
           pattern: silence,
@@ -292,21 +307,23 @@ export function StrudelEditor({
               }
             }
           },
+
           onToggle: (started: boolean) => {
             setPlaying(started);
             if (started) setError(null);
           },
+
           onError: (error: Error) => {
             console.error('strudel error:', error);
             setError(error.message);
           },
         });
 
-        // configure editor appearance
-        mirror.setFontFamily?.('var(--font-geist-mono), monospace');
+        // editor appearance config
         mirror.setFontSize?.(14);
         mirror.setLineNumbers?.(true);
         mirror.setLineWrapping?.(true);
+        mirror.setFontFamily?.('var(--font-geist-mono), monospace');
         mirror.reconfigureExtension?.('isPatternHighlightingEnabled', true);
         mirror.reconfigureExtension?.('isFlashEnabled', true);
 
@@ -330,6 +347,7 @@ export function StrudelEditor({
 
         // sync with current store code (may have changed during async init)
         const currentStoreCode = useEditorStore.getState().code;
+
         if (currentStoreCode && currentStoreCode !== strudelMirrorInstance?.code) {
           strudelMirrorInstance.setCode(currentStoreCode);
           strudelMirrorInstance.code = currentStoreCode;
@@ -337,7 +355,9 @@ export function StrudelEditor({
 
         // poll for code changes (strudelMirror doesn't have onChange)
         codePollingInterval = setInterval(() => {
-          if (!strudelMirrorInstance) return;
+          if (!strudelMirrorInstance) {
+            return;
+          }
 
           const currentCode = strudelMirrorInstance.code || '';
           const storeCode = useEditorStore.getState().code;
@@ -408,7 +428,10 @@ export function StrudelEditor({
 }
 
 export function isAudioContextSuspended(): boolean {
-  if (!getAudioContextFn) return false;
+  if (!getAudioContextFn) {
+    return false;
+  }
+
   try {
     return getAudioContextFn().state === 'suspended';
   } catch {
@@ -417,12 +440,17 @@ export function isAudioContextSuspended(): boolean {
 }
 
 export async function resumeAudioContext(): Promise<boolean> {
-  if (!getAudioContextFn) return false;
+  if (!getAudioContextFn) {
+    return false;
+  }
+
   try {
     const ctx = getAudioContextFn();
+
     if (ctx.state === 'suspended') {
       await ctx.resume();
     }
+
     return ctx.state === 'running';
   } catch (e) {
     console.warn('[strudel] Failed to resume audio context:', e);
