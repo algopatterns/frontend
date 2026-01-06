@@ -55,6 +55,7 @@ export const useEditor = ({
     setCode,
     setCurrentStrudel,
     setCurrentDraftId,
+    setForkedFromId,
     currentStrudelId,
     markSaved,
     setConversationHistory,
@@ -232,9 +233,10 @@ export const useEditor = ({
       // this prevents duplicate drafts when re-forking the same strudel
       const forkDraftId = `fork_${forkStrudelId}`;
 
-      // set local state
+      // set local state (forkedFromId is tracked in store and localStorage, not in code)
       setCurrentStrudel(null, null);
       setCurrentDraftId(forkDraftId);
+      setForkedFromId(forkStrudelId);
       setCode(publicStrudel.code, true);
       setConversationHistory([]);
 
@@ -245,6 +247,7 @@ export const useEditor = ({
         conversationHistory: [],
         updatedAt: Date.now(),
         title: `Fork of ${publicStrudel.title}`,
+        forkedFromId: forkStrudelId,
       });
 
       // clear fork param from URL
@@ -266,6 +269,7 @@ export const useEditor = ({
     setCode,
     setCurrentStrudel,
     setCurrentDraftId,
+    setForkedFromId,
     setConversationHistory,
   ]);
 

@@ -12,7 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useInfinitePublicStrudels, usePublicTags } from "@/lib/hooks/use-strudels";
-import { Eye, GitFork, Loader2, Search, Filter, X, Sparkles } from "lucide-react";
+import { Eye, GitFork, Loader2, Search, Filter, X, Sparkles, BarChart3 } from "lucide-react";
+import { StrudelStatsDialog } from "@/components/shared/strudel-stats-dialog";
+import type { Strudel } from "@/lib/api/strudels/types";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useEditorStore } from "@/lib/stores/editor";
 import { useUIStore } from "@/lib/stores/ui";
@@ -25,6 +27,7 @@ export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [statsStrudel, setStatsStrudel] = useState<Strudel | null>(null);
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -221,6 +224,14 @@ export default function ExplorePage() {
               <Card key={strudel.id} className="rounded-md">
                 <CardHeader className="relative">
                   <div className="absolute -top-1 right-4 flex gap-1">
+                    <Button
+                      size="icon-round-sm"
+                      variant="outline"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => setStatsStrudel(strudel)}
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                    </Button>
                     <Button size="icon-round-sm" variant="outline" className="text-muted-foreground hover:text-foreground">
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -288,6 +299,13 @@ export default function ExplorePage() {
           </CardContent>
         </Card>
       )}
+
+      <StrudelStatsDialog
+        strudelId={statsStrudel?.id ?? null}
+        strudelTitle={statsStrudel?.title}
+        open={!!statsStrudel}
+        onOpenChange={(open) => !open && setStatsStrudel(null)}
+      />
     </div>
   );
 }

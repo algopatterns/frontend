@@ -46,6 +46,7 @@ function StrudelForm({
     code,
     conversationHistory,
     currentDraftId,
+    forkedFromId,
     setCurrentStrudel,
     setCurrentDraftId,
     markSaved,
@@ -105,6 +106,7 @@ function StrudelForm({
         const newStrudel = await createStrudel.mutateAsync({
           ...formData,
           code,
+          forked_from: forkedFromId || undefined,
           conversation_history: conversationHistory.map(h => ({
             role: h.role as 'user' | 'assistant',
             content: h.content,

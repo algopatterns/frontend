@@ -12,8 +12,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { AuthGuard } from '@/components/shared/auth-guard';
 import { StrudelFormDialog } from '@/components/shared/strudel-form-dialog';
+import { StrudelStatsDialog } from '@/components/shared/strudel-stats-dialog';
 import { useDashboard } from './hooks';
-import { Settings, Pencil, Loader2, Sparkles } from 'lucide-react';
+import { Settings, Pencil, Loader2, Sparkles, BarChart3 } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useUIStore } from '@/lib/stores/ui';
@@ -23,6 +24,7 @@ function DashboardContent() {
   const { strudels, isLoading, isFetchingNextPage, loadMoreRef, router } = useDashboard();
   const [selectedStrudel, setSelectedStrudel] = useState<Strudel | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [statsStrudel, setStatsStrudel] = useState<Strudel | null>(null);
 
   const { isDirty, code, currentStrudelId } = useEditorStore();
   const { setPendingOpenStrudelId } = useUIStore();
@@ -77,6 +79,15 @@ function DashboardContent() {
                 <Card key={strudel.id} className="rounded-md">
                   <CardHeader className="relative">
                     <div className="absolute -top-1 right-4 flex gap-1">
+                      {strudel.is_public && (
+                        <Button
+                          size="icon-round-sm"
+                          variant="outline"
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => setStatsStrudel(strudel)}>
+                          <BarChart3 className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         size="icon-round-sm"
                         variant="outline"
@@ -169,6 +180,13 @@ function DashboardContent() {
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
           mode="edit"
+        />
+
+        <StrudelStatsDialog
+          strudelId={statsStrudel?.id ?? null}
+          strudelTitle={statsStrudel?.title}
+          open={!!statsStrudel}
+          onOpenChange={(open) => !open && setStatsStrudel(null)}
         />
       </div>
     </AuthGuard>

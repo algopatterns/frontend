@@ -132,3 +132,11 @@ export function usePublicStrudel(id: string) {
     enabled: !!id,
   });
 }
+
+export function useStrudelStats(id: string | null) {
+  return useQuery({
+    queryKey: [...strudelKeys.public(), 'stats', id],
+    queryFn: () => strudelsApi.getStats(id!),
+    enabled: !!id,
+  });
+}

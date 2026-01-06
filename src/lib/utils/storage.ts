@@ -10,6 +10,7 @@ export interface Draft {
   conversationHistory: AgentMessage[];
   updatedAt: number;
   title?: string;
+  forkedFromId?: string;
 }
 
 export const storage = {

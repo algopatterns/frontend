@@ -43,6 +43,7 @@ export interface Strudel {
   is_public: boolean;
   allow_training: boolean;
   ai_contribution_score: number;
+  forked_from?: string;
   conversation_history: AgentMessage[];
   created_at: string;
   updated_at: string;
@@ -57,6 +58,7 @@ export interface CreateStrudelRequest {
   categories?: string[];
   is_public?: boolean;
   allow_training?: boolean;
+  forked_from?: string;
   conversation_history?: AgentMessage[];
 }
 
@@ -75,4 +77,27 @@ export interface UpdateStrudelRequest {
 export interface StrudelsListResponse {
   strudels: Strudel[];
   pagination: Pagination;
+}
+
+// strudel stats (attribution)
+export interface StrudelStats {
+  total_uses: number;
+  unique_users: number;
+  last_used_at?: string;
+  fork_count: number;
+}
+
+export interface StrudelUse {
+  id: string;
+  target_strudel_id?: string;
+  target_strudel_title?: string;
+  requesting_user_id?: string;
+  requesting_display_name?: string;
+  similarity_score?: number;
+  created_at: string;
+}
+
+export interface StrudelStatsResponse {
+  stats: StrudelStats;
+  recent_uses: StrudelUse[];
 }
