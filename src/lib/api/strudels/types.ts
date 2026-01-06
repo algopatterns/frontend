@@ -31,6 +31,28 @@ export interface AgentMessage {
   created_at?: string;
 }
 
+// CC Signals types
+export type CCSignal = 'cc-cr' | 'cc-dc' | 'cc-ec' | 'cc-op' | 'no-ai';
+
+// Signal metadata for UI
+export const CC_SIGNALS = [
+  { id: 'cc-cr' as const, label: 'Credit', desc: 'Allow AI use with attribution' },
+  { id: 'cc-dc' as const, label: 'Credit + Support', desc: 'Attribution + support creator' },
+  { id: 'cc-ec' as const, label: 'Credit + Commons', desc: 'Attribution + contribute to open ecosystem' },
+  { id: 'cc-op' as const, label: 'Credit + Open', desc: 'Attribution + keep AI/model open' },
+  { id: 'no-ai' as const, label: 'No AI', desc: 'Do not use for AI training' },
+] as const;
+
+// Signal restrictiveness order (higher = more restrictive)
+export const SIGNAL_RESTRICTIVENESS: Record<CCSignal | '', number> = {
+  '': 0,
+  'cc-cr': 1,
+  'cc-dc': 2,
+  'cc-ec': 3,
+  'cc-op': 4,
+  'no-ai': 5,
+};
+
 // strudel entity
 export interface Strudel {
   id: string;
@@ -41,7 +63,7 @@ export interface Strudel {
   tags: string[];
   categories: string[];
   is_public: boolean;
-  allow_training: boolean;
+  cc_signal?: CCSignal | null;
   ai_assist_count: number;
   forked_from?: string;
   conversation_history: AgentMessage[];
@@ -57,7 +79,7 @@ export interface CreateStrudelRequest {
   tags?: string[];
   categories?: string[];
   is_public?: boolean;
-  allow_training?: boolean;
+  cc_signal?: CCSignal | null;
   forked_from?: string;
   conversation_history?: AgentMessage[];
 }
@@ -69,7 +91,7 @@ export interface UpdateStrudelRequest {
   tags?: string[];
   categories?: string[];
   is_public?: boolean;
-  allow_training?: boolean;
+  cc_signal?: CCSignal | null;
   conversation_history?: AgentMessage[];
 }
 

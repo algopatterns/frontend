@@ -56,7 +56,7 @@ export const useEditor = ({
     setCurrentStrudel,
     setCurrentDraftId,
     setForkedFromId,
-    setParentAllowTraining,
+    setParentCCSignal,
     currentStrudelId,
     markSaved,
     setConversationHistory,
@@ -238,7 +238,7 @@ export const useEditor = ({
       setCurrentStrudel(null, null);
       setCurrentDraftId(forkDraftId);
       setForkedFromId(forkStrudelId);
-      setParentAllowTraining(publicStrudel.allow_training);
+      setParentCCSignal(publicStrudel.cc_signal ?? null);
       setCode(publicStrudel.code, true);
       setConversationHistory([]);
 
@@ -250,7 +250,7 @@ export const useEditor = ({
         updatedAt: Date.now(),
         title: `Fork of ${publicStrudel.title}`,
         forkedFromId: forkStrudelId,
-        parentAllowTraining: publicStrudel.allow_training,
+        parentCCSignal: publicStrudel.cc_signal ?? null,
       });
 
       // clear fork param from URL
@@ -273,7 +273,7 @@ export const useEditor = ({
     setCurrentStrudel,
     setCurrentDraftId,
     setForkedFromId,
-    setParentAllowTraining,
+    setParentCCSignal,
     setConversationHistory,
   ]);
 

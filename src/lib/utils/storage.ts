@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from '@/lib/constants';
-import type { AgentMessage } from '@/lib/api/strudels/types';
+import type { AgentMessage, CCSignal } from '@/lib/api/strudels/types';
 
 const DRAFT_PREFIX = 'algorave_draft_';
 const CURRENT_DRAFT_ID_KEY = 'algorave_current_draft_id';
@@ -11,7 +11,7 @@ export interface Draft {
   updatedAt: number;
   title?: string;
   forkedFromId?: string;
-  parentAllowTraining?: boolean; // inherit training restriction from parent
+  parentCCSignal?: CCSignal | null; // inherit CC signal restriction from parent
 }
 
 export const storage = {

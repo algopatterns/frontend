@@ -15,10 +15,10 @@ interface AIInputProps {
 export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const { isAIGenerating, conversationHistory, setCode, parentAllowTraining, forkedFromId } = useEditorStore();
+  const { isAIGenerating, conversationHistory, setCode, parentCCSignal, forkedFromId } = useEditorStore();
 
-  // AI is blocked if this is a fork from a strudel that doesn't allow training
-  const isAIBlocked = forkedFromId && parentAllowTraining === false;
+  // AI is blocked if this is a fork from a strudel with 'no-ai' signal
+  const isAIBlocked = forkedFromId && parentCCSignal === 'no-ai';
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleApplyCode = useCallback((code: string) => {

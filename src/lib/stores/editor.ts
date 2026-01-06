@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { storage } from '@/lib/utils/storage';
 import { EDITOR } from '@/lib/constants';
-import type { AgentMessage } from '@/lib/api/strudels/types';
+import type { AgentMessage, CCSignal } from '@/lib/api/strudels/types';
 
 // debounce draft saves to avoid excessive writes
 let draftSaveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -12,13 +12,13 @@ type InitialDraftState = {
   draftId: string | null;
   conversationHistory: AgentMessage[];
   forkedFromId: string | null;
-  parentAllowTraining: boolean | null;
+  parentCCSignal: CCSignal | null;
 };
 
 // loads initial state from localStorage draft (sync, for immediate display)
 function getInitialStateFromDraft(): InitialDraftState {
   if (typeof window === 'undefined') {
-    return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null, parentAllowTraining: null };
+    return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null, parentCCSignal: null };
   }
 
   // try current tab's draft first (sessionStorage has draft ID)
@@ -31,7 +31,7 @@ function getInitialStateFromDraft(): InitialDraftState {
         draftId: currentDraftId,
         conversationHistory: currentDraft.conversationHistory || [],
         forkedFromId: currentDraft.forkedFromId || null,
-        parentAllowTraining: currentDraft.parentAllowTraining ?? null,
+        parentCCSignal: currentDraft.parentCCSignal ?? null,
       };
     }
   }
@@ -44,11 +44,11 @@ function getInitialStateFromDraft(): InitialDraftState {
       draftId: latestDraft.id,
       conversationHistory: latestDraft.conversationHistory || [],
       forkedFromId: latestDraft.forkedFromId || null,
-      parentAllowTraining: latestDraft.parentAllowTraining ?? null,
+      parentCCSignal: latestDraft.parentCCSignal ?? null,
     };
   }
 
-  return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null, parentAllowTraining: null };
+  return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null, parentCCSignal: null };
 }
 
 const initialDraft = getInitialStateFromDraft();
@@ -66,7 +66,7 @@ interface EditorState {
   currentStrudelTitle: string | null;
   currentDraftId: string | null;
   forkedFromId: string | null;
-  parentAllowTraining: boolean | null;
+  parentCCSignal: CCSignal | null;
 
   setCode: (code: string, fromRemote?: boolean) => void;
   setCursor: (line: number, col: number) => void;
@@ -76,7 +76,7 @@ interface EditorState {
   setCurrentStrudel: (id: string | null, title: string | null) => void;
   setCurrentDraftId: (id: string | null) => void;
   setForkedFromId: (id: string | null) => void;
-  setParentAllowTraining: (allowed: boolean | null) => void;
+  setParentCCSignal: (signal: CCSignal | null) => void;
   addToHistory: (message: AgentMessage) => void;
   setConversationHistory: (history: AgentMessage[]) => void;
   clearHistory: () => void;
@@ -96,7 +96,7 @@ const initialState = {
   currentStrudelTitle: null as string | null,
   currentDraftId: initialDraft.draftId,
   forkedFromId: initialDraft.forkedFromId,
-  parentAllowTraining: initialDraft.parentAllowTraining,
+  parentCCSignal: initialDraft.parentCCSignal,
 };
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -130,7 +130,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       currentStrudelId,
       currentStrudelTitle,
       // clear draft ID, forked from, and parent restriction when switching to a saved strudel
-      ...(currentStrudelId ? { currentDraftId: null, forkedFromId: null, parentAllowTraining: null } : {}),
+      ...(currentStrudelId ? { currentDraftId: null, forkedFromId: null, parentCCSignal: null } : {}),
     });
   },
 
@@ -147,7 +147,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   setForkedFromId: (forkedFromId) => set({ forkedFromId }),
 
-  setParentAllowTraining: (parentAllowTraining) => set({ parentAllowTraining }),
+  setParentCCSignal: (parentCCSignal) => set({ parentCCSignal }),
 
   setCode: (code, fromRemote = false) => {
     const state = get();

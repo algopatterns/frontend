@@ -15,11 +15,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useCreateStrudel, useUpdateStrudel } from '@/lib/hooks/use-strudels';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useUIStore } from '@/lib/stores/ui';
 import { storage } from '@/lib/utils/storage';
-import type { Strudel } from '@/lib/api/strudels/types';
+import type { Strudel, CCSignal } from '@/lib/api/strudels/types';
+import { CC_SIGNALS, SIGNAL_RESTRICTIVENESS } from '@/lib/api/strudels/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface StrudelFormDialogProps {
@@ -58,9 +60,9 @@ function StrudelForm({
     setPendingOpenStrudelId,
   } = useUIStore();
 
-  // check if parent strudel restricts training (for forks)
+  // check if parent strudel has a CC signal restriction (for forks)
   const draft = currentDraftId ? storage.getDraft(currentDraftId) : null;
-  const parentRestrictsTraining = draft?.parentAllowTraining === false;
+  const parentCCSignal = draft?.parentCCSignal ?? null;
 
   // initialize state from props (only runs on mount due to key pattern)
   const [title, setTitle] = useState(mode === 'edit' && strudel ? strudel.title : '');
@@ -76,13 +78,29 @@ function StrudelForm({
   const [isPublic, setIsPublic] = useState(
     mode === 'edit' && strudel ? strudel.is_public : false
   );
-  const [allowTraining, setAllowTraining] = useState(
-    mode === 'edit' && strudel ? strudel.allow_training : false
+  const [ccSignal, setCCSignal] = useState<CCSignal | null>(
+    mode === 'edit' && strudel ? strudel.cc_signal ?? null : null
   );
   const [error, setError] = useState('');
 
   const isCreate = mode === 'create';
   const isPending = isCreate ? createStrudel.isPending : updateStrudel.isPending;
+
+  // compute effective signal considering parent restriction
+  const getEffectiveSignal = (): CCSignal | null => {
+    if (!isPublic) return null;
+    if (!ccSignal) return null;
+
+    // if parent has a signal, child must be at least as restrictive
+    if (parentCCSignal) {
+      const parentLevel = SIGNAL_RESTRICTIVENESS[parentCCSignal];
+      const childLevel = SIGNAL_RESTRICTIVENESS[ccSignal];
+      if (childLevel < parentLevel) {
+        return parentCCSignal; // enforce parent's minimum
+      }
+    }
+    return ccSignal;
+  };
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -102,7 +120,7 @@ function StrudelForm({
         .map(c => c.trim())
         .filter(Boolean),
       is_public: isPublic,
-      allow_training: isPublic && allowTraining && !parentRestrictsTraining,
+      cc_signal: getEffectiveSignal(),
     };
 
     try {
@@ -215,37 +233,54 @@ function StrudelForm({
               setIsPublic(!checked);
 
               if (checked) {
-                setAllowTraining(false);
+                setCCSignal(null);
               }
             }}
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <Label
-            htmlFor="strudel-training"
-            className={!isPublic || parentRestrictsTraining ? 'text-muted-foreground' : ''}>
-            CC Signals
-          </Label>
+        <div className="space-y-4">
+          <Label className={!isPublic ? 'text-muted-foreground' : 'text-orange-400'}>CC Signals</Label>
+          <RadioGroup
+            value={ccSignal || 'no-ai'}
+            onValueChange={v => setCCSignal((v as CCSignal) || null)}
+            disabled={!isPublic}
+            className="space-y-2">
+            {CC_SIGNALS.filter(s => {
+              // filter out signals less restrictive than parent
+              if (!parentCCSignal) return true;
 
-          <Tooltip>
-            <TooltipTrigger>
-              <Switch
-                id="strudel-training"
-                checked={parentRestrictsTraining ? false : allowTraining}
-                onCheckedChange={setAllowTraining}
-                disabled={!isPublic || parentRestrictsTraining}
-              />
-            </TooltipTrigger>
+              return (
+                SIGNAL_RESTRICTIVENESS[s.id] >= SIGNAL_RESTRICTIVENESS[parentCCSignal]
+              );
+            }).map(signal => (
+              <div key={signal.id} className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value={signal.id}
+                  id={`signal-${signal.id}`}
+                  disabled={!isPublic}
+                />
+                <Label
+                  htmlFor={`signal-${signal.id}`}
+                  className={`text-sm ${!isPublic ? 'text-muted-foreground' : ''}`}>
+                  <span className="font-medium uppercase">{signal.id}</span>
+                  <span className="text-muted-foreground">
+                    {' '}
+                    -{' '}
+                    {signal.id === 'no-ai'
+                      ? 'No preference (AI cannot use)'
+                      : signal.label}
+                  </span>
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
 
-            <TooltipContent side="left">
-              {parentRestrictsTraining
-                ? 'Original author disabled AI training for this strudel'
-                : isPublic
-                  ? 'Let AI assistant learn from this strudel to help others'
-                  : 'Only available for public strudels'}
-            </TooltipContent>
-          </Tooltip>
+          {parentCCSignal && (
+            <p className="text-xs text-muted-foreground">
+              Inherited from parent: minimum {parentCCSignal}
+            </p>
+          )}
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
