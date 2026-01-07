@@ -52,7 +52,7 @@ export function NewStrudelDialog() {
     clearHistory();
 
     wsClient.skipCodeRestoration = true;
-    wsClient.sendCodeUpdate(EDITOR.DEFAULT_CODE);
+    wsClient.sendCodeUpdate(EDITOR.DEFAULT_CODE, undefined, undefined, 'loaded_strudel');
 
     setNewStrudelDialogOpen(false);
   };
@@ -71,7 +71,7 @@ export function NewStrudelDialog() {
     clearHistory();
 
     wsClient.skipCodeRestoration = true;
-    wsClient.sendCodeUpdate(EDITOR.DEFAULT_CODE);
+    wsClient.sendCodeUpdate(EDITOR.DEFAULT_CODE, undefined, undefined, 'loaded_strudel');
 
     router.replace('/', { scroll: false });
     setNewStrudelDialogOpen(false);

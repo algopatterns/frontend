@@ -16,7 +16,7 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
 
   useEffect(() => {
     if (!isLoading && !token) {
-      // store intended destination for post-login redirect
+      // set intended destination for post-login redirect
       storage.setRedirectUrl(window.location.pathname);
       router.push("/login");
     }

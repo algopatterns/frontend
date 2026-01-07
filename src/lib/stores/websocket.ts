@@ -17,6 +17,7 @@ interface WebSocketState {
   messages: ChatMessage[];
   myRole: SessionRole | null;
   sessionStateReceived: boolean;
+  pasteLocked: boolean;
 
   setStatus: (status: ConnectionStatus) => void;
   setSessionId: (id: string | null) => void;
@@ -28,6 +29,7 @@ interface WebSocketState {
   addMessage: (message: ChatMessage) => void;
   clearMessages: () => void;
   setSessionStateReceived: (received: boolean) => void;
+  setPasteLocked: (locked: boolean) => void;
   reset: () => void;
 }
 
@@ -39,6 +41,7 @@ const initialState = {
   messages: [],
   myRole: null,
   sessionStateReceived: false,
+  pasteLocked: false,
 };
 
 export const useWebSocketStore = create<WebSocketState>(set => ({
@@ -52,19 +55,20 @@ export const useWebSocketStore = create<WebSocketState>(set => ({
   setSessionId: sessionId => set({ sessionId }),
   setParticipants: participants => set({ participants }),
   setSessionStateReceived: sessionStateReceived => set({ sessionStateReceived }),
+  setPasteLocked: pasteLocked => set({ pasteLocked }),
 
   addParticipant: participant => {
     return set(state => {
-      // Check for existing participant to prevent duplicates
+      // check for existing participant to prevent duplicates
       const exists = state.participants.some(p =>
-        // Match by userId if both have it (registered users)
+        // match by userId if both have it (registered users)
         (participant.userId && p.userId && p.userId === participant.userId) ||
-        // Match by displayName for guests (no userId)
+        // match by displayName for guests (no userId)
         (!participant.userId && !p.userId && p.displayName === participant.displayName)
       );
 
       if (exists) {
-        return state; // Don't add duplicate
+        return state; // don't add duplicate
       }
 
       return {
@@ -76,15 +80,15 @@ export const useWebSocketStore = create<WebSocketState>(set => ({
   removeParticipant: (id, displayName) => {
     return set(state => ({
       participants: state.participants.filter(p => {
-        // Try to match by id/userId first
+        // try matching by id/userId first
         if (id && (p.id === id || p.userId === id)) {
-          return false; // Remove this participant
+          return false; // remove this participant
         }
-        // Fall back to displayName match for guests
+        // fall back to displayName match for guests
         if (!id && displayName && !p.userId && p.displayName === displayName) {
-          return false; // Remove this participant
+          return false; // remove this participant
         }
-        return true; // Keep this participant
+        return true; // keep this participant
       }),
     }));
   },

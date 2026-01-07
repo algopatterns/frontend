@@ -55,6 +55,8 @@ export const useEditor = ({
     setCode,
     setCurrentStrudel,
     setCurrentDraftId,
+    setForkedFromId,
+    setParentCCSignal,
     currentStrudelId,
     markSaved,
     setConversationHistory,
@@ -192,7 +194,7 @@ export const useEditor = ({
 
       // sync code to WebSocket session
       wsClient.onceConnected(() => {
-        wsClient.sendCodeUpdate(ownStrudel.code);
+        wsClient.sendCodeUpdate(ownStrudel.code, undefined, undefined, 'loaded_strudel');
       });
     }
   }, [
@@ -232,9 +234,11 @@ export const useEditor = ({
       // this prevents duplicate drafts when re-forking the same strudel
       const forkDraftId = `fork_${forkStrudelId}`;
 
-      // set local state
+      // set local state (forkedFromId is tracked in store and localStorage, not in code)
       setCurrentStrudel(null, null);
       setCurrentDraftId(forkDraftId);
+      setForkedFromId(forkStrudelId);
+      setParentCCSignal(publicStrudel.cc_signal ?? null);
       setCode(publicStrudel.code, true);
       setConversationHistory([]);
 
@@ -245,6 +249,8 @@ export const useEditor = ({
         conversationHistory: [],
         updatedAt: Date.now(),
         title: `Fork of ${publicStrudel.title}`,
+        forkedFromId: forkStrudelId,
+        parentCCSignal: publicStrudel.cc_signal ?? null,
       });
 
       // clear fork param from URL
@@ -254,7 +260,7 @@ export const useEditor = ({
 
       // sync forked code with session
       wsClient.onceConnected(() => {
-        wsClient.sendCodeUpdate(publicStrudel.code);
+        wsClient.sendCodeUpdate(publicStrudel.code, undefined, undefined, 'forked');
       });
     }
   }, [
@@ -266,6 +272,8 @@ export const useEditor = ({
     setCode,
     setCurrentStrudel,
     setCurrentDraftId,
+    setForkedFromId,
+    setParentCCSignal,
     setConversationHistory,
   ]);
 

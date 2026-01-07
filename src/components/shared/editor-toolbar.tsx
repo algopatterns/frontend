@@ -146,14 +146,17 @@ function ConnectionIndicator({
       icon: <Activity className="h-3.5 w-3.5" />,
       className: 'text-muted-foreground',
     },
+
     connecting: {
       icon: <Activity className="h-3.5 w-3.5 animate-pulse" />,
       className: 'text-yellow-500',
     },
+
     reconnecting: {
       icon: <Activity className="h-3.5 w-3.5 animate-pulse" />,
       className: 'text-yellow-500',
     },
+    
     disconnected: {
       icon: <Activity className="h-3.5 w-3.5" />,
       className: 'text-red-500',

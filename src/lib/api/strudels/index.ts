@@ -7,6 +7,7 @@ import type {
   PaginationParams,
   StrudelFilterParams,
   TagsResponse,
+  StrudelStatsResponse,
 } from './types';
 import type { MessageResponse } from '../sessions/types';
 
@@ -74,5 +75,10 @@ export const strudelsApi = {
   getPublic: (id: string) => {
     const url = `/api/v1/public/strudels/${id}`;
     return apiClient.get<Strudel>(url);
+  },
+
+  getStats: (id: string) => {
+    const url = `/api/v1/public/strudels/${id}/stats`;
+    return apiClient.get<StrudelStatsResponse>(url);
   },
 };

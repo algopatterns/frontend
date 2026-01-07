@@ -77,14 +77,16 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   // create debounced send function
   const debouncedSendCodeRef = useRef(
-    debounce((code: string, line: number, col: number) => {
-      wsClient.sendCodeUpdate(code, line, col);
+    debounce((code: string, line: number, col: number, source: 'typed' | 'loaded_strudel' | 'forked' | 'paste') => {
+      wsClient.sendCodeUpdate(code, line, col, source);
     }, 100)
   );
 
   const sendCode = useCallback(
     (newCode: string) => {
-      debouncedSendCodeRef.current(newCode, cursorLine, cursorCol);
+      // consume the source set by paste detection (defaults to 'typed')
+      const source = useEditorStore.getState().consumeNextUpdateSource();
+      debouncedSendCodeRef.current(newCode, cursorLine, cursorCol, source);
     },
     [cursorLine, cursorCol]
   );

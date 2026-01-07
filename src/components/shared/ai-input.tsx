@@ -1,10 +1,20 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useEditorStore } from '@/lib/stores/editor';
-import { ArrowUp, Loader2, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { useWebSocketStore } from '@/lib/stores/websocket';
+import {
+  ArrowUp,
+  Loader2,
+  X,
+  ChevronUp,
+  ChevronDown,
+  ShieldAlert,
+  ClipboardPaste,
+} from 'lucide-react';
 import { AIMessage } from './ai-message';
+import { toast } from 'sonner';
 
 interface AIInputProps {
   onSendAIRequest: (query: string) => void;
@@ -14,8 +24,21 @@ interface AIInputProps {
 export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const { isAIGenerating, conversationHistory } = useEditorStore();
+  const { isAIGenerating, conversationHistory, setCode, parentCCSignal, forkedFromId } =
+    useEditorStore();
+  const { pasteLocked } = useWebSocketStore();
+
+  // agent chat is blocked if this is a fork from a strudel with 'no-ai' signal
+  const isAIBlocked = forkedFromId && parentCCSignal === 'no-ai';
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleApplyCode = useCallback(
+    (code: string) => {
+      setCode(code, false);
+      toast.success('Code applied to editor');
+    },
+    [setCode]
+  );
 
   // auto-scroll when expanded and new messages arrive
   useEffect(() => {
@@ -37,6 +60,36 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
       handleSend();
     }
   };
+  if (isAIBlocked) {
+    return (
+      <div className="border-t bg-background min-h-footer">
+        <div className="p-3 h-footer flex items-center">
+          <div className="bg-muted/30 border border-muted rounded-lg px-3 py-2 flex items-center gap-2 w-full">
+            <ShieldAlert className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-sm text-muted-foreground">
+              AI assistant permanently disabled - original author restricted AI use for
+              this strudel
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (pasteLocked) {
+    return (
+      <div className="border-t bg-background min-h-footer">
+        <div className="p-3 h-footer flex items-center">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 flex items-center gap-2 w-full">
+            <ClipboardPaste className="h-4 w-4 text-amber-500 shrink-0" />
+            <span className="text-sm text-amber-600 dark:text-amber-400">
+              AI paused - make some edits to the pasted code to unlock AI assistance
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="border-t bg-background min-h-footer">
@@ -50,9 +103,10 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
                   Tinkering...
                 </>
               ) : (
-                "AI Assistant"
+                'AI Assistant'
               )}
             </span>
+
             <Button
               size="icon"
               variant="ghost"
@@ -61,10 +115,16 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
               <X className="h-3 w-3" />
             </Button>
           </div>
+
           <div className="max-h-96 overflow-y-auto p-3 space-y-2">
             {conversationHistory.map(msg => (
-              <AIMessage key={msg.id || msg.created_at} message={msg} />
+              <AIMessage
+                key={msg.id || msg.created_at}
+                message={msg}
+                onApplyCode={handleApplyCode}
+              />
             ))}
+
             <div ref={messagesEndRef} />
           </div>
         </div>
@@ -81,6 +141,7 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
             disabled={disabled || isAIGenerating}
             className="flex-1 bg-transparent text-sm focus:outline-none disabled:opacity-50"
           />
+
           {conversationHistory.length > 0 && (
             <button
               type="button"
@@ -94,9 +155,11 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
               )}
             </button>
           )}
+
           {isAIGenerating && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
           )}
+
           <Button
             size="icon"
             className="h-7 w-7 rounded-md bg-primary hover:bg-primary/90 shrink-0"

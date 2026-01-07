@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { storage } from '@/lib/utils/storage';
 import { EDITOR } from '@/lib/constants';
-import type { AgentMessage } from '@/lib/api/strudels/types';
+import type { AgentMessage, CCSignal } from '@/lib/api/strudels/types';
+import type { CodeUpdateSource } from '@/lib/websocket/types';
 
 // debounce draft saves to avoid excessive writes
 let draftSaveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -11,12 +12,14 @@ type InitialDraftState = {
   code: string;
   draftId: string | null;
   conversationHistory: AgentMessage[];
+  forkedFromId: string | null;
+  parentCCSignal: CCSignal | null;
 };
 
 // loads initial state from localStorage draft (sync, for immediate display)
 function getInitialStateFromDraft(): InitialDraftState {
   if (typeof window === 'undefined') {
-    return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [] };
+    return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null, parentCCSignal: null };
   }
 
   // try current tab's draft first (sessionStorage has draft ID)
@@ -28,6 +31,8 @@ function getInitialStateFromDraft(): InitialDraftState {
         code: currentDraft.code,
         draftId: currentDraftId,
         conversationHistory: currentDraft.conversationHistory || [],
+        forkedFromId: currentDraft.forkedFromId || null,
+        parentCCSignal: currentDraft.parentCCSignal ?? null,
       };
     }
   }
@@ -39,10 +44,12 @@ function getInitialStateFromDraft(): InitialDraftState {
       code: latestDraft.code,
       draftId: latestDraft.id,
       conversationHistory: latestDraft.conversationHistory || [],
+      forkedFromId: latestDraft.forkedFromId || null,
+      parentCCSignal: latestDraft.parentCCSignal ?? null,
     };
   }
 
-  return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [] };
+  return { code: EDITOR.DEFAULT_CODE, draftId: null, conversationHistory: [], forkedFromId: null, parentCCSignal: null };
 }
 
 const initialDraft = getInitialStateFromDraft();
@@ -59,6 +66,9 @@ interface EditorState {
   currentStrudelId: string | null;
   currentStrudelTitle: string | null;
   currentDraftId: string | null;
+  forkedFromId: string | null;
+  parentCCSignal: CCSignal | null;
+  nextUpdateSource: CodeUpdateSource;
 
   setCode: (code: string, fromRemote?: boolean) => void;
   setCursor: (line: number, col: number) => void;
@@ -67,6 +77,10 @@ interface EditorState {
   markSaved: () => void;
   setCurrentStrudel: (id: string | null, title: string | null) => void;
   setCurrentDraftId: (id: string | null) => void;
+  setForkedFromId: (id: string | null) => void;
+  setParentCCSignal: (signal: CCSignal | null) => void;
+  setNextUpdateSource: (source: CodeUpdateSource) => void;
+  consumeNextUpdateSource: () => CodeUpdateSource;
   addToHistory: (message: AgentMessage) => void;
   setConversationHistory: (history: AgentMessage[]) => void;
   clearHistory: () => void;
@@ -85,6 +99,9 @@ const initialState = {
   currentStrudelId: null as string | null,
   currentStrudelTitle: null as string | null,
   currentDraftId: initialDraft.draftId,
+  forkedFromId: initialDraft.forkedFromId,
+  parentCCSignal: initialDraft.parentCCSignal,
+  nextUpdateSource: 'typed' as CodeUpdateSource,
 };
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -117,8 +134,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return set({
       currentStrudelId,
       currentStrudelTitle,
-      // clear draft ID when switching to a saved strudel
-      ...(currentStrudelId ? { currentDraftId: null } : {}),
+      // always clear fork restrictions when switching strudels or starting fresh
+      currentDraftId: null,
+      forkedFromId: null,
+      parentCCSignal: null,
     });
   },
 
@@ -131,6 +150,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
 
     return set({ currentDraftId });
+  },
+
+  setForkedFromId: (forkedFromId) => set({ forkedFromId }),
+
+  setParentCCSignal: (parentCCSignal) => set({ parentCCSignal }),
+
+  setNextUpdateSource: (nextUpdateSource) => set({ nextUpdateSource }),
+
+  consumeNextUpdateSource: () => {
+    const source = get().nextUpdateSource;
+    set({ nextUpdateSource: 'typed' });
+    return source;
   },
 
   setCode: (code, fromRemote = false) => {
@@ -148,7 +179,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         clearTimeout(draftSaveTimeout);
       }
       draftSaveTimeout = setTimeout(() => {
-        const { currentDraftId, currentStrudelId, conversationHistory } = get();
+        const { currentDraftId, currentStrudelId, conversationHistory, forkedFromId } = get();
         // use strudel ID as draft ID for saved strudels, otherwise generate/use draft ID
         const draftId = currentStrudelId || currentDraftId || storage.generateDraftId();
 
@@ -163,6 +194,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           code,
           conversationHistory,
           updatedAt: Date.now(),
+          forkedFromId: forkedFromId || undefined,
+          parentCCSignal: get().parentCCSignal,
         });
       }, DRAFT_SAVE_DEBOUNCE_MS);
     }
@@ -176,7 +209,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
 
     // save draft to localStorage when conversation updates
-    const { currentDraftId, currentStrudelId, code, conversationHistory } = get();
+    const { currentDraftId, currentStrudelId, code, conversationHistory, forkedFromId, parentCCSignal } = get();
     const draftId = currentStrudelId || currentDraftId;
     if (draftId) {
       storage.setDraft({
@@ -184,6 +217,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         code,
         conversationHistory,
         updatedAt: Date.now(),
+        forkedFromId: forkedFromId || undefined,
+        parentCCSignal,
       });
     }
 

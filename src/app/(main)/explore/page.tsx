@@ -12,7 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useInfinitePublicStrudels, usePublicTags } from "@/lib/hooks/use-strudels";
-import { Eye, GitFork, Loader2, Search, Filter, X } from "lucide-react";
+import { Eye, GitFork, Loader2, Search, Filter, X, Sparkles, BarChart3 } from "lucide-react";
+import { StrudelStatsDialog } from "@/components/shared/strudel-stats-dialog";
+import type { Strudel } from "@/lib/api/strudels/types";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useEditorStore } from "@/lib/stores/editor";
 import { useUIStore } from "@/lib/stores/ui";
@@ -25,6 +27,7 @@ export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [statsStrudel, setStatsStrudel] = useState<Strudel | null>(null);
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -221,6 +224,14 @@ export default function ExplorePage() {
               <Card key={strudel.id} className="rounded-md">
                 <CardHeader className="relative">
                   <div className="absolute -top-1 right-4 flex gap-1">
+                    <Button
+                      size="icon-round-sm"
+                      variant="outline"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => setStatsStrudel(strudel)}
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                    </Button>
                     <Button size="icon-round-sm" variant="outline" className="text-muted-foreground hover:text-foreground">
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -237,18 +248,22 @@ export default function ExplorePage() {
                     {strudel.code.slice(0, 100)}
                     {strudel.code.length > 100 && "..."}
                   </pre>
-                  {strudel.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {strudel.tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-xs bg-secondary px-2 py-0.5 rounded"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-1">
+                    {strudel.ai_assist_count > 0 && (
+                      <span className="text-xs bg-violet-500/15 text-violet-400 px-2 py-0.5 rounded flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        AI Assisted ({strudel.ai_assist_count})
+                      </span>
+                    )}
+                    {strudel.tags?.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs bg-secondary px-2 py-0.5 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -284,6 +299,13 @@ export default function ExplorePage() {
           </CardContent>
         </Card>
       )}
+
+      <StrudelStatsDialog
+        strudelId={statsStrudel?.id ?? null}
+        strudelTitle={statsStrudel?.title}
+        open={!!statsStrudel}
+        onOpenChange={(open) => !open && setStatsStrudel(null)}
+      />
     </div>
   );
 }

@@ -22,6 +22,7 @@ export type ServerMessageType =
   | "play"
   | "stop"
   | "session_ended"
+  | "paste_lock_changed"
   | "error"
   | "pong";
 
@@ -33,11 +34,15 @@ export interface WebSocketMessage<T = unknown> {
   payload: T;
 }
 
+// code update source types
+export type CodeUpdateSource = 'typed' | 'loaded_strudel' | 'forked' | 'paste';
+
 // client payloads
 export interface CodeUpdatePayload {
   code: string;
   cursor_line?: number;
   cursor_col?: number;
+  source?: CodeUpdateSource;
 }
 
 export interface ChatMessagePayload {
@@ -118,4 +123,9 @@ export interface StopPayload {
 
 export interface SessionEndedPayload {
   reason?: string;
+}
+
+export interface PasteLockChangedPayload {
+  locked: boolean;
+  reason?: string; // "paste_detected", "edits_sufficient", "ttl_expired"
 }

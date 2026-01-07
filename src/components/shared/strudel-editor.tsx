@@ -117,7 +117,7 @@ export function StrudelEditor({
   const onCodeChangeRef = useRef(onCodeChange);
   const readOnlyRef = useRef(readOnly);
 
-  const { code, setCode, currentStrudelId } = useEditorStore();
+  const { code, setCode, currentStrudelId, setNextUpdateSource } = useEditorStore();
   const { setPlaying, setInitialized, setError } = useAudioStore();
   const wsStatus = useWebSocketStore(state => state.status);
   const sessionStateReceived = useWebSocketStore(state => state.sessionStateReceived);
@@ -340,6 +340,12 @@ export function StrudelEditor({
 
         strudelMirrorInstance = mirror;
         setInitialized(true);
+
+        // detect paste events to mark code updates as paste source
+        const handlePaste = () => {
+          useEditorStore.getState().setNextUpdateSource('paste');
+        };
+        containerRef.current?.addEventListener('paste', handlePaste);
 
         if (initialCode) {
           setCode(initialCode, true);

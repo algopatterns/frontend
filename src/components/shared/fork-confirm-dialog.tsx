@@ -19,12 +19,8 @@ import { EDITOR } from '@/lib/constants';
 export function ForkConfirmDialog() {
   const router = useRouter();
   const pathname = usePathname();
-  const {
-    pendingForkId,
-    setPendingForkId,
-    setLoginModalOpen,
-    setSaveStrudelDialogOpen,
-  } = useUIStore();
+  const { pendingForkId, setPendingForkId, setLoginModalOpen, setSaveStrudelDialogOpen } =
+    useUIStore();
 
   const { token } = useAuthStore();
   const { isDirty, code, currentStrudelId, currentDraftId } = useEditorStore();
@@ -33,7 +29,6 @@ export function ForkConfirmDialog() {
   const hasUnsavedChanges =
     isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
 
-  // check if user is re-forking the same strudel they already have a fork of
   const isReforkingSameStrudel =
     pendingForkId && currentDraftId === `fork_${pendingForkId}`;
 
@@ -70,14 +65,16 @@ export function ForkConfirmDialog() {
     const description = isReforkingSameStrudel
       ? 'Your changes to this fork will be overwritten with the original. Sign in to save first, or continue as a guest.'
       : hasUnsavedChanges
-        ? 'Sign in to save your current work before forking, or continue as a guest. Your current unsaved work will be lost.'
-        : 'Sign in to save your current work before forking, or continue as a guest.';
+      ? 'Sign in to save your current work before forking, or continue as a guest. Your current unsaved work will be lost.'
+      : 'Sign in to save your current work before forking, or continue as a guest.';
 
     return (
-      <Dialog open={!!pendingForkId} onOpenChange={(open) => !open && handleClose()}>
+      <Dialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{isReforkingSameStrudel ? 'Re-fork Strudel' : 'Fork Strudel'}</DialogTitle>
+            <DialogTitle>
+              {isReforkingSameStrudel ? 'Re-fork Strudel' : 'Fork Strudel'}
+            </DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -85,7 +82,11 @@ export function ForkConfirmDialog() {
               Cancel
             </Button>
             <Button variant="outline" onClick={handleFork}>
-              {isReforkingSameStrudel ? 'Overwrite & Re-fork' : hasUnsavedChanges ? 'Fork Anyway' : 'Fork'}
+              {isReforkingSameStrudel
+                ? 'Overwrite & Re-fork'
+                : hasUnsavedChanges
+                ? 'Fork Anyway'
+                : 'Fork'}
             </Button>
             <Button onClick={handleLogin}>Sign In</Button>
           </DialogFooter>
@@ -100,11 +101,11 @@ export function ForkConfirmDialog() {
     const description = isReforkingSameStrudel
       ? 'Your changes to this fork will be overwritten with the original. Save first to keep your work.'
       : currentStrudelId
-        ? "You have changes that haven't been autosaved yet. If you fork now, these changes will be lost."
-        : 'You have unsaved work that will be lost if you fork without saving first.';
+      ? "You have changes that haven't been autosaved yet. If you fork now, these changes will be lost."
+      : 'You have unsaved work that will be lost if you fork without saving first.';
 
     return (
-      <Dialog open={!!pendingForkId} onOpenChange={(open) => !open && handleClose()}>
+      <Dialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -117,9 +118,7 @@ export function ForkConfirmDialog() {
             <Button variant="outline" onClick={handleFork}>
               {isReforkingSameStrudel ? 'Overwrite & Re-fork' : 'Discard & Fork'}
             </Button>
-            {!currentStrudelId && (
-              <Button onClick={handleSaveFirst}>Save First</Button>
-            )}
+            {!currentStrudelId && <Button onClick={handleSaveFirst}>Save First</Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>
