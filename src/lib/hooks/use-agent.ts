@@ -18,6 +18,7 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
     conversationHistory,
     currentStrudelId,
     forkedFromId,
+    parentCCSignal,
     setAIGenerating,
     addToHistory,
   } = useEditorStore();
@@ -25,6 +26,12 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
 
   return useMutation({
     mutationFn: async (query: string) => {
+      // block AI requests if parent strudel has no-ai restriction
+      // this takes precedence over any websocket paste lock state
+      if (forkedFromId && parentCCSignal === 'no-ai') {
+        throw new Error('AI assistant is permanently disabled - the original author restricted AI use for this strudel');
+      }
+
       // for saved strudels: server loads history from DB (strudel_messages table)
       // for drafts: pass history from local store
       const isSavedStrudel = !!currentStrudelId;

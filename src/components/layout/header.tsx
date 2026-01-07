@@ -35,9 +35,9 @@ export function Header() {
           </Link>
           {isAuthenticated && (
             <Link
-              href="/dashboard"
+              href="/my-strudels"
               className="text-muted-foreground hover:text-foreground transition-colors">
-              Dashboard
+              Collection
             </Link>
           )}
         </nav>
@@ -68,7 +68,7 @@ export function Header() {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard">Dashboard</Link>
+                  <Link href="/my-strudels">My Strudels</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings">Settings</Link>

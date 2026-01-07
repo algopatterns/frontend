@@ -51,7 +51,7 @@ function HomePageContent() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
+    <div className="flex h-full overflow-hidden">
       <div className="flex-1 flex flex-col min-w-0">
         <EditorToolbar
           onPlay={handlePlay}
@@ -135,7 +135,7 @@ function HomePageContent() {
 
 export default function HomePage() {
   return (
-    <Suspense fallback={<div className="flex h-[calc(100vh-3.5rem)] items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="flex h-full items-center justify-center">Loading...</div>}>
       <HomePageContent />
     </Suspense>
   );

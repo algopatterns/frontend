@@ -190,6 +190,13 @@ export const useEditor = ({
 
       // set strudel metadata
       setCurrentStrudel(ownStrudel.id, ownStrudel.title);
+
+      // set fork info if this strudel was forked (for AI blocking)
+      if (ownStrudel.forked_from) {
+        setForkedFromId(ownStrudel.forked_from);
+        setParentCCSignal(ownStrudel.parent_cc_signal ?? null);
+      }
+
       markSaved();
 
       // sync code to WebSocket session
@@ -205,6 +212,8 @@ export const useEditor = ({
     setCode,
     setConversationHistory,
     setCurrentStrudel,
+    setForkedFromId,
+    setParentCCSignal,
     markSaved,
   ]);
 

@@ -21,7 +21,7 @@ export function useOpenStrudelConfirmDialog() {
     isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
 
   useEffect(() => {
-    if (pendingOpenStrudelId && pathname !== '/dashboard') {
+    if (pendingOpenStrudelId && pathname !== '/') {
       setPendingOpenStrudelId(null);
     }
   }, [pathname, pendingOpenStrudelId, setPendingOpenStrudelId]);

@@ -13,7 +13,9 @@ export function useAIInput(onSendAIRequest: (query: string) => void, disabled: b
   const { isAIGenerating, conversationHistory, setCode, parentCCSignal, forkedFromId } =
     useEditorStore();
 
-  const isAIBlocked = forkedFromId && parentCCSignal === 'no-ai';
+  // permanent AI block from parent CC signal takes precedence over websocket paste lock
+  // if parent strudel has 'no-ai' restriction, AI is permanently disabled for all forks
+  const isAIBlocked = !!(forkedFromId && parentCCSignal === 'no-ai');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleApplyCode = useCallback(

@@ -116,7 +116,9 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
         </div>
 
         <div className="space-y-4">
-          <Label className={!isPublic ? 'text-muted-foreground' : 'text-orange-400'}>CC Signals</Label>
+          <Label className={!isPublic ? 'text-muted-foreground' : 'text-orange-400'}>
+            CC Signals
+          </Label>
           <RadioGroup
             value={ccSignal || 'no-ai'}
             onValueChange={v => setCCSignal((v as CCSignal) || null)}
@@ -141,21 +143,17 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
                   <span className="font-medium uppercase">{signal.id}</span>
                   <span className="text-muted-foreground">
                     {' '}
-                    -{' '}
+                    {!parentCCSignal && '-'}
                     {signal.id === 'no-ai'
-                      ? 'No preference (AI cannot use)'
+                      ? parentCCSignal
+                        ? `(inherited from parent)`
+                        : 'AI cannot use'
                       : signal.label}
                   </span>
                 </Label>
               </div>
             ))}
           </RadioGroup>
-
-          {parentCCSignal && (
-            <p className="text-xs text-muted-foreground">
-              Inherited from parent: minimum {parentCCSignal}
-            </p>
-          )}
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}

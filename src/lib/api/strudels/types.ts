@@ -83,6 +83,7 @@ export interface Strudel {
   cc_signal?: CCSignal | null;
   ai_assist_count: number;
   forked_from?: string;
+  parent_cc_signal?: CCSignal | null;
   conversation_history: AgentMessage[];
   created_at: string;
   updated_at: string;

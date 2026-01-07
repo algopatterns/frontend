@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useAudioStore } from '@/lib/stores/audio';
 import { useWebSocketStore } from '@/lib/stores/websocket';
-import { EDITOR } from '@/lib/constants';
 
 export const SAMPLE_SOURCES = {
   doughSamples: 'https://raw.githubusercontent.com/felixroos/dough-samples/main',
@@ -187,31 +186,18 @@ export function useStrudelEditor(
   const onCodeChangeRef = useRef(onCodeChange);
   const readOnlyRef = useRef(readOnly);
 
-  const { code, setCode, currentStrudelId, setNextUpdateSource } = useEditorStore();
+  const { code, setCode, currentStrudelId } = useEditorStore();
   const { setPlaying, setInitialized, setError } = useAudioStore();
   const wsStatus = useWebSocketStore(state => state.status);
   const sessionStateReceived = useWebSocketStore(state => state.sessionStateReceived);
-  const hasReceivedStrudelCode = useRef(false);
 
-  const [urlStrudelId, setUrlStrudelId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get('id');
-
-    if (id) {
-      setUrlStrudelId(id);
-    }
-  }, []);
+  // Use lazy initial state for URL params (avoids setState in effect)
+  const [urlStrudelId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('id');
+  });
 
   const effectiveStrudelId = currentStrudelId || urlStrudelId;
-
-  if (effectiveStrudelId && sessionStateReceived && !hasReceivedStrudelCode.current) {
-    hasReceivedStrudelCode.current = true;
-  }
-
-  if (!effectiveStrudelId) {
-    hasReceivedStrudelCode.current = false;
-  }
 
   useEffect(() => {
     onCodeChangeRef.current = onCodeChange;
@@ -251,7 +237,6 @@ export function useStrudelEditor(
 
   const isLoadingStrudel =
     effectiveStrudelId &&
-    !hasReceivedStrudelCode.current &&
     (wsStatus === 'connecting' || (wsStatus === 'connected' && !sessionStateReceived));
 
   return {

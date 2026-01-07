@@ -525,6 +525,17 @@ class AlgoraveWebSocket {
         const payload = message.payload as PasteLockChangedPayload;
         const { setPasteLocked } = useWebSocketStore.getState();
         setPasteLocked(payload.locked);
+
+        // if locked due to parent no-ai signal, set permanent block in editor store
+        // this ensures UI shows permanent disabled state even if localStorage was tampered
+        if (payload.locked && payload.reason === "parent_no_ai") {
+          const { setParentCCSignal, setForkedFromId, forkedFromId } = useEditorStore.getState();
+          setParentCCSignal("no-ai");
+          // set a placeholder forkedFromId if not already set (required for isAIBlocked check)
+          if (!forkedFromId) {
+            setForkedFromId("unknown");
+          }
+        }
         break;
       }
 

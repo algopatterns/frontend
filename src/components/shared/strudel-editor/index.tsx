@@ -269,7 +269,7 @@ export function StrudelEditor({
     <div className="relative h-full w-full">
       <div
         ref={containerRef}
-        className="strudel-editor h-full w-full overflow-hidden rounded-none"
+        className="strudel-editor h-full w-full overflow-auto rounded-none"
       />
       {isLoadingStrudel && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">

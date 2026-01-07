@@ -132,16 +132,16 @@ Quick flowchart of how live sessions actually work for agents and contributors.
 │                        AUTHENTICATED USER                                   │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-  │ dashboard   │     │ saved       │     │ fresh       │
-  │ /dashboard  │     │ /?id=<uuid> │     │ /           │
-  └─────────────┘     └─────────────┘     └─────────────┘
+  ┌─────────────-┐     ┌─────────────┐     ┌─────────────┐
+  │ my-strudels  │     │ saved       │     │ fresh       │
+  │ /my-strudels │     │ /?id=<uuid> │     │ /           │
+  └─────────────-┘     └─────────────┘     └─────────────┘
         │                   │                   │
         │                   ▼                   ▼
         │           ┌─────────────┐     ┌─────────────┐
         │           │ load from   │     │ new session │
         │           │ server via  │     │ default code│
-        │           │switch_strudel│    └─────────────┘
+        │           │ rest-api    │     └─────────────┘
         │           └─────────────┘
         │
         ▼

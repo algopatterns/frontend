@@ -22,7 +22,7 @@ function LoginContent() {
 
   useEffect(() => {
     if (token) {
-      const redirectUrl = storage.getRedirectUrl() || '/dashboard';
+      const redirectUrl = storage.getRedirectUrl() || '/';
       storage.clearRedirectUrl();
       router.push(redirectUrl);
     }

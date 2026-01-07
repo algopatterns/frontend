@@ -16,11 +16,7 @@ import type { SessionRole } from '@/lib/api/sessions/types';
 import { useInviteDialog, getRoleLabel } from './hooks';
 
 function getRoleIcon(r: SessionRole) {
-  return r === 'viewer' ? (
-    <Eye className="h-3 w-3" />
-  ) : (
-    <Users className="h-3 w-3" />
-  );
+  return r === 'viewer' ? <Eye className="h-3 w-3" /> : <Users className="h-3 w-3" />;
 }
 
 export function InviteDialog() {
@@ -59,14 +55,16 @@ export function InviteDialog() {
           <div className="flex items-center justify-between p-3 rounded-none border bg-muted/30">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <span className={`h-3 w-3 rounded-full ${isLive ? 'bg-green-500' : 'bg-red-500'}`} />
-                <span className="font-medium">
-                  {isLive ? 'Live' : 'Go Live'}
-                </span>
+                <span
+                  className={`h-3 w-3 rounded-full ${
+                    isLive ? 'bg-green-500' : 'bg-red-500'
+                  }`}
+                />
+                <span className="font-medium">{isLive ? 'Live' : 'Go Live'}</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 {isLive
-                  ? 'Your session is visible in Explore'
+                  ? 'Your session is visible in explore'
                   : 'Make your session discoverable'}
               </p>
             </div>
@@ -74,8 +72,7 @@ export function InviteDialog() {
               size="sm"
               variant={isLive ? 'destructive' : 'default'}
               onClick={handleToggleLive}
-              disabled={setDiscoverable.isPending || !sessionId}
-            >
+              disabled={setDiscoverable.isPending || !sessionId}>
               {setDiscoverable.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : isLive ? (
@@ -88,7 +85,7 @@ export function InviteDialog() {
 
           <Separator />
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="space-y-2">
               <Label>Role</Label>
               <div className="flex gap-2">
@@ -97,46 +94,38 @@ export function InviteDialog() {
                   size="sm"
                   variant={role === 'co-author' ? 'default' : 'outline'}
                   onClick={() => setRole('co-author')}
-                  className="flex-1"
-                >
+                  className="flex-1">
                   <Users className="h-4 w-4 mr-2" />
-                  Co-author
+                  Co-creator
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   variant={role === 'viewer' ? 'default' : 'outline'}
                   onClick={() => setRole('viewer')}
-                  className="flex-1"
-                >
+                  className="flex-1">
                   <Eye className="h-4 w-4 mr-2" />
                   Viewer
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {role === 'co-author'
-                  ? 'Can edit code and chat'
-                  : 'Can only view and chat'}
-              </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="maxUses">Max uses (optional)</Label>
+              <Label htmlFor="maxUses">Max uses</Label>
               <Input
                 id="maxUses"
                 type="number"
                 min="1"
-                placeholder="Unlimited"
+                placeholder="unlimited (default)"
                 value={maxUses}
-                onChange={(e) => setMaxUses(e.target.value)}
+                onChange={e => setMaxUses(e.target.value)}
               />
             </div>
 
             <Button
               onClick={handleCreateInvite}
               disabled={createInvite.isPending || !sessionId}
-              className="w-full"
-            >
+              className="w-full">
               {createInvite.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -152,11 +141,10 @@ export function InviteDialog() {
             <div className="space-y-2">
               <Label>Active Invites</Label>
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {invites.map((invite) => (
+                {invites.map(invite => (
                   <div
                     key={invite.id}
-                    className="flex items-center gap-2 p-2 rounded-none bg-muted/50 text-sm"
-                  >
+                    className="flex items-center gap-2 p-2 rounded-none bg-muted/50 text-sm">
                     <span className="flex items-center gap-1 text-muted-foreground">
                       {getRoleIcon(invite.role)}
                       {getRoleLabel(invite.role)}
@@ -172,8 +160,7 @@ export function InviteDialog() {
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
-                      onClick={() => handleCopyLink(invite.token)}
-                    >
+                      onClick={() => handleCopyLink(invite.token)}>
                       {copiedToken === invite.token ? (
                         <Check className="h-3 w-3 text-green-500" />
                       ) : (
@@ -185,8 +172,7 @@ export function InviteDialog() {
                       variant="ghost"
                       className="h-7 w-7 text-destructive hover:text-destructive"
                       onClick={() => handleRevoke(invite.id)}
-                      disabled={revokeInvite.isPending}
-                    >
+                      disabled={revokeInvite.isPending}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
