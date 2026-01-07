@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, FileText, Settings, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,7 +17,12 @@ import { useUIStore } from '@/lib/stores/ui';
 
 export function Header() {
   const { user, isAuthenticated } = useAuth();
-  const { setLoginModalOpen, setLogoutDialogOpen } = useUIStore();
+  const {
+    setLoginModalOpen,
+    setLogoutDialogOpen,
+    setDraftsModalOpen,
+    setSettingsModalOpen,
+  } = useUIStore();
   const { theme, setTheme } = useTheme();
 
   return (
@@ -33,6 +38,13 @@ export function Header() {
             className="text-muted-foreground hover:text-foreground transition-colors">
             Explore
           </Link>
+
+          <Link
+            href="/live"
+            className="text-muted-foreground hover:text-foreground transition-colors">
+            Live
+          </Link>
+
           {isAuthenticated && (
             <Link
               href="/my-strudels"
@@ -52,38 +64,60 @@ export function Header() {
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <UserAvatar user={user} size="sm" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <UserAvatar user={user} size="sm" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              {isAuthenticated ? (
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium">{user?.name}</p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                   </div>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/my-strudels">My Strudels</Link>
+              ) : (
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium text-muted-foreground">Anonymous</p>
+                    <p className="text-xs text-muted-foreground">Sign in to save your work</p>
+                  </div>
+                </div>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setDraftsModalOpen(true)}
+                className="cursor-pointer">
+                <FileText className="mr-2 h-4 w-4" />
+                Drafts
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setSettingsModalOpen(true)}
+                className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {isAuthenticated ? (
+                <DropdownMenuItem
+                  onClick={() => setLogoutDialogOpen(true)}
+                  className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">Settings</Link>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() => setLoginModalOpen(true)}
+                  className="cursor-pointer text-emerald-500 focus:text-emerald-500">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Sign in
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setLogoutDialogOpen(true)} className="cursor-pointer">
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button size="sm" onClick={() => setLoginModalOpen(true)}>
-              Sign In
-            </Button>
-          )}
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

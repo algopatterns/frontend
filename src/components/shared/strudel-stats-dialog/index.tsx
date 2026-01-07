@@ -35,9 +35,7 @@ export function StrudelStatsDialog({
             Usage Stats
           </DialogTitle>
           {strudelTitle && (
-            <DialogDescription className="truncate">
-              {strudelTitle}
-            </DialogDescription>
+            <DialogDescription className="truncate">{strudelTitle}</DialogDescription>
           )}
         </DialogHeader>
 
@@ -56,29 +54,23 @@ export function StrudelStatsDialog({
               <div className="bg-muted/50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
                   <BarChart3 className="h-3 w-3" />
-                  AI Uses
+                  {data.stats.total_uses === 1 ? 'AI Use' : 'AI Uses'}
                 </div>
-                <div className="text-xl font-semibold">
-                  {data.stats.total_uses}
-                </div>
+                <div className="text-xl font-semibold">{data.stats.total_uses}</div>
               </div>
               <div className="bg-muted/50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
                   <GitFork className="h-3 w-3" />
-                  Forks
+                  {data.stats.fork_count === 1 ? 'Fork' : 'Forks'}
                 </div>
-                <div className="text-xl font-semibold">
-                  {data.stats.fork_count}
-                </div>
+                <div className="text-xl font-semibold">{data.stats.fork_count}</div>
               </div>
               <div className="bg-muted/50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
                   <Users className="h-3 w-3" />
-                  Users
+                  {data.stats.unique_users === 1 ? 'Unique User' : 'Unique Users'}
                 </div>
-                <div className="text-xl font-semibold">
-                  {data.stats.unique_users}
-                </div>
+                <div className="text-xl font-semibold">{data.stats.unique_users}</div>
               </div>
             </div>
 
@@ -91,17 +83,14 @@ export function StrudelStatsDialog({
 
             {data.recent_uses.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium mb-2">
-                  Inspired these strudels
-                </h4>
+                <h4 className="text-sm font-medium mb-2">Inspired these strudels</h4>
                 <div className="space-y-2">
-                  {data.recent_uses.map((use) => (
+                  {data.recent_uses.map(use => (
                     <Link
                       key={use.id}
                       href={`/?fork=${use.target_strudel_id}`}
                       className="flex items-center justify-between p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors group"
-                      onClick={() => onOpenChange(false)}
-                    >
+                      onClick={() => onOpenChange(false)}>
                       <div className="truncate flex-1">
                         <span className="text-sm">
                           {use.target_strudel_title || 'Untitled'}
@@ -116,15 +105,6 @@ export function StrudelStatsDialog({
                     </Link>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {data.stats.total_uses === 0 && data.stats.fork_count === 0 && (
-              <div className="text-center py-4 text-muted-foreground">
-                <p>No usage data yet</p>
-                <p className="text-xs mt-1">
-                  Stats appear when your strudel is forked or helps others learn
-                </p>
               </div>
             )}
           </div>

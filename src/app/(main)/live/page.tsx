@@ -17,7 +17,7 @@ export default function LivePage() {
   const { data, isLoading } = useLiveSessions();
 
   return (
-    <div className="container py-8">
+    <div className="container p-8">
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <Radio className="h-6 w-6 text-red-500 animate-pulse" />
@@ -46,10 +46,10 @@ export default function LivePage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.sessions.map(session => (
             <Card key={session.id} className="relative overflow-hidden">
-              <div className="absolute top-3 right-3">
-                <span className="flex items-center gap-1 text-xs text-red-500">
-                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  LIVE
+              <div className="absolute top-6 right-6">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
                 </span>
               </div>
               <CardHeader>

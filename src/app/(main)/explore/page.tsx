@@ -47,10 +47,10 @@ export default function ExplorePage() {
     fetchNextPage,
   } = useInfinitePublicStrudels(filters);
 
-  // Flatten pages into single array
+  // flatten pages into single array
   const strudels = data?.pages.flatMap(page => page.strudels) ?? [];
 
-  // Intersection observer for infinite scroll
+  // intersection observer for infinite scroll
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -73,7 +73,7 @@ export default function ExplorePage() {
     [isFetchingNextPage, hasNextPage, fetchNextPage]
   );
 
-  // Cleanup observer on unmount
+  // cleanup observer on unmount
   useEffect(() => {
     return () => {
       if (observerRef.current) {
@@ -86,10 +86,10 @@ export default function ExplorePage() {
     const hasUnsavedChanges = isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
 
     if (hasUnsavedChanges) {
-      // Show confirmation dialog
+      // show confirmation dialog
       setPendingForkId(strudelId);
     } else {
-      // Fork directly
+      // fork directly
       router.push(`/?fork=${strudelId}`);
     }
   };

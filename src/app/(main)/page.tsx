@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useEditor } from './hooks';
 import { useUIStore } from '@/lib/stores/ui';
+import { useAIFeaturesEnabled } from '@/lib/hooks/use-ai-features';
 
 function HomePageContent() {
   const searchParams = useSearchParams();
@@ -21,6 +22,7 @@ function HomePageContent() {
   const urlDisplayName = searchParams.get('name');
 
   const { setInviteDialogOpen, setLoginModalOpen } = useUIStore();
+  const aiEnabled = useAIFeaturesEnabled();
 
   const {
     handleCodeChange,
@@ -72,7 +74,7 @@ function HomePageContent() {
           />
         </div>
         
-        {canEdit && (
+        {canEdit && aiEnabled && (
           <AIInput
             onSendAIRequest={handleSendAIRequest}
             disabled={!isConnected}
