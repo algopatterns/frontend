@@ -18,6 +18,9 @@ export const sessionKeys = {
   details: () => [...sessionKeys.all, "detail"] as const,
   detail: (id: string) => [...sessionKeys.details(), id] as const,
   live: () => [...sessionKeys.all, "live"] as const,
+  lastSession: () => [...sessionKeys.all, "last"] as const,
+  liveStatus: (sessionId: string) =>
+    [...sessionKeys.all, "live-status", sessionId] as const,
   invites: (sessionId: string) =>
     [...sessionKeys.all, "invites", sessionId] as const,
   participants: (sessionId: string) =>
@@ -207,5 +210,49 @@ export function useSessionMessages(
     queryKey: [...sessionKeys.messages(sessionId), params],
     queryFn: () => sessionsApi.getMessages(sessionId, params),
     enabled: !!sessionId,
+  });
+}
+
+// get user's last active session (for recovery from /live page)
+export function useLastSession() {
+  return useQuery({
+    queryKey: sessionKeys.lastSession(),
+    queryFn: () => sessionsApi.getLastSession(),
+    retry: false, // don't retry on 404 (no active session)
+  });
+}
+
+// check if session is live (has other participants or active invite tokens)
+export function useSessionLiveStatus(sessionId: string, enabled = true) {
+  return useQuery({
+    queryKey: sessionKeys.liveStatus(sessionId),
+    queryFn: () => sessionsApi.getLiveStatus(sessionId),
+    enabled: enabled && !!sessionId,
+    refetchInterval: 30000, // refresh every 30 seconds
+  });
+}
+
+// soft-end a live session (kick participants, revoke invites, keep code)
+export function useSoftEndSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sessionId: string) => sessionsApi.softEndSession(sessionId),
+    onSuccess: (_, sessionId) => {
+      // invalidate related queries
+      queryClient.invalidateQueries({ queryKey: sessionKeys.live() });
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.liveStatus(sessionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.participants(sessionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.invites(sessionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.detail(sessionId),
+      });
+    },
   });
 }

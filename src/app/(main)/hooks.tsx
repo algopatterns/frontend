@@ -8,7 +8,7 @@ import { useWebSocket } from '@/lib/hooks/use-websocket';
 import { useAutosave } from '@/lib/hooks/use-autosave';
 import { useAgentGenerate } from '@/lib/hooks/use-agent';
 import { useStrudel, usePublicStrudel } from '@/lib/hooks/use-strudels';
-import { useSessionInvites } from '@/lib/hooks/use-sessions';
+import { useSessionInvites, useSessionLiveStatus, useSoftEndSession } from '@/lib/hooks/use-sessions';
 import { useUIStore } from '@/lib/stores/ui';
 import { useAuthStore } from '@/lib/stores/auth';
 import { useEditorStore } from '@/lib/stores/editor';
@@ -88,6 +88,16 @@ export const useEditor = ({
   // check if host has generated any invites (only for authenticated users)
   const { data: invitesData } = useSessionInvites(token && sessionId ? sessionId : '');
   const hasActiveInvites = (invitesData?.tokens?.length ?? 0) > 0;
+
+  // check if session is live (for host to show End Live button)
+  const { data: liveStatus } = useSessionLiveStatus(
+    token && sessionId && canEdit ? sessionId : '',
+    !!token && !!sessionId && canEdit
+  );
+  const isLive = liveStatus?.is_live ?? false;
+
+  // soft-end live session mutation
+  const softEndSession = useSoftEndSession();
 
   const showChat =
     hasInviteContext ||
@@ -371,6 +381,19 @@ export const useEditor = ({
     setNewStrudelDialogOpen(true);
   }, [setNewStrudelDialogOpen]);
 
+  const handleEndLive = useCallback(() => {
+    if (!sessionId) return;
+
+    softEndSession.mutate(sessionId, {
+      onSuccess: (data) => {
+        toast.success(`Live session ended. ${data.participants_kicked} participant(s) removed.`);
+      },
+      onError: () => {
+        toast.error('Failed to end live session');
+      },
+    });
+  }, [sessionId, softEndSession]);
+
   return {
     handleCodeChange,
     handlePlay,
@@ -379,6 +402,7 @@ export const useEditor = ({
     handleSendMessage,
     handleSave,
     handleNewStrudel,
+    handleEndLive,
     isChatPanelOpen,
     toggleChatPanel,
     isConnected,
@@ -391,5 +415,7 @@ export const useEditor = ({
     isLoadingStrudel,
     currentStrudelId,
     showChat,
+    isLive,
+    isEndingLive: softEndSession.isPending,
   };
 };

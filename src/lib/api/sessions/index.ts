@@ -11,12 +11,15 @@ import type {
   Session,
   SessionsListResponse,
   LiveSessionsListResponse,
+  LiveSession,
   UpdateSessionCodeRequest,
   UpdateSessionCodeResponse,
   ParticipantsListResponse,
   MessagesResponse,
   MessageResponse,
   PaginationParams,
+  SoftEndSessionResponse,
+  LiveStatusResponse,
 } from './types';
 
 export const sessionsApi = {
@@ -129,5 +132,29 @@ export const sessionsApi = {
     const url = `/api/v1/sessions/${sessionId}/messages${query ? `?${query}` : ''}`;
 
     return apiClient.get<MessagesResponse>(url, { requireAuth: true });
+  },
+
+  // get user's last active session (for recovery)
+  getLastSession: () => {
+    return apiClient.get<LiveSession>('/api/v1/sessions/last', {
+      requireAuth: true,
+    });
+  },
+
+  // soft-end a live session (kick participants, revoke invites, keep code)
+  softEndSession: (sessionId: string) => {
+    return apiClient.post<SoftEndSessionResponse>(
+      `/api/v1/sessions/${sessionId}/end-live`,
+      undefined,
+      { requireAuth: true }
+    );
+  },
+
+  // check if session is live (has other participants or active invite tokens)
+  getLiveStatus: (sessionId: string) => {
+    return apiClient.get<LiveStatusResponse>(
+      `/api/v1/sessions/${sessionId}/live-status`,
+      { requireAuth: true }
+    );
   },
 };

@@ -8,13 +8,25 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useLiveSessions } from '@/lib/hooks/use-sessions';
-import { Users, Radio } from 'lucide-react';
+import { useLiveSessions, useLastSession } from '@/lib/hooks/use-sessions';
+import { Users, Radio, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { formatRelativeTime } from '@/lib/utils/date';
+import { useAuth } from '@/lib/hooks/use-auth';
 
 export default function LivePage() {
   const { data, isLoading } = useLiveSessions();
+  const { isAuthenticated } = useAuth();
+  const { data: lastSession, isLoading: isLoadingLastSession } = useLastSession();
+
+  // check if last session is already in the live sessions list
+  const lastSessionInList = data?.sessions?.some(s => s.id === lastSession?.id);
+
+  // show recovery card if:
+  // 1. User is authenticated
+  // 2. Has a last session
+  // 3. Last session is NOT already in the live sessions list
+  const showRecoveryCard = isAuthenticated && lastSession && !lastSessionInList;
 
   return (
     <div className="container p-8">
@@ -28,7 +40,41 @@ export default function LivePage() {
         </p>
       </div>
 
-      {isLoading ? (
+      {/* Recovery card for user's last session */}
+      {showRecoveryCard && (
+        <div className="mb-6">
+          <Card className="border-primary/50 bg-primary/5">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {lastSession.title}
+                    <span className="text-xs bg-primary/15 text-primary px-2 py-0.5 rounded font-normal">
+                      Your Session
+                    </span>
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-4 mt-1">
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      {lastSession.participant_count}{' '}
+                      {lastSession.participant_count === 1 ? 'participant' : 'participants'}
+                    </span>
+                    <span>Active {formatRelativeTime(lastSession.last_activity)}</span>
+                  </CardDescription>
+                </div>
+                <Button asChild>
+                  <Link href={`/?session_id=${lastSession.id}`} className="gap-2">
+                    Resume Session
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
+      )}
+
+      {isLoading || (isAuthenticated && isLoadingLastSession) ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map(i => (
             <Card key={i} className="animate-pulse">

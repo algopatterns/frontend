@@ -19,7 +19,7 @@ interface StrudelPreviewPlayerProps {
 
 export function StrudelPreviewPlayer({ code, onError }: StrudelPreviewPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mirrorRef = useRef<ReturnType<typeof import('@strudel/codemirror').StrudelMirror> | null>(null);
+  const mirrorRef = useRef<InstanceType<typeof import('@strudel/codemirror').StrudelMirror> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);

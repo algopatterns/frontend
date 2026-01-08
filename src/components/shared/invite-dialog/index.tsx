@@ -57,28 +57,28 @@ export function InviteDialog() {
               <div className="flex items-center gap-2">
                 <span
                   className={`h-3 w-3 rounded-full ${
-                    isLive ? 'bg-green-500' : 'bg-red-500'
+                    isLive ? 'bg-green-500' : 'bg-muted-foreground'
                   }`}
                 />
-                <span className="font-medium">{isLive ? 'Live' : 'Go Live'}</span>
+                <span className="font-medium">{isLive ? 'Public' : 'Private'}</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 {isLive
-                  ? 'Your session is visible in explore'
-                  : 'Make your session discoverable'}
+                  ? 'Session visible in the Live page'
+                  : 'Invite-only (not listed publicly)'}
               </p>
             </div>
             <Button
               size="sm"
-              variant={isLive ? 'destructive' : 'default'}
+              variant={isLive ? 'outline' : 'default'}
               onClick={handleToggleLive}
               disabled={setDiscoverable.isPending || !sessionId}>
               {setDiscoverable.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : isLive ? (
-                'End Live'
+                'Make Private'
               ) : (
-                'Go Live'
+                'Make Public'
               )}
             </Button>
           </div>

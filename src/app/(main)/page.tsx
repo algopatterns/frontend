@@ -32,6 +32,7 @@ function HomePageContent() {
     handleSendMessage,
     handleSave,
     handleNewStrudel,
+    handleEndLive,
     isChatPanelOpen,
     toggleChatPanel,
     isConnected,
@@ -41,14 +42,16 @@ function HomePageContent() {
     saveStatus,
     showChat,
     isAuthenticated,
+    isLive,
+    isEndingLive,
   } = useEditor({ strudelId, forkStrudelId, urlSessionId, urlInviteToken, urlDisplayName });
 
-  const handleShare = () => {
+  const handleGoLive = () => {
     if (!isAuthenticated) {
       setLoginModalOpen(true);
       return;
     }
-    
+
     setInviteDialogOpen(true);
   };
 
@@ -60,10 +63,13 @@ function HomePageContent() {
           onStop={handleStop}
           onSave={handleSave}
           onNew={handleNewStrudel}
-          onShare={handleShare}
+          onGoLive={handleGoLive}
+          onEndLive={handleEndLive}
           showSave={canEdit}
           showNew={canEdit}
-          showShare={!!sessionId && canEdit}
+          showGoLive={!!sessionId && canEdit}
+          isLive={isLive}
+          isEndingLive={isEndingLive}
           saveStatus={saveStatus}
           isViewer={isViewer}
         />

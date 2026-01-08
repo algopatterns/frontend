@@ -129,3 +129,15 @@ export interface MessagesResponse {
 export interface MessageResponse {
   message: string;
 }
+
+export interface SoftEndSessionResponse {
+  message: string;
+  participants_kicked: number;
+  invites_revoked: boolean;
+}
+
+export interface LiveStatusResponse {
+  is_live: boolean;
+  participant_count: number;
+  has_active_invite_tokens: boolean;
+}

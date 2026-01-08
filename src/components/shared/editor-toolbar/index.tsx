@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Play, Square, Plus, Share2 } from 'lucide-react';
+import { Play, Square, Plus, Radio, X } from 'lucide-react';
 import { useEditorToolbar, type SaveStatus } from './hooks';
 import { SaveIndicator, ConnectionIndicator } from './components';
 
@@ -12,10 +12,13 @@ interface EditorToolbarProps {
   onStop: () => void;
   onSave?: () => void;
   onNew?: () => void;
-  onShare?: () => void;
+  onGoLive?: () => void;
+  onEndLive?: () => void;
   showSave?: boolean;
   showNew?: boolean;
-  showShare?: boolean;
+  showGoLive?: boolean;
+  isLive?: boolean;
+  isEndingLive?: boolean;
   saveStatus?: SaveStatus;
   isViewer?: boolean;
 }
@@ -25,10 +28,13 @@ export function EditorToolbar({
   onStop,
   onSave,
   onNew,
-  onShare,
+  onGoLive,
+  onEndLive,
   showSave = false,
   showNew = false,
-  showShare = false,
+  showGoLive = false,
+  isLive = false,
+  isEndingLive = false,
   saveStatus = 'saved',
   isViewer = false,
 }: EditorToolbarProps) {
@@ -102,19 +108,39 @@ export function EditorToolbar({
         </Tooltip>
       )}
 
-      {showShare && onShare && (
+      {showGoLive && onGoLive && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               size="icon-round-sm"
               variant="outline"
-              onClick={onShare}
+              onClick={onGoLive}
               className="text-muted-foreground hover:text-foreground">
-              <Share2 className="h-4 w-4" />
+              <Radio className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Share</TooltipContent>
+          <TooltipContent>Go Live</TooltipContent>
         </Tooltip>
+      )}
+
+      {isLive && onEndLive && (
+        <>
+          <Separator orientation="vertical" className="h-6" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={onEndLive}
+                disabled={isEndingLive}
+                className="gap-1">
+                <X className="h-3 w-3" />
+                End Live
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>End live session and kick all participants</TooltipContent>
+          </Tooltip>
+        </>
       )}
     </div>
   );
