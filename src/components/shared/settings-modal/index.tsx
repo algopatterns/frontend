@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Settings, Sparkles, User } from 'lucide-react';
@@ -17,10 +18,25 @@ import { useUpdateAIFeaturesEnabled } from '@/lib/hooks/use-users';
 import { toast } from 'sonner';
 
 const AI_DISABLED_KEY = 'algorave_ai_disabled';
+const ANON_DISPLAY_NAME_KEY = 'algorave_display_name';
 
 function getAnonAIEnabled(): boolean {
   if (typeof window === 'undefined') return true;
   return localStorage.getItem(AI_DISABLED_KEY) !== 'true';
+}
+
+export function getAnonDisplayName(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(ANON_DISPLAY_NAME_KEY) || '';
+}
+
+function setAnonDisplayName(name: string): void {
+  if (typeof window === 'undefined') return;
+  if (name.trim()) {
+    localStorage.setItem(ANON_DISPLAY_NAME_KEY, name.trim());
+  } else {
+    localStorage.removeItem(ANON_DISPLAY_NAME_KEY);
+  }
 }
 
 export function SettingsModal() {
@@ -30,6 +46,19 @@ export function SettingsModal() {
 
   // track optimistic state for pending updates
   const [optimisticValue, setOptimisticValue] = useState<boolean | null>(null);
+
+  // anonymous display name - save on change, read fresh when modal opens
+  const handleDisplayNameChange = (value: string) => {
+    setAnonDisplayName(value);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // reset optimistic value when modal closes (so next open reads fresh from source)
+      setOptimisticValue(null);
+    }
+    setSettingsModalOpen(open);
+  };
 
   // derive the current value from source of truth
   const sourceValue = useMemo(() => {
@@ -73,12 +102,12 @@ export function SettingsModal() {
       }
 
       toast.success(checked ? 'AI features enabled' : 'AI features disabled');
-      setOptimisticValue(null);
+      // keep optimistic value for anon - localStorage change won't trigger useMemo re-run
     }
   };
 
   return (
-    <Dialog open={isSettingsModalOpen} onOpenChange={setSettingsModalOpen}>
+    <Dialog open={isSettingsModalOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -90,10 +119,31 @@ export function SettingsModal() {
 
         <div className="space-y-7 py-4">
           {!isAuthenticated && (
-            <div className="rounded-lg border border-dashed p-4 text-center">
-              <p className="text-sm text-muted-foreground">
-                Sign in to view profile information
-              </p>
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Profile
+              </h3>
+              <div className="space-y-4 rounded-lg border p-4">
+                <div className="space-y-2">
+                  <Label htmlFor="display-name">Display Name</Label>
+                  <Input
+                    id="display-name"
+                    placeholder="Anonymous"
+                    defaultValue={getAnonDisplayName()}
+                    onChange={(e) => handleDisplayNameChange(e.target.value)}
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Used when joining live sessions
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-dashed text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Sign in for more profile options
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 

@@ -45,8 +45,13 @@ export default function LivePage() {
       ) : data?.sessions && data.sessions.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.sessions.map(session => (
-            <Card key={session.id} className="relative overflow-hidden">
-              <div className="absolute top-6 right-6">
+            <Card key={session.id} className={`relative overflow-hidden ${session.is_member ? "border-primary/50" : ""}`}>
+              <div className="absolute top-6 right-6 flex items-center gap-2">
+                {session.is_member && (
+                  <span className="text-xs bg-primary/15 text-primary px-2 py-0.5 rounded">
+                    Member
+                  </span>
+                )}
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
@@ -66,8 +71,10 @@ export default function LivePage() {
                 <p className="text-xs text-muted-foreground mb-4">
                   Active {formatRelativeTime(session.last_activity)}
                 </p>
-                <Button asChild className="w-full">
-                  <Link href={`/sessions/${session.id}`}>Join Session</Link>
+                <Button asChild className="w-full" variant={session.is_member ? "secondary" : "default"}>
+                  <Link href={`/sessions/${session.id}`}>
+                    {session.is_member ? "Rejoin Session" : "Join Session"}
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Dialog,
@@ -9,8 +10,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { GitFork, Sparkles, ExternalLink } from 'lucide-react';
+import { GitFork, Sparkles } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
+import { StrudelPreviewPlayer } from '@/components/shared/strudel-preview-player';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useUIStore } from '@/lib/stores/ui';
 import { EDITOR } from '@/lib/constants';
@@ -29,25 +31,25 @@ export function StrudelPreviewModal({
   const router = useRouter();
   const { isDirty, code, currentStrudelId } = useEditorStore();
   const { setPendingForkId } = useUIStore();
+  const [error, setError] = useState<string | null>(null);
 
-  if (!strudel) return null;
+  const handleErrorChange = useCallback((err: string | null) => {
+    setError(err);
+  }, []);
 
-  const handleOpen = () => {
-    onOpenChange(false);
-    router.push(`/?id=${strudel.id}`);
-  };
-
-  const handleFork = () => {
+  const handleFork = useCallback(() => {
     const hasUnsavedChanges = isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
 
     onOpenChange(false);
 
     if (hasUnsavedChanges) {
-      setPendingForkId(strudel.id);
+      setPendingForkId(strudel?.id ?? '');
     } else {
-      router.push(`/?fork=${strudel.id}`);
+      router.push(`/?fork=${strudel?.id}`);
     }
-  };
+  }, [isDirty, currentStrudelId, code, onOpenChange, setPendingForkId, strudel?.id, router]);
+
+  if (!strudel) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,9 +64,17 @@ export function StrudelPreviewModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
-          <pre className="flex-1 text-sm bg-muted p-4 rounded-lg overflow-auto font-mono whitespace-pre-wrap break-words">
-            {strudel.code}
-          </pre>
+          {/* only mount player when modal is open to avoid audio context issues */}
+          {open && (
+            <StrudelPreviewPlayer
+              code={strudel.code}
+              onError={handleErrorChange}
+            />
+          )}
+
+          {error && (
+            <p className="text-sm text-destructive mt-2">{error}</p>
+          )}
 
           <div className="flex flex-wrap gap-2 mt-4">
             {strudel.ai_assist_count > 0 && (
@@ -85,10 +95,6 @@ export function StrudelPreviewModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={handleOpen}>
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Open
-          </Button>
           <Button onClick={handleFork}>
             <GitFork className="h-4 w-4 mr-2" />
             Fork

@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { usersApi } from "@/lib/api/users";
+import { useAuthStore } from "@/lib/stores/auth";
 import type {
   TrainingConsentRequest,
   AIFeaturesEnabledRequest,
@@ -20,25 +21,26 @@ export function useUsage() {
 }
 
 export function useUpdateTrainingConsent() {
-  const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
 
   return useMutation({
     mutationFn: (data: TrainingConsentRequest) =>
       usersApi.updateTrainingConsent(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+    onSuccess: (updatedUser) => {
+      setUser(updatedUser);
     },
   });
 }
 
 export function useUpdateAIFeaturesEnabled() {
-  const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
 
   return useMutation({
     mutationFn: (data: AIFeaturesEnabledRequest) =>
       usersApi.updateAIFeaturesEnabled(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+    onSuccess: (updatedUser) => {
+      // update the auth store directly with the returned user
+      setUser(updatedUser);
     },
   });
 }
