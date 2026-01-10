@@ -27,8 +27,8 @@ export function OpenStrudelConfirmDialog() {
 
   return (
     <Dialog open={!!pendingOpenStrudelId} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader className="space-y-3">
           <DialogTitle>Unsaved Changes</DialogTitle>
           <DialogDescription>
             {currentStrudelId
@@ -36,7 +36,7 @@ export function OpenStrudelConfirmDialog() {
               : 'You have unsaved work that will be lost if you continue without saving first.'}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 pt-2">
           <Button variant="ghost" onClick={handleClose}>
             Cancel
           </Button>

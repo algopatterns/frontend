@@ -28,15 +28,15 @@ export function NewStrudelDialog() {
   if (!isAuthenticated) {
     return (
       <Dialog open={isNewStrudelDialogOpen} onOpenChange={setNewStrudelDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="space-y-3">
             <DialogTitle>Start a New Strudel</DialogTitle>
             <DialogDescription>
               Sign in to save your strudels and access them later. As a guest, you can
               clear the editor to start fresh.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
@@ -52,8 +52,8 @@ export function NewStrudelDialog() {
 
   return (
     <Dialog open={isNewStrudelDialogOpen} onOpenChange={setNewStrudelDialogOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader className="space-y-3">
           <DialogTitle>Start a New Strudel</DialogTitle>
           <DialogDescription>
             {hasUnsavedChanges
@@ -63,7 +63,7 @@ export function NewStrudelDialog() {
               : 'Start fresh with a new strudel session.'}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 pt-2">
           <Button variant="ghost" onClick={handleClose}>
             Cancel
           </Button>

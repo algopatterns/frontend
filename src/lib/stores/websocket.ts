@@ -84,10 +84,12 @@ export const useWebSocketStore = create<WebSocketState>(set => ({
         if (id && (p.id === id || p.userId === id)) {
           return false; // remove this participant
         }
+
         // fall back to displayName match for guests
         if (!id && displayName && !p.userId && p.displayName === displayName) {
           return false; // remove this participant
         }
+        
         return true; // keep this participant
       }),
     }));

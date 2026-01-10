@@ -14,7 +14,7 @@ import { AuthGuard } from '@/components/shared/auth-guard';
 import { StrudelFormDialog } from '@/components/shared/strudel-form-dialog';
 import { StrudelStatsDialog } from '@/components/shared/strudel-stats-dialog';
 import { useDashboard } from './hooks';
-import { Settings, Pencil, Loader2, Sparkles, BarChart3 } from 'lucide-react';
+import { Settings, Pencil, Loader2, Sparkles, BarChart3, Plus } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useUIStore } from '@/lib/stores/ui';
@@ -36,7 +36,8 @@ function DashboardContent() {
       return;
     }
 
-    const hasUnsavedChanges = isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
+    const hasUnsavedChanges =
+      isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
 
     if (hasUnsavedChanges) {
       setPendingOpenStrudelId(strudelId);
@@ -50,12 +51,9 @@ function DashboardContent() {
       <div className="container p-8 w-full max-w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Manage your strudels and sessions</p>
+            <h1 className="text-3xl font-bold">Shelf</h1>
+            <p className="text-muted-foreground">Your creations and live sessions</p>
           </div>
-          <Button asChild>
-            <Link href="/">New Strudel</Link>
-          </Button>
         </div>
 
         {isLoading ? (
@@ -186,7 +184,7 @@ function DashboardContent() {
           strudelId={statsStrudel?.id ?? null}
           strudelTitle={statsStrudel?.title}
           open={!!statsStrudel}
-          onOpenChange={(open) => !open && setStatsStrudel(null)}
+          onOpenChange={open => !open && setStatsStrudel(null)}
         />
       </div>
     </AuthGuard>

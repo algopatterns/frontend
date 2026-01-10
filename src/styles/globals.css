@@ -145,3 +145,12 @@ body {
     margin-top: -1.5rem;
   }
 }
+
+/* strudel editor - make CodeMirror fill container height */
+.strudel-editor .cm-editor {
+  height: 100%;
+}
+
+.strudel-editor .cm-scroller {
+  min-height: 100%;
+}

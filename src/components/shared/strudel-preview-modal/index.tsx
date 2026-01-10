@@ -1,7 +1,5 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -13,9 +11,7 @@ import { Button } from '@/components/ui/button';
 import { GitFork, Sparkles } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
 import { StrudelPreviewPlayer } from '@/components/shared/strudel-preview-player';
-import { useEditorStore } from '@/lib/stores/editor';
-import { useUIStore } from '@/lib/stores/ui';
-import { EDITOR } from '@/lib/constants';
+import { useStrudelPreviewModal } from './hooks';
 
 interface StrudelPreviewModalProps {
   strudel: Strudel | null;
@@ -28,32 +24,16 @@ export function StrudelPreviewModal({
   open,
   onOpenChange,
 }: StrudelPreviewModalProps) {
-  const router = useRouter();
-  const { isDirty, code, currentStrudelId } = useEditorStore();
-  const { setPendingForkId } = useUIStore();
-  const [error, setError] = useState<string | null>(null);
-
-  const handleErrorChange = useCallback((err: string | null) => {
-    setError(err);
-  }, []);
-
-  const handleFork = useCallback(() => {
-    const hasUnsavedChanges = isDirty || (!currentStrudelId && code !== EDITOR.DEFAULT_CODE);
-
-    onOpenChange(false);
-
-    if (hasUnsavedChanges) {
-      setPendingForkId(strudel?.id ?? '');
-    } else {
-      router.push(`/?fork=${strudel?.id}`);
-    }
-  }, [isDirty, currentStrudelId, code, onOpenChange, setPendingForkId, strudel?.id, router]);
+  const { error, handleErrorChange, handleFork } = useStrudelPreviewModal(
+    strudel,
+    onOpenChange
+  );
 
   if (!strudel) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="md:max-w-3xl lg:max-w-4xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {strudel.title}
@@ -64,7 +44,7 @@ export function StrudelPreviewModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
-          {/* only mount player when modal is open to avoid audio context issues */}
+          {/* mount player only when modal is open - avoids audio context issues, do not change @agents and @contributors */}
           {open && (
             <StrudelPreviewPlayer
               code={strudel.code}

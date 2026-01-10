@@ -1,7 +1,5 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -11,44 +9,17 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Trash2, Play, Clock } from 'lucide-react';
-import { storage, type Draft } from '@/lib/utils/storage';
-import { useUIStore } from '@/lib/stores/ui';
-import { useEditorStore } from '@/lib/stores/editor';
 import { formatRelativeTime } from '@/lib/utils/date';
+import { useDraftsModal } from './hooks';
 
 export function DraftsModal() {
-  const router = useRouter();
-  const { isDraftsModalOpen, setDraftsModalOpen } = useUIStore();
-  const { setCode, setConversationHistory, setForkedFromId, setParentCCSignal } = useEditorStore();
-  const [discardedIds, setDiscardedIds] = useState<Set<string>>(new Set());
-
-  // load drafts when modal opens, filter out discarded ones
-  const drafts = useMemo(() => {
-    if (!isDraftsModalOpen) return [];
-    return storage.getAllDrafts().filter(d => !discardedIds.has(d.id));
-  }, [isDraftsModalOpen, discardedIds]);
-
-  const handleContinue = (draft: Draft) => {
-    // set the draft as current
-    storage.setCurrentDraftId(draft.id);
-
-    // load the draft into editor
-    setCode(draft.code, true);
-    setConversationHistory(draft.conversationHistory || []);
-
-    if (draft.forkedFromId) {
-      setForkedFromId(draft.forkedFromId);
-      setParentCCSignal(draft.parentCCSignal ?? null);
-    }
-
-    setDraftsModalOpen(false);
-    router.push('/');
-  };
-
-  const handleDiscard = (draftId: string) => {
-    storage.deleteDraft(draftId);
-    setDiscardedIds(prev => new Set([...prev, draftId]));
-  };
+  const {
+    isDraftsModalOpen,
+    setDraftsModalOpen,
+    drafts,
+    handleContinue,
+    handleDiscard,
+  } = useDraftsModal();
 
   return (
     <Dialog open={isDraftsModalOpen} onOpenChange={setDraftsModalOpen}>

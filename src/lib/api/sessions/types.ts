@@ -95,6 +95,7 @@ export interface LiveSession {
   title: string;
   participant_count: number;
   is_member: boolean;
+  is_discoverable: boolean;
   created_at: string;
   last_activity: string;
 }

@@ -5,7 +5,7 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 import type { Strudel } from '@/lib/api/strudels/types';
-import { StrudelForm } from './components';
+import { StrudelForm } from './form';
 
 interface StrudelFormDialogProps {
   strudel?: Strudel | null;

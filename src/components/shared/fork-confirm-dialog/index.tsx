@@ -33,14 +33,14 @@ export function ForkConfirmDialog() {
 
     return (
       <Dialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="space-y-3">
             <DialogTitle>
               {isReforkingSameStrudel ? 'Re-fork Strudel' : 'Fork Strudel'}
             </DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
@@ -68,12 +68,12 @@ export function ForkConfirmDialog() {
 
     return (
       <Dialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="space-y-3">
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
