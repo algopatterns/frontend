@@ -37,7 +37,7 @@ export function StrudelStatsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
@@ -63,7 +63,7 @@ export function StrudelStatsDialog({
                 <div className="bg-muted/50 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
                     <BarChart3 className="h-3 w-3" />
-                    {data.stats.total_uses === 1 ? 'AI Use' : 'AI Uses'}
+                    AI References
                   </div>
                   <div className="text-xl font-semibold">{data.stats.total_uses}</div>
                 </div>
@@ -97,8 +97,7 @@ export function StrudelStatsDialog({
                     {data.recent_uses.map(use => (
                       <div
                         key={use.id}
-                        className="flex items-center justify-between p-2 rounded-md bg-muted/30"
-                      >
+                        className="flex items-center justify-between p-2 rounded-md bg-muted/30">
                         <div className="truncate flex-1 min-w-0">
                           <span className="text-sm">
                             {use.target_strudel_title || 'Untitled'}
@@ -113,8 +112,10 @@ export function StrudelStatsDialog({
                           size="sm"
                           variant="ghost"
                           className="ml-2 shrink-0"
-                          onClick={() => use.target_strudel_id && handleOpenPreview(use.target_strudel_id)}
-                        >
+                          onClick={() =>
+                            use.target_strudel_id &&
+                            handleOpenPreview(use.target_strudel_id)
+                          }>
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Button>
@@ -131,7 +132,7 @@ export function StrudelStatsDialog({
       <StrudelPreviewModal
         strudel={previewStrudel}
         open={isPreviewOpen}
-        onOpenChange={(open) => !open && handleClosePreview()}
+        onOpenChange={open => !open && handleClosePreview()}
       />
     </>
   );

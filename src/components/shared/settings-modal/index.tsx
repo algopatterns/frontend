@@ -46,17 +46,16 @@ export function SettingsModal() {
               </h3>
               <div className="space-y-4 rounded-lg border p-4">
                 <div className="space-y-2">
-                  <Label htmlFor="display-name">Display Name</Label>
+                  <Label htmlFor="display-name">
+                    Display Name <span className='text-xs text-muted-foreground'>(for shared sessions & raves)</span>
+                  </Label>
                   <Input
                     id="display-name"
                     placeholder="Anonymous"
                     defaultValue={getAnonDisplayName()}
-                    onChange={(e) => handleDisplayNameChange(e.target.value)}
+                    onChange={e => handleDisplayNameChange(e.target.value)}
                     maxLength={50}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Used when joining live sessions
-                  </p>
                 </div>
                 <div className="pt-2 border-t border-dashed text-center">
                   <p className="text-sm text-muted-foreground">

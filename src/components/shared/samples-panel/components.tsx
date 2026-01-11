@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, ChevronDown, Play, Download, Loader2 } from 'lucide-react';
+import { Copy, Check, ChevronDown, Play, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { previewSample } from '../strudel-editor';
 
@@ -33,50 +33,42 @@ export function SampleItem({ name }: SampleItemProps) {
     if (success && !isLoaded) {
       loadedSamples.add(name);
       setIsLoaded(true);
+      setIsLoading(false);
+      
+      // play again now that the sample is loaded
+      await previewSample(name);
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
     <div
       className="flex items-center justify-between py-1 px-3 hover:bg-muted/50 group cursor-pointer"
-      onClick={handleCopy}>
-      <code className="text-xs font-mono">{name}</code>
-      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-5 w-5"
-          onClick={e => {
-            e.stopPropagation();
-            handlePlay();
-          }}
-          title={isLoaded ? 'Preview sample' : 'Load and preview sample'}
-          disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : isLoaded ? (
-            <Play className="h-3 w-3" />
-          ) : (
-            <Download className="h-3 w-3" />
-          )}
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-5 w-5"
-          onClick={e => {
-            e.stopPropagation();
-            handleCopy();
-          }}
-          title="Copy to clipboard">
-          {copied ? (
-            <Check className="h-3 w-3 text-green-500" />
-          ) : (
-            <Copy className="h-3 w-3" />
-          )}
-        </Button>
+      onClick={handlePlay}>
+      <div className="flex items-center gap-1.5">
+        {isLoading ? (
+          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+        ) : (
+          <Play className="h-3 w-3 text-muted-foreground" />
+        )}
+        <code className="text-xs font-mono">{name}</code>
       </div>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={e => {
+          e.stopPropagation();
+          handleCopy();
+        }}
+        title="Copy to clipboard">
+        {copied ? (
+          <Check className="h-3 w-3 text-green-500" />
+        ) : (
+          <Copy className="h-3 w-3" />
+        )}
+      </Button>
     </div>
   );
 }
@@ -125,14 +117,9 @@ export function CategorySection({
       </button>
       {isOpen && (
         <div className="max-h-64 overflow-y-auto bg-muted/40">
-          {filteredSamples.slice(0, 50).map(sample => (
+          {filteredSamples.map(sample => (
             <SampleItem key={sample} name={sample} />
           ))}
-          {filteredSamples.length > 50 && (
-            <p className="text-xs text-muted-foreground text-center py-2">
-              + {filteredSamples.length - 50} more (use search to filter)
-            </p>
-          )}
         </div>
       )}
     </div>

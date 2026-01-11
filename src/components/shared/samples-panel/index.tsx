@@ -2,18 +2,13 @@
 
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { SAMPLE_DATA, ALL_SAMPLES } from '@/lib/data/samples';
+import { SAMPLE_DATA } from '@/lib/data/samples';
 import { useSamplesPanel } from './hooks';
 import { SampleItem, CategorySection, SubCategorySection } from './components';
 
 export function SamplesPanel() {
-  const {
-    searchQuery,
-    setSearchQuery,
-    openCategories,
-    toggleCategory,
-    searchResults,
-  } = useSamplesPanel();
+  const { searchQuery, setSearchQuery, openCategories, toggleCategory, searchResults } =
+    useSamplesPanel();
 
   return (
     <div className="flex flex-col h-full">
@@ -43,46 +38,61 @@ export function SamplesPanel() {
                 {searchResults.map(sample => (
                   <SampleItem key={sample} name={sample} />
                 ))}
-                {ALL_SAMPLES.filter(s =>
-                  s.toLowerCase().includes(searchQuery.toLowerCase())
-                ).length > 50 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">
-                    Showing first 50 results. Refine your search for more.
-                  </p>
-                )}
               </>
             )}
           </div>
         ) : (
           <>
             <CategorySection
-              title="Samples"
-              samples={SAMPLE_DATA.samples}
-              isOpen={openCategories.has('samples')}
-              onToggle={() => toggleCategory('samples')}
+              title="Basic Drums"
+              samples={SAMPLE_DATA.basicDrums}
+              isOpen={openCategories.has('basicDrums')}
+              onToggle={() => toggleCategory('basicDrums')}
+              searchQuery={searchQuery}
+            />
+            <CategorySection
+              title="Orchestral (VCSL)"
+              samples={SAMPLE_DATA.vcsl}
+              isOpen={openCategories.has('vcsl')}
+              onToggle={() => toggleCategory('vcsl')}
               searchQuery={searchQuery}
             />
             <SubCategorySection
               title="Drum Machines"
-              data={SAMPLE_DATA.drums}
-              defaultOpen="Basic"
-              isOpen={openCategories.has('drums')}
-              onToggle={() => toggleCategory('drums')}
+              data={SAMPLE_DATA.drumMachines}
+              defaultOpen="Roland TR-808"
+              isOpen={openCategories.has('drumMachines')}
+              onToggle={() => toggleCategory('drumMachines')}
               searchQuery={searchQuery}
             />
             <SubCategorySection
               title="Synths"
               data={SAMPLE_DATA.synths}
-              defaultOpen="Basic Waveforms"
+              defaultOpen="Waveforms"
               isOpen={openCategories.has('synths')}
               onToggle={() => toggleCategory('synths')}
               searchQuery={searchQuery}
             />
+            <SubCategorySection
+              title="GM Soundfonts"
+              data={SAMPLE_DATA.gmSoundfonts}
+              defaultOpen="Piano/Keys"
+              isOpen={openCategories.has('gmSoundfonts')}
+              onToggle={() => toggleCategory('gmSoundfonts')}
+              searchQuery={searchQuery}
+            />
             <CategorySection
-              title="Wavetables"
-              samples={SAMPLE_DATA.wavetables}
-              isOpen={openCategories.has('wavetables')}
-              onToggle={() => toggleCategory('wavetables')}
+              title="Dirt Samples"
+              samples={SAMPLE_DATA.dirtSamples}
+              isOpen={openCategories.has('dirtSamples')}
+              onToggle={() => toggleCategory('dirtSamples')}
+              searchQuery={searchQuery}
+            />
+            <CategorySection
+              title="Piano"
+              samples={SAMPLE_DATA.piano}
+              isOpen={openCategories.has('piano')}
+              onToggle={() => toggleCategory('piano')}
               searchQuery={searchQuery}
             />
           </>

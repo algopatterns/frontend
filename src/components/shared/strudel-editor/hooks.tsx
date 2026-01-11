@@ -111,7 +111,9 @@ export function setAudioContextFn(fn: (() => AudioContext) | null) {
 }
 
 export function setSuperdoughFn(
-  fn: ((value: Record<string, unknown>, time: number, duration?: number) => Promise<void>) | null
+  fn:
+    | ((value: Record<string, unknown>, time: number, duration?: number) => Promise<void>)
+    | null
 ) {
   superdoughFn = fn;
 }
@@ -149,11 +151,76 @@ export async function resumeAudioContext(): Promise<boolean> {
 
 export async function evaluateStrudel() {
   await resumeAudioContext();
-  strudelMirrorInstance?.evaluate();
+
+  if (!strudelMirrorInstance) {
+    console.warn('[strudel] No instance available for evaluate');
+    return;
+  }
+
+  try {
+    // optimistically set playing state before evaluate
+    // this ensures UI updates even if onToggle callback is delayed
+    useAudioStore.getState().setPlaying(true);
+
+    await strudelMirrorInstance.evaluate();
+  } catch (error) {
+    console.error('[strudel] Evaluate failed:', error);
+    // revert state on error
+    useAudioStore.getState().setPlaying(false);
+  }
 }
 
 export function stopStrudel() {
-  strudelMirrorInstance?.stop();
+  if (!strudelMirrorInstance) {
+    console.warn('[strudel] No instance available for stop');
+    return;
+  }
+
+  // optimistically set playing state to false
+  // this ensures UI updates even if onToggle callback is delayed
+  useAudioStore.getState().setPlaying(false);
+
+  strudelMirrorInstance.stop();
+}
+
+// sounds that need a note parameter to play (pitched instruments)
+const PITCHED_SOUNDS = [
+  // synths
+  'sine',
+  'triangle',
+  'square',
+  'sawtooth',
+  'pulse',
+  'sin',
+  'tri',
+  'sqr',
+  'saw',
+  'white',
+  'pink',
+  'brown',
+  'crackle',
+  'supersaw',
+  'bytebeat',
+  'sbd',
+  'user',
+  'zzfx',
+  'z_sine',
+  'z_sawtooth',
+  'z_triangle',
+  'z_square',
+  'z_tan',
+  'z_noise',
+
+  // piano sample
+  'piano',
+];
+
+function isPitchedSound(name: string): boolean {
+  // gm soundfonts all start with gm_
+  if (name.startsWith('gm_')) return true;
+
+  // check against known pitched sounds
+  return PITCHED_SOUNDS.includes(name);
 }
 
 export async function previewSample(sampleName: string): Promise<boolean> {
@@ -169,7 +236,21 @@ export async function previewSample(sampleName: string): Promise<boolean> {
       await ctx.resume();
     }
 
-    await superdoughFn({ s: sampleName }, ctx.currentTime + 0.01);
+    // build parameters for superdough
+    // superdough signature: (value, t, hapDuration, cps, cycle)
+    const params: Record<string, unknown> = { s: sampleName };
+
+    // pitched instruments need a note to play
+    if (isPitchedSound(sampleName)) {
+      params.note = 60; // Middle C (C4)
+    }
+
+    const startTime = ctx.currentTime + 0.01;
+    const duration = 0.5; // half second preview
+    const cps = 1; // 1 cycle per second (60 BPM)
+
+    // @ts-expect-error - superdoughFn signature is not typed
+    await superdoughFn(params, startTime, duration, cps);
     return true;
   } catch (error) {
     console.warn('[strudel] Failed to preview sample:', error);
@@ -451,6 +532,7 @@ export function useStrudelEditor(
         setStrudelMirrorInstance(null);
       }
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: init runs once on mount
   }, []);
 

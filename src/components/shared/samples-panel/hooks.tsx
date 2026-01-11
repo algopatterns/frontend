@@ -5,7 +5,7 @@ import { ALL_SAMPLES } from '@/lib/data/samples';
 
 export function useSamplesPanel() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(['samples']));
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(['basicDrums']));
 
   const toggleCategory = (category: string) => {
     setOpenCategories(prev => {
@@ -26,7 +26,7 @@ export function useSamplesPanel() {
 
     return ALL_SAMPLES.filter(s =>
       s.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 50);
+    );
   }, [searchQuery]);
 
   return {
