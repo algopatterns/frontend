@@ -1,9 +1,9 @@
-import { useAuthStore } from "@/lib/stores/auth";
-import { useWebSocketStore } from "@/lib/stores/websocket";
-import { useEditorStore } from "@/lib/stores/editor";
-import { storage } from "@/lib/utils/storage";
-import { processSessionState, type SessionStateContext } from "./session-state-machine";
-import { WS_BASE_URL, WEBSOCKET, EDITOR } from "@/lib/constants";
+import { useAuthStore } from '@/lib/stores/auth';
+import { useWebSocketStore } from '@/lib/stores/websocket';
+import { useEditorStore } from '@/lib/stores/editor';
+import { storage } from '@/lib/utils/storage';
+import { processSessionState, type SessionStateContext } from './session-state-machine';
+import { WS_BASE_URL, WEBSOCKET, EDITOR } from '@/lib/constants';
 import type {
   WebSocketMessage,
   SessionStatePayload,
@@ -16,7 +16,7 @@ import type {
   StopPayload,
   SessionEndedPayload,
   PasteLockChangedPayload,
-} from "./types";
+} from './types';
 
 interface ConnectionOptions {
   sessionId?: string;
@@ -100,7 +100,11 @@ class AlgoraveWebSocket {
 
   connect(options: ConnectionOptions = {}) {
     // don't interrupt an existing connection
-    if (this.ws && (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)) {
+    if (
+      this.ws &&
+      (this.ws.readyState === WebSocket.CONNECTING ||
+        this.ws.readyState === WebSocket.OPEN)
+    ) {
       return;
     }
 
@@ -113,28 +117,31 @@ class AlgoraveWebSocket {
     const { token } = useAuthStore.getState();
     const { setStatus, setError, setSessionStateReceived } = useWebSocketStore.getState();
 
-    setStatus("connecting");
+    setStatus('connecting');
     setError(null);
     setSessionStateReceived(false);
 
     const params = new URLSearchParams();
-    
-    if (options.sessionId) params.set("session_id", options.sessionId);
-    if (options.previousSessionId) params.set("previous_session_id", options.previousSessionId);
-    if (token) params.set("token", token);
-    if (options.inviteToken) params.set("invite", options.inviteToken);
-    if (options.displayName) params.set("display_name", options.displayName);
 
-    const wsUrl = `${WS_BASE_URL}/api/v1/ws${params.toString() ? `?${params}` : ""}`;
+    if (options.sessionId) params.set('session_id', options.sessionId);
+    if (options.previousSessionId) {
+      params.set('previous_session_id', options.previousSessionId);
+    }
+
+    if (token) params.set('token', token);
+    if (options.inviteToken) params.set('invite', options.inviteToken);
+    if (options.displayName) params.set('display_name', options.displayName);
+
+    const wsUrl = `${WS_BASE_URL}/api/v1/ws${params.toString() ? `?${params}` : ''}`;
 
     try {
       this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
       this.startConnectionTimeout();
     } catch (error) {
-      console.error("[WS] Failed to create WebSocket:", error);
-      setStatus("disconnected");
-      setError("Failed to connect");
+      console.error('[WS] Failed to create WebSocket:', error);
+      setStatus('disconnected');
+      setError('Failed to connect');
     }
   }
 
@@ -170,8 +177,11 @@ class AlgoraveWebSocket {
       this.ws.onerror = null;
       this.ws.onmessage = null;
 
-      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
-        this.ws.close(1000, "Cleanup");
+      if (
+        this.ws.readyState === WebSocket.OPEN ||
+        this.ws.readyState === WebSocket.CONNECTING
+      ) {
+        this.ws.close(1000, 'Cleanup');
       }
 
       this.ws = null;
@@ -186,24 +196,24 @@ class AlgoraveWebSocket {
     this.ws.onopen = () => {
       this.clearConnectionTimeout();
       this.reconnectAttempts = 0;
-      setStatus("connected");
+      setStatus('connected');
       setError(null);
       this.startPing();
 
       // execute and clear onceConnected callbacks
       const callbacks = this.onConnectedCallbacks;
       this.onConnectedCallbacks = [];
-      callbacks.forEach((cb) => cb());
+      callbacks.forEach(cb => cb());
     };
 
-    this.ws.onclose = (event) => {
+    this.ws.onclose = event => {
       this.clearConnectionTimeout();
       this.stopPing();
 
       if (this.shouldReconnect && event.code !== 1000) {
         this.scheduleReconnect();
       } else {
-        setStatus("disconnected");
+        setStatus('disconnected');
       }
     };
 
@@ -211,12 +221,12 @@ class AlgoraveWebSocket {
       // onclose will follow and handle status
     };
 
-    this.ws.onmessage = (event) => {
+    this.ws.onmessage = event => {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
         this.handleMessage(message);
       } catch (error) {
-        console.error("[WS] Failed to parse message:", error);
+        console.error('[WS] Failed to parse message:', error);
       }
     };
   }
@@ -225,7 +235,7 @@ class AlgoraveWebSocket {
     const { setStatus } = useWebSocketStore.getState();
 
     if (this.reconnectAttempts >= WEBSOCKET.RECONNECT_MAX_ATTEMPTS) {
-      setStatus("disconnected");
+      setStatus('disconnected');
 
       // fallback to localStorage if we never got session_state
       if (!this.initialLoadComplete) {
@@ -234,7 +244,7 @@ class AlgoraveWebSocket {
       return;
     }
 
-    setStatus("reconnecting");
+    setStatus('reconnecting');
     this.reconnectAttempts++;
 
     const delay = Math.min(
@@ -259,11 +269,12 @@ class AlgoraveWebSocket {
       setSessionStateReceived,
       clearMessages,
     } = useWebSocketStore.getState();
-    
-    const { setCode, currentStrudelId, currentDraftId, setCurrentDraftId } = useEditorStore.getState();
+
+    const { setCode, currentStrudelId, currentDraftId, setCurrentDraftId } =
+      useEditorStore.getState();
 
     switch (message.type) {
-      case "session_state": {
+      case 'session_state': {
         const payload = message.payload as SessionStatePayload;
         const hasToken = !!useAuthStore.getState().token;
 
@@ -285,15 +296,15 @@ class AlgoraveWebSocket {
           for (const msg of payload.chat_history) {
             addMessage({
               id: crypto.randomUUID(),
-              type: "chat",
+              type: 'chat',
               content: msg.content,
               displayName: msg.display_name,
               timestamp: (() => {
                 // handle string timestamps, seconds, or milliseconds
-                if (typeof msg.timestamp === "string") {
+                if (typeof msg.timestamp === 'string') {
                   return new Date(msg.timestamp).toISOString();
                 }
-                
+
                 // if numeric and < 1e12, assume seconds
                 return new Date(
                   msg.timestamp < 1e12 ? msg.timestamp * 1000 : msg.timestamp
@@ -359,7 +370,12 @@ class AlgoraveWebSocket {
           case 'USE_DEFAULT_CODE': {
             setCode(decision.codeAction.code, true);
             // sync default code to server
-            this.sendCodeUpdate(decision.codeAction.code, undefined, undefined, 'loaded_strudel');
+            this.sendCodeUpdate(
+              decision.codeAction.code,
+              undefined,
+              undefined,
+              'loaded_strudel'
+            );
             break;
           }
 
@@ -399,18 +415,18 @@ class AlgoraveWebSocket {
         break;
       }
 
-      case "code_update": {
+      case 'code_update': {
         const payload = message.payload as CodeUpdateBroadcastPayload;
         setCode(payload.code, true);
         break;
       }
 
-      case "chat_message": {
+      case 'chat_message': {
         const payload = message.payload as ChatMessageBroadcastPayload;
 
         addMessage({
           id: crypto.randomUUID(),
-          type: "chat",
+          type: 'chat',
           content: payload.message,
           displayName: payload.display_name,
           timestamp: message.timestamp,
@@ -419,7 +435,7 @@ class AlgoraveWebSocket {
         break;
       }
 
-      case "user_joined": {
+      case 'user_joined': {
         const payload = message.payload as UserJoinedPayload;
 
         addParticipant({
@@ -431,7 +447,7 @@ class AlgoraveWebSocket {
 
         addMessage({
           id: crypto.randomUUID(),
-          type: "system",
+          type: 'system',
           content: `${payload.display_name} joined`,
           timestamp: message.timestamp,
         });
@@ -439,13 +455,13 @@ class AlgoraveWebSocket {
         break;
       }
 
-      case "user_left": {
+      case 'user_left': {
         const payload = message.payload as UserLeftPayload;
         removeParticipant(payload.user_id, payload.display_name);
 
         addMessage({
           id: crypto.randomUUID(),
-          type: "system",
+          type: 'system',
           content: `${payload.display_name} left`,
           timestamp: message.timestamp,
         });
@@ -453,13 +469,14 @@ class AlgoraveWebSocket {
         break;
       }
 
-      case "error": {
+      case 'error': {
         const payload = message.payload as ErrorPayload;
         setError(payload.message);
 
         // reject pending request if error has matching request_id
         if (payload.request_id) {
           const pending = this.pendingRequests.get(payload.request_id);
+
           if (pending) {
             clearTimeout(pending.timeoutId);
             this.pendingRequests.delete(payload.request_id);
@@ -470,7 +487,7 @@ class AlgoraveWebSocket {
         break;
       }
 
-      case "play": {
+      case 'play': {
         const payload = message.payload as PlayPayload;
 
         if (this.onPlayCallback) {
@@ -479,7 +496,7 @@ class AlgoraveWebSocket {
 
         addMessage({
           id: crypto.randomUUID(),
-          type: "system",
+          type: 'system',
           content: `${payload.display_name} started playback`,
           timestamp: message.timestamp,
         });
@@ -487,7 +504,7 @@ class AlgoraveWebSocket {
         break;
       }
 
-      case "stop": {
+      case 'stop': {
         const payload = message.payload as StopPayload;
 
         if (this.onStopCallback) {
@@ -496,7 +513,7 @@ class AlgoraveWebSocket {
 
         addMessage({
           id: crypto.randomUUID(),
-          type: "system",
+          type: 'system',
           content: `${payload.display_name} stopped playback`,
           timestamp: message.timestamp,
         });
@@ -504,7 +521,7 @@ class AlgoraveWebSocket {
         break;
       }
 
-      case "session_ended": {
+      case 'session_ended': {
         const payload = message.payload as SessionEndedPayload;
 
         if (this.onSessionEndedCallback) {
@@ -513,33 +530,38 @@ class AlgoraveWebSocket {
 
         addMessage({
           id: crypto.randomUUID(),
-          type: "system",
-          content: payload.reason || "Session ended by host",
+          type: 'system',
+          content: payload.reason || 'Session ended by host',
           timestamp: message.timestamp,
         });
 
         break;
       }
 
-      case "paste_lock_changed": {
+      case 'paste_lock_changed': {
         const payload = message.payload as PasteLockChangedPayload;
         const { setPasteLocked } = useWebSocketStore.getState();
+        
         setPasteLocked(payload.locked);
 
         // if locked due to parent no-ai signal, set permanent block in editor store
         // this ensures UI shows permanent disabled state even if localStorage was tampered
-        if (payload.locked && payload.reason === "parent_no_ai") {
-          const { setParentCCSignal, setForkedFromId, forkedFromId } = useEditorStore.getState();
-          setParentCCSignal("no-ai");
+        if (payload.locked && payload.reason === 'parent_no_ai') {
+          const { setParentCCSignal, setForkedFromId, forkedFromId } =
+            useEditorStore.getState();
+
+          setParentCCSignal('no-ai');
+
           // set a placeholder forkedFromId if not already set (required for isAIBlocked check)
           if (!forkedFromId) {
-            setForkedFromId("unknown");
+            setForkedFromId('unknown');
           }
         }
+
         break;
       }
 
-      case "pong":
+      case 'pong':
         break;
     }
   }
@@ -555,14 +577,14 @@ class AlgoraveWebSocket {
   }
 
   /**
-   * Send a message and wait for a response with matching request_id.
+   * send a message and wait for a response with matching request_id.
    * Returns a Promise that resolves with the response payload.
-   * Rejects on timeout or disconnect.
+   * rejects on timeout or disconnect.
    */
   sendWithReply<T>(type: string, payload: Record<string, unknown>): Promise<T> {
     return new Promise((resolve, reject) => {
       if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-        reject(new Error("WebSocket not connected"));
+        reject(new Error('WebSocket not connected'));
         return;
       }
 
@@ -584,7 +606,7 @@ class AlgoraveWebSocket {
   }
 
   /**
-   * Resolve a pending request by its request_id.
+   * resolve a pending request by its request_id.
    * Called from handleMessage when a response contains a request_id.
    */
   private resolvePendingRequest(requestId: string, payload: unknown): boolean {
@@ -599,7 +621,7 @@ class AlgoraveWebSocket {
   }
 
   /**
-   * Reject all pending requests (called on disconnect).
+   * reject all pending requests (called on disconnect).
    */
   private rejectAllPendingRequests(error: Error) {
     for (const [, pending] of this.pendingRequests) {
@@ -609,25 +631,35 @@ class AlgoraveWebSocket {
     this.pendingRequests.clear();
   }
 
-  sendCodeUpdate(code: string, cursorLine?: number, cursorCol?: number, source?: 'typed' | 'loaded_strudel' | 'forked' | 'paste') {
-    this.send("code_update", { code, cursor_line: cursorLine, cursor_col: cursorCol, source: source || 'typed' });
+  sendCodeUpdate(
+    code: string,
+    cursorLine?: number,
+    cursorCol?: number,
+    source?: 'typed' | 'loaded_strudel' | 'forked' | 'paste'
+  ) {
+    this.send('code_update', {
+      code,
+      cursor_line: cursorLine,
+      cursor_col: cursorCol,
+      source: source || 'typed',
+    });
   }
 
   sendChatMessage(message: string) {
-    this.send("chat_message", { message });
+    this.send('chat_message', { message });
   }
 
   sendPlay() {
-    this.send("play", {});
+    this.send('play', {});
   }
 
   sendStop() {
-    this.send("stop", {});
+    this.send('stop', {});
   }
 
   /**
-   * Restore editor state from localStorage when WS connection fails.
-   * Used as fallback so user isn't blocked from working.
+   * restore editor state from localStorage when WS connection fails.
+   * used as fallback so user isn't blocked from working.
    */
   private restoreFromLocalStorage() {
     const { setCode, setCurrentDraftId } = useEditorStore.getState();
@@ -643,7 +675,7 @@ class AlgoraveWebSocket {
   private startPing() {
     this.stopPing();
     this.pingInterval = setInterval(() => {
-      this.send("ping", {});
+      this.send('ping', {});
     }, WEBSOCKET.PING_INTERVAL_MS);
   }
 
@@ -658,7 +690,7 @@ class AlgoraveWebSocket {
     this.shouldReconnect = false;
     this.cleanup();
     // reject all pending requests
-    this.rejectAllPendingRequests(new Error("WebSocket disconnected"));
+    this.rejectAllPendingRequests(new Error('WebSocket disconnected'));
     // reset state for fresh start on next connect
     this.initialLoadComplete = false;
     useWebSocketStore.getState().reset();

@@ -27,24 +27,24 @@ export function OpenStrudelConfirmDialog() {
 
   return (
     <Dialog open={!!pendingOpenStrudelId} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader className="space-y-3">
           <DialogTitle>Unsaved Changes</DialogTitle>
           <DialogDescription>
             {currentStrudelId
-              ? "You have changes that haven't been autosaved yet. If you open another strudel, these changes will be lost."
-              : 'You have unsaved work that will be lost if you continue without saving first.'}
+              ? "You have changes that haven't been autosaved yet. Your current work will be saved as a draft."
+              : 'Your current work will be saved as a draft so you can continue later.'}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 pt-2">
           <Button variant="ghost" onClick={handleClose}>
             Cancel
           </Button>
           <Button variant="outline" onClick={handleOpen}>
-            Discard & Open
+            Save Draft & Open
           </Button>
           {!currentStrudelId && (
-            <Button onClick={handleSaveFirst}>Save First</Button>
+            <Button onClick={handleSaveFirst}>Save as Strudel</Button>
           )}
         </DialogFooter>
       </DialogContent>

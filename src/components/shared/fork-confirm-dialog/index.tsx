@@ -28,19 +28,19 @@ export function ForkConfirmDialog() {
     const description = isReforkingSameStrudel
       ? 'Your changes to this fork will be overwritten with the original. Sign in to save first, or continue as a guest.'
       : hasUnsavedChanges
-      ? 'Sign in to save your current work before forking, or continue as a guest. Your current unsaved work will be lost.'
+      ? 'Sign in to save your current work before forking, or continue as a guest. Your work will be saved as a draft.'
       : 'Sign in to save your current work before forking, or continue as a guest.';
 
     return (
       <Dialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="space-y-3">
             <DialogTitle>
               {isReforkingSameStrudel ? 'Re-fork Strudel' : 'Fork Strudel'}
             </DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
@@ -48,7 +48,7 @@ export function ForkConfirmDialog() {
               {isReforkingSameStrudel
                 ? 'Overwrite & Re-fork'
                 : hasUnsavedChanges
-                ? 'Fork Anyway'
+                ? 'Save Draft & Fork'
                 : 'Fork'}
             </Button>
             <Button onClick={handleLogin}>Sign In</Button>
@@ -63,22 +63,22 @@ export function ForkConfirmDialog() {
     const description = isReforkingSameStrudel
       ? 'Your changes to this fork will be overwritten with the original. Save first to keep your work.'
       : currentStrudelId
-      ? "You have changes that haven't been autosaved yet. If you fork now, these changes will be lost."
-      : 'You have unsaved work that will be lost if you fork without saving first.';
+      ? "You have changes that haven't been autosaved yet. Your current work will be saved as a draft."
+      : 'Your current work will be saved as a draft so you can continue later.';
 
     return (
       <Dialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="space-y-3">
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
             <Button variant="outline" onClick={handleFork}>
-              {isReforkingSameStrudel ? 'Overwrite & Re-fork' : 'Discard & Fork'}
+              {isReforkingSameStrudel ? 'Overwrite & Re-fork' : 'Continue With Fork'}
             </Button>
             {!currentStrudelId && <Button onClick={handleSaveFirst}>Save First</Button>}
           </DialogFooter>

@@ -17,15 +17,15 @@ export function LogoutConfirmDialog() {
 
   return (
     <Dialog open={isLogoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader className="space-y-3">
           <DialogTitle>Log out?</DialogTitle>
           <DialogDescription>
             Your current session code will not be saved. You&apos;ll start fresh as a guest when
             you reconnect.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 pt-2">
           <Button variant="ghost" onClick={handleCancel}>
             Cancel
           </Button>

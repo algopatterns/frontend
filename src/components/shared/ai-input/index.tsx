@@ -41,7 +41,7 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
           <div className="bg-muted/30 border border-muted rounded-lg px-3 py-2 flex items-center gap-2 w-full">
             <ShieldAlert className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="text-sm text-muted-foreground">
-              AI assistant permanently disabled - original author restricted AI use for
+              AI assistant disabled - original creator restricted AI use for
               this strudel
             </span>
           </div>

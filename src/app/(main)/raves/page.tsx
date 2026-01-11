@@ -15,35 +15,41 @@ import { formatRelativeTime } from '@/lib/utils/date';
 import { useAuth } from '@/lib/hooks/use-auth';
 
 export default function LivePage() {
-  const { data, isLoading } = useLiveSessions();
   const { isAuthenticated } = useAuth();
   const { data: lastSession, isLoading: isLoadingLastSession } = useLastSession();
+  const { data, isLoading } = useLiveSessions();
 
   // check if last session is already in the live sessions list
   const lastSessionInList = data?.sessions?.some(s => s.id === lastSession?.id);
 
   // show recovery card if:
-  // 1. User is authenticated
-  // 2. Has a last session
-  // 3. Last session is NOT already in the live sessions list
-  const showRecoveryCard = isAuthenticated && lastSession && !lastSessionInList;
+  // - data has loaded
+  // - user is authenticated
+  // - backend returned a last session (backend handles all filtering:
+  //   only host sessions, not currently active, has participants or is discoverable)
+  // - session is not already in the live sessions list
+  const showRecoveryCard =
+    !isLoading &&
+    !isLoadingLastSession &&
+    isAuthenticated &&
+    lastSession &&
+    !lastSessionInList;
 
   return (
-    <div className="container p-8">
+    <div className="container p-8 w-full max-w-full">
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <Radio className="h-6 w-6 text-red-500 animate-pulse" />
-          <h1 className="text-3xl font-bold">Live Sessions</h1>
+          <h1 className="text-3xl font-bold">Raves</h1>
         </div>
         <p className="text-muted-foreground">
-          Join live coding sessions happening right now
+          Join live sets and party with frens
         </p>
       </div>
 
-      {/* Recovery card for user's last session */}
       {showRecoveryCard && (
         <div className="mb-6">
-          <Card className="border-primary/50 bg-primary/5">
+          <Card className="border-primary/50 bg-primary/5 rounded-md">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
@@ -57,7 +63,9 @@ export default function LivePage() {
                     <span className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
                       {lastSession.participant_count}{' '}
-                      {lastSession.participant_count === 1 ? 'participant' : 'participants'}
+                      {lastSession.participant_count === 1
+                        ? 'participant'
+                        : 'participants'}
                     </span>
                     <span>Active {formatRelativeTime(lastSession.last_activity)}</span>
                   </CardDescription>
@@ -75,8 +83,8 @@ export default function LivePage() {
       )}
 
       {isLoading || (isAuthenticated && isLoadingLastSession) ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map(i => (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          {[1, 2, 3, 4].map(i => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
                 <div className="h-4 bg-muted rounded w-3/4" />
@@ -89,9 +97,13 @@ export default function LivePage() {
           ))}
         </div>
       ) : data?.sessions && data.sessions.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {data.sessions.map(session => (
-            <Card key={session.id} className={`relative overflow-hidden ${session.is_member ? "border-primary/50" : ""}`}>
+            <Card
+              key={session.id}
+              className={`relative overflow-hidden rounded-md ${
+                session.is_member ? 'border-primary/50' : ''
+              }`}>
               <div className="absolute top-6 right-6 flex items-center gap-2">
                 {session.is_member && (
                   <span className="text-xs bg-primary/15 text-primary px-2 py-0.5 rounded">
@@ -117,9 +129,12 @@ export default function LivePage() {
                 <p className="text-xs text-muted-foreground mb-4">
                   Active {formatRelativeTime(session.last_activity)}
                 </p>
-                <Button asChild className="w-full" variant={session.is_member ? "secondary" : "default"}>
+                <Button
+                  asChild
+                  className="w-full"
+                  variant={session.is_member ? 'secondary' : 'default'}>
                   <Link href={`/sessions/${session.id}`}>
-                    {session.is_member ? "Rejoin Session" : "Join Session"}
+                    {session.is_member ? 'Rejoin Session' : 'Join Session'}
                   </Link>
                 </Button>
               </CardContent>

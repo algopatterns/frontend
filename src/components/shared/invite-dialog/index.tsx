@@ -47,7 +47,7 @@ export function InviteDialog() {
         <DialogHeader>
           <DialogTitle>Invite Collaborators</DialogTitle>
           <DialogDescription>
-            Create invite links to let others join your session.
+            Invite special frens or start a public rave.
           </DialogDescription>
         </DialogHeader>
 
@@ -63,9 +63,7 @@ export function InviteDialog() {
                 <span className="font-medium">{isLive ? 'Public' : 'Private'}</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {isLive
-                  ? 'Session visible in the Live page'
-                  : 'Invite-only (not listed publicly)'}
+                {isLive ? 'Public Rave' : 'Invite-only Rave'}
               </p>
             </div>
             <Button

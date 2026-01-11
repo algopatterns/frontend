@@ -28,15 +28,15 @@ export function NewStrudelDialog() {
   if (!isAuthenticated) {
     return (
       <Dialog open={isNewStrudelDialogOpen} onOpenChange={setNewStrudelDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="space-y-3">
             <DialogTitle>Start a New Strudel</DialogTitle>
             <DialogDescription>
               Sign in to save your strudels and access them later. As a guest, you can
               clear the editor to start fresh.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
@@ -52,25 +52,25 @@ export function NewStrudelDialog() {
 
   return (
     <Dialog open={isNewStrudelDialogOpen} onOpenChange={setNewStrudelDialogOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader className="space-y-3">
           <DialogTitle>Start a New Strudel</DialogTitle>
           <DialogDescription>
             {hasUnsavedChanges
               ? currentStrudelId
-                ? "You have changes that haven't been autosaved yet. If you continue, these changes will be lost."
-                : 'You have unsaved work that will be lost if you continue without saving first.'
+                ? "You have changes that haven't been autosaved yet. Your current work will be saved as a draft."
+                : 'Your current work will be saved as a draft so you can continue later.'
               : 'Start fresh with a new strudel session.'}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 pt-2">
           <Button variant="ghost" onClick={handleClose}>
             Cancel
           </Button>
           {hasUnsavedChanges ? (
             <>
               <Button variant="outline" onClick={handleStartNew}>
-                Discard & Start New
+                Start New
               </Button>
               {!currentStrudelId && <Button onClick={handleSaveFirst}>Save First</Button>}
             </>

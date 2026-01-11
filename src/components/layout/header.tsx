@@ -33,6 +33,14 @@ export function Header() {
         </Link>
 
         <nav className="ml-6 flex items-center gap-4 text-sm">
+          {isAuthenticated && (
+            <Link
+              href="/shelf"
+              className="text-muted-foreground hover:text-foreground transition-colors">
+              Shelf
+            </Link>
+          )}
+
           <Link
             href="/explore"
             className="text-muted-foreground hover:text-foreground transition-colors">
@@ -40,18 +48,10 @@ export function Header() {
           </Link>
 
           <Link
-            href="/live"
+            href="/raves"
             className="text-muted-foreground hover:text-foreground transition-colors">
-            Live
+            Raves
           </Link>
-
-          {isAuthenticated && (
-            <Link
-              href="/my-strudels"
-              className="text-muted-foreground hover:text-foreground transition-colors">
-              Collection
-            </Link>
-          )}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
@@ -83,7 +83,9 @@ export function Header() {
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium text-muted-foreground">Anonymous</p>
-                    <p className="text-xs text-muted-foreground">Sign in to save your work</p>
+                    <p className="text-xs text-muted-foreground">
+                      Sign in to save your work
+                    </p>
                   </div>
                 </div>
               )}

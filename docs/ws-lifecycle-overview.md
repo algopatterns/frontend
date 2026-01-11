@@ -133,8 +133,8 @@ Quick flowchart of how live sessions actually work for agents and contributors.
 └─────────────────────────────────────────────────────────────────────────────┘
 
   ┌─────────────-┐     ┌─────────────┐     ┌─────────────┐
-  │ my-strudels  │     │ saved       │     │ fresh       │
-  │ /my-strudels │     │ /?id=<uuid> │     │ /           │
+  │ shelf        │     │ saved       │     │ fresh       │
+  │ /shelf       │     │ /?id=<uuid> │     │ /           │
   └─────────────-┘     └─────────────┘     └─────────────┘
         │                   │                   │
         │                   ▼                   ▼

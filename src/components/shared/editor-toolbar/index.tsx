@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Play, Square, Plus, Radio, X } from 'lucide-react';
 import { useEditorToolbar, type SaveStatus } from './hooks';
-import { SaveIndicator, ConnectionIndicator } from './components';
+import { SaveIndicator, ConnectionIndicator } from './indicators';
 
 interface EditorToolbarProps {
   onPlay: () => void;

@@ -5,7 +5,7 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 import type { Strudel } from '@/lib/api/strudels/types';
-import { StrudelForm } from './components';
+import { StrudelForm } from './form';
 
 interface StrudelFormDialogProps {
   strudel?: Strudel | null;
@@ -26,7 +26,7 @@ export function StrudelFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <StrudelForm key={formKey} strudel={strudel} mode={mode} onClose={handleClose} />
       </DialogContent>
     </Dialog>

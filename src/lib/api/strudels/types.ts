@@ -53,11 +53,11 @@ export type CCSignal = 'cc-cr' | 'cc-dc' | 'cc-ec' | 'cc-op' | 'no-ai';
 
 // signal metadata for UI
 export const CC_SIGNALS = [
-  { id: 'cc-cr' as const, label: 'Credit', desc: 'Allow AI use with attribution' },
-  { id: 'cc-dc' as const, label: 'Credit + Support', desc: 'Attribution + support creator' },
-  { id: 'cc-ec' as const, label: 'Credit + Commons', desc: 'Attribution + contribute to open ecosystem' },
-  { id: 'cc-op' as const, label: 'Credit + Open', desc: 'Attribution + keep AI/model open' },
-  { id: 'no-ai' as const, label: 'No AI', desc: 'Do not use for AI training' },
+  { id: 'cc-cr' as const, label: 'Credit', desc: 'Allow use with attribution' },
+  { id: 'cc-dc' as const, label: 'Credit + Support', desc: 'Attr. + support creator' },
+  { id: 'cc-ec' as const, label: 'Credit + Commons', desc: 'Attr. + contribute to open ecosystem' },
+  { id: 'cc-op' as const, label: 'Credit + Open', desc: 'Attr. + keep agent/model open' },
+  { id: 'no-ai' as const, label: 'No AI', desc: 'Training/inference prohibited' },
 ] as const;
 
 // signal restrictiveness order (higher = more restrictive)
@@ -70,6 +70,41 @@ export const SIGNAL_RESTRICTIVENESS: Record<CCSignal | '', number> = {
   'no-ai': 5,
 };
 
+// Creative Commons license types
+export type CCLicense =
+  | 'CC0 1.0'
+  | 'CC BY 4.0'
+  | 'CC BY-SA 4.0'
+  | 'CC BY-NC 4.0'
+  | 'CC BY-NC-SA 4.0'
+  | 'CC BY-ND 4.0'
+  | 'CC BY-NC-ND 4.0';
+
+// license metadata for UI
+export const CC_LICENSES = [
+  { id: 'CC0 1.0' as const, label: 'CC0 (Public Domain)', desc: 'No rights reserved' },
+  { id: 'CC BY 4.0' as const, label: 'CC BY', desc: 'Attribution required' },
+  { id: 'CC BY-SA 4.0' as const, label: 'CC BY-SA', desc: 'Attribution + ShareAlike' },
+  { id: 'CC BY-NC 4.0' as const, label: 'CC BY-NC', desc: 'Attribution + NonCommercial' },
+  { id: 'CC BY-NC-SA 4.0' as const, label: 'CC BY-NC-SA', desc: 'Attribution + NonCommercial + ShareAlike' },
+  { id: 'CC BY-ND 4.0' as const, label: 'CC BY-ND', desc: 'Attribution + NoDerivatives' },
+  { id: 'CC BY-NC-ND 4.0' as const, label: 'CC BY-NC-ND', desc: 'Attribution + NonCommercial + NoDerivatives' },
+] as const;
+
+// infer signal from license (user can override)
+// ND licenses -> no-ai (no derivatives means no AI training)
+// SA licenses -> cc-op (share-alike maps to keeping AI open)
+// BY licenses -> cc-cr (attribution maps to credit)
+// CC0 -> null (no preference)
+export function inferSignalFromLicense(license: CCLicense | null | undefined): CCSignal | null {
+  if (!license) return null;
+  if (license.includes('-ND')) return 'no-ai';
+  if (license.includes('-SA')) return 'cc-op';
+  if (license.startsWith('CC BY')) return 'cc-cr';
+  if (license === 'CC0 1.0') return null;
+  return null;
+}
+
 // strudel entity
 export interface Strudel {
   id: string;
@@ -80,6 +115,7 @@ export interface Strudel {
   tags: string[];
   categories: string[];
   is_public: boolean;
+  license?: CCLicense | null;
   cc_signal?: CCSignal | null;
   ai_assist_count: number;
   forked_from?: string;
@@ -97,6 +133,7 @@ export interface CreateStrudelRequest {
   tags?: string[];
   categories?: string[];
   is_public?: boolean;
+  license?: CCLicense | null;
   cc_signal?: CCSignal | null;
   forked_from?: string;
   conversation_history?: AgentMessage[];
@@ -109,6 +146,7 @@ export interface UpdateStrudelRequest {
   tags?: string[];
   categories?: string[];
   is_public?: boolean;
+  license?: CCLicense | null;
   cc_signal?: CCSignal | null;
   conversation_history?: AgentMessage[];
 }
