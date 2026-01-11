@@ -11,9 +11,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { Strudel, CCSignal } from '@/lib/api/strudels/types';
-import { CC_SIGNALS, SIGNAL_RESTRICTIVENESS } from '@/lib/api/strudels/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ArrowRightLeft } from 'lucide-react';
+import type { Strudel, CCSignal, CCLicense } from '@/lib/api/strudels/types';
+import { CC_SIGNALS, CC_LICENSES, SIGNAL_RESTRICTIVENESS, inferSignalFromLicense } from '@/lib/api/strudels/types';
 import { useStrudelForm } from './hooks';
 
 interface StrudelFormProps {
@@ -34,8 +41,11 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
     setCategories,
     isPublic,
     setIsPublic,
+    license,
+    handleLicenseChange,
     ccSignal,
-    setCCSignal,
+    handleSignalChange,
+    signalOverridden,
     error,
     setError,
     isCreate,
@@ -43,6 +53,9 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
     parentCCSignal,
     handleSave,
   } = useStrudelForm(strudel, mode, onClose);
+
+  // get what signal would be inferred from current license
+  const inferredSignal = inferSignalFromLicense(license);
 
   return (
     <>
@@ -69,16 +82,18 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="strudel-description">Description</Label>
-          <Textarea
-            id="strudel-description"
-            placeholder="A brief description of your strudel..."
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            rows={3}
-          />
-        </div>
+        {!isCreate && (
+          <div className="space-y-2">
+            <Label htmlFor="strudel-description">Description</Label>
+            <Textarea
+              id="strudel-description"
+              placeholder="A brief description of your strudel..."
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="strudel-tags">Tags</Label>
@@ -90,70 +105,77 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="strudel-categories">Categories</Label>
-          <Input
-            id="strudel-categories"
-            placeholder="music, experimental (comma separated)"
-            value={categories}
-            onChange={e => setCategories(e.target.value)}
-          />
-        </div>
+        {!isCreate && (
+          <div className="space-y-2">
+            <Label htmlFor="strudel-categories">Categories</Label>
+            <Input
+              id="strudel-categories"
+              placeholder="music, experimental (comma separated)"
+              value={categories}
+              onChange={e => setCategories(e.target.value)}
+            />
+          </div>
+        )}
 
-        <div className="flex items-center justify-between mt-8">
-          <Label htmlFor="strudel-public">Private Strudel</Label>
+        <div className="flex items-center justify-between py-3 my-4 border-y border-border/50">
+          <Label htmlFor="strudel-private">Private Strudel</Label>
           <Switch
-            id="strudel-public"
+            id="strudel-private"
             checked={!isPublic}
-            onCheckedChange={checked => {
-              setIsPublic(!checked);
-
-              if (checked) {
-                setCCSignal(null);
-              }
-            }}
+            onCheckedChange={checked => setIsPublic(!checked)}
           />
         </div>
 
-        <div className="space-y-4">
-          <Label className={!isPublic ? 'text-muted-foreground' : 'text-orange-400'}>
-            CC Signals
-          </Label>
-          <RadioGroup
-            value={ccSignal || 'no-ai'}
-            onValueChange={v => setCCSignal((v as CCSignal) || null)}
-            disabled={!isPublic}
-            className="space-y-2">
-            {CC_SIGNALS.filter(s => {
-              if (!parentCCSignal) return true;
-
-              return (
-                SIGNAL_RESTRICTIVENESS[s.id] >= SIGNAL_RESTRICTIVENESS[parentCCSignal]
-              );
-            }).map(signal => (
-              <div key={signal.id} className="flex items-center space-x-2">
-                <RadioGroupItem
-                  value={signal.id}
-                  id={`signal-${signal.id}`}
-                  disabled={!isPublic}
-                />
-                <Label
-                  htmlFor={`signal-${signal.id}`}
-                  className={`text-sm ${!isPublic ? 'text-muted-foreground' : ''}`}>
-                  <span className="font-medium uppercase">{signal.id}</span>
-                  <span className="text-muted-foreground">
-                    {' '}
-                    {!parentCCSignal && '-'}
-                    {signal.id === 'no-ai'
-                      ? parentCCSignal
-                        ? `(inherited from parent)`
-                        : 'AI cannot use'
-                      : signal.label}
-                  </span>
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
+        <div className="flex items-start gap-3">
+          <div className="flex-1 min-w-0 space-y-2">
+            <Label>License</Label>
+            <Select
+              value={license || ''}
+              onValueChange={v => handleLicenseChange((v || null) as CCLicense | null)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select license..." />
+              </SelectTrigger>
+              <SelectContent>
+                {CC_LICENSES.map(l => (
+                  <SelectItem key={l.id} value={l.id}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <ArrowRightLeft className="h-4 w-4 text-muted-foreground shrink-0 mt-9" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center gap-2">
+              <Label>AI/CC Signal</Label>
+              {license && inferredSignal && !signalOverridden && (
+                <span className="text-xs text-muted-foreground">(inferred from license)</span>
+              )}
+              {signalOverridden && (
+                <span className="text-xs text-orange-400">(custom)</span>
+              )}
+            </div>
+            <Select
+              value={ccSignal || 'no-ai'}
+              onValueChange={v => handleSignalChange((v as CCSignal) || null)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="AI/CC signal..." />
+              </SelectTrigger>
+              <SelectContent>
+                {CC_SIGNALS.filter(s => {
+                  if (!parentCCSignal) return true;
+                  return SIGNAL_RESTRICTIVENESS[s.id] >= SIGNAL_RESTRICTIVENESS[parentCCSignal];
+                }).map(signal => (
+                  <SelectItem key={signal.id} value={signal.id}>
+                    <span className="font-medium uppercase">{signal.id}</span>
+                    <span className="text-muted-foreground ml-2 text-xs">
+                      {signal.desc}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}

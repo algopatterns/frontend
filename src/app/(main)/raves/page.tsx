@@ -13,31 +13,27 @@ import { Users, Radio, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { formatRelativeTime } from '@/lib/utils/date';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { storage } from '@/lib/utils/storage';
 
 export default function LivePage() {
-  const { data, isLoading } = useLiveSessions();
   const { isAuthenticated } = useAuth();
   const { data: lastSession, isLoading: isLoadingLastSession } = useLastSession();
+  const { data, isLoading } = useLiveSessions();
 
   // check if last session is already in the live sessions list
   const lastSessionInList = data?.sessions?.some(s => s.id === lastSession?.id);
 
-  // get current session ID to check if user is already in this session
-  const currentSessionId = storage.getSessionId();
-
-  // show recovery card only if:
-  // 1. user is authenticated (backend only returns sessions where user is host)
-  // 2. has a last session
-  // 3. last session is NOT already in the live sessions list
-  // 4. user is NOT currently in that session
-  // 5. session has other participants OR is discoverable (public)
+  // show recovery card if:
+  // - data has loaded
+  // - user is authenticated
+  // - backend returned a last session (backend handles all filtering:
+  //   only host sessions, not currently active, has participants or is discoverable)
+  // - session is not already in the live sessions list
   const showRecoveryCard =
+    !isLoading &&
+    !isLoadingLastSession &&
     isAuthenticated &&
     lastSession &&
-    !lastSessionInList &&
-    lastSession.id !== currentSessionId &&
-    (lastSession.participant_count > 0 || lastSession.is_discoverable);
+    !lastSessionInList;
 
   return (
     <div className="container p-8 w-full max-w-full">

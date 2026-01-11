@@ -6,8 +6,8 @@ import { useCreateStrudel, useUpdateStrudel } from '@/lib/hooks/use-strudels';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useUIStore } from '@/lib/stores/ui';
 import { storage } from '@/lib/utils/storage';
-import type { Strudel, CCSignal } from '@/lib/api/strudels/types';
-import { SIGNAL_RESTRICTIVENESS } from '@/lib/api/strudels/types';
+import type { Strudel, CCSignal, CCLicense } from '@/lib/api/strudels/types';
+import { SIGNAL_RESTRICTIVENESS, inferSignalFromLicense } from '@/lib/api/strudels/types';
 
 export function useStrudelForm(
   strudel: Strudel | null | undefined,
@@ -53,17 +53,40 @@ export function useStrudelForm(
     mode === 'edit' && strudel ? strudel.is_public : false
   );
 
+  const [license, setLicense] = useState<CCLicense | null>(
+    mode === 'edit' && strudel ? strudel.license ?? null : null
+  );
+
   const [ccSignal, setCCSignal] = useState<CCSignal | null>(
     mode === 'edit' && strudel ? strudel.cc_signal ?? null : null
   );
 
+  // track if user has manually overridden the signal
+  const [signalOverridden, setSignalOverridden] = useState(false);
+
   const [error, setError] = useState('');
+
+  // handle license change with signal inference
+  const handleLicenseChange = (newLicense: CCLicense | null) => {
+    setLicense(newLicense);
+
+    // only auto-infer if user hasn't manually overridden
+    if (!signalOverridden) {
+      const inferredSignal = inferSignalFromLicense(newLicense);
+      setCCSignal(inferredSignal);
+    }
+  };
+
+  // handle manual signal change
+  const handleSignalChange = (newSignal: CCSignal | null) => {
+    setCCSignal(newSignal);
+    setSignalOverridden(true);
+  };
 
   const isCreate = mode === 'create';
   const isPending = isCreate ? createStrudel.isPending : updateStrudel.isPending;
 
   const getEffectiveSignal = (): CCSignal | null => {
-    if (!isPublic) return null;
     if (!ccSignal) return null;
 
     if (parentCCSignal) {
@@ -96,6 +119,7 @@ export function useStrudelForm(
         .map(c => c.trim())
         .filter(Boolean),
       is_public: isPublic,
+      license,
       cc_signal: getEffectiveSignal(),
     };
 
@@ -153,8 +177,11 @@ export function useStrudelForm(
     setCategories,
     isPublic,
     setIsPublic,
+    license,
+    handleLicenseChange,
     ccSignal,
-    setCCSignal,
+    handleSignalChange,
+    signalOverridden,
     error,
     setError,
     isCreate,

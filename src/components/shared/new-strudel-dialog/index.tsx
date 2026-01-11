@@ -58,8 +58,8 @@ export function NewStrudelDialog() {
           <DialogDescription>
             {hasUnsavedChanges
               ? currentStrudelId
-                ? "You have changes that haven't been autosaved yet. If you continue, these changes will be lost."
-                : 'You have unsaved work that will be lost if you continue without saving first.'
+                ? "You have changes that haven't been autosaved yet. Your current work will be saved as a draft."
+                : 'Your current work will be saved as a draft so you can continue later.'
               : 'Start fresh with a new strudel session.'}
           </DialogDescription>
         </DialogHeader>
@@ -70,7 +70,7 @@ export function NewStrudelDialog() {
           {hasUnsavedChanges ? (
             <>
               <Button variant="outline" onClick={handleStartNew}>
-                Discard & Start New
+                Start New
               </Button>
               {!currentStrudelId && <Button onClick={handleSaveFirst}>Save First</Button>}
             </>

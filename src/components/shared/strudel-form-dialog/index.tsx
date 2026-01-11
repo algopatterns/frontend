@@ -26,7 +26,7 @@ export function StrudelFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <StrudelForm key={formKey} strudel={strudel} mode={mode} onClose={handleClose} />
       </DialogContent>
     </Dialog>
