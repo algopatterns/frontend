@@ -25,6 +25,7 @@ export function useAgentGenerate(options: UseAgentGenerateOptions = {}) {
   const { sessionId } = useWebSocketStore();
 
   return useMutation({
+    meta: { skipGlobalErrorToast: true }, // errors shown in conversation UI instead
     mutationFn: async (query: string) => {
       // block AI requests if parent strudel has no-ai restriction
       // this takes precedence over any websocket paste lock state
