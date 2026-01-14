@@ -74,6 +74,9 @@ export default function AboutPage() {
           patterns, help stuck musicians find their next idea and generally make the
           language more accessible without diminishing its depth.
         </p>
+        <p className="text-muted-foreground mb-4">
+          I see a future where creators can easily talk to agents using voice commands and natural language instructions to output authentic creative music in real time - just like Switch Angel did on this TikTok series. She had to manually transcribe her thoughts and actions into text but with intelligent and voice enabled agents, this will soon all be automated and you&apos;ll only need to speak your line of thought for your creative piece out loud and it will be transcribed and executed in real time while maintaining the integrity of your creative process.
+        </p>
       </section>
 
       <hr className="my-8 border-border" />
