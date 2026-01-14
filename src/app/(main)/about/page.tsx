@@ -75,7 +75,13 @@ export default function AboutPage() {
           language more accessible without diminishing its depth.
         </p>
         <p className="text-muted-foreground mb-4">
-          I see a future where creators can easily talk to agents using voice commands and natural language instructions to output authentic creative music in real time - just like Switch Angel did on this TikTok series. She had to manually transcribe her thoughts and actions into text but with intelligent and voice enabled agents, this will soon all be automated and you&apos;ll only need to speak your line of thought for your creative piece out loud and it will be transcribed and executed in real time while maintaining the integrity of your creative process.
+          I see a future where creators can easily talk to agents using voice commands and
+          natural language instructions to output authentic creative music in real time -
+          just like Switch Angel did on this TikTok series. She had to manually transcribe
+          her thoughts and actions into text but with intelligent and voice enabled
+          agents, this will soon all be automated and you&apos;ll only need to speak your
+          line of thought for your creative piece out loud and it will be transcribed and
+          executed in real time while maintaining the integrity of your creative process.
         </p>
       </section>
 
@@ -253,10 +259,15 @@ export default function AboutPage() {
               <li>Comes from an unknown external source</li>
             </ul>
             <p className="text-muted-foreground mt-3">
-              AI assistance is <strong>temporarily disabled</strong> until you make
-              significant edits (30%+ changes via Levenshtein distance). This ensures
-              you&apos;ve genuinely engaged with and transformed the code before AI can
-              assist.
+              AI assistance is either <strong>permanently</strong> or{' '}
+              <strong>temporarily disabled</strong> until you make significant edits (30%+
+              changes via Levenshtein distance) depending on if the strudel is licensed
+              with a CC signal or not.
+            </p>
+            <p className="text-muted-foreground mt-3">
+              This ensures you&apos;ve genuinely engaged with and transformed the code
+              before AI can assist in creating derivative work and also makes surethat you&apos;re not
+              using AI to create derivative work without the creator&apos;s consent.
             </p>
           </div>
 
