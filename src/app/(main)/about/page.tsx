@@ -75,13 +75,15 @@ export default function AboutPage() {
           language more accessible without diminishing its depth.
         </p>
         <p className="text-muted-foreground mb-4">
-          I see a future where creators can easily talk to agents using voice commands and
-          natural language instructions to output authentic creative music in real time -
-          just like Switch Angel did on this TikTok series. She had to manually transcribe
-          her thoughts and actions into text but with intelligent and voice enabled
-          agents, this will soon all be automated and you&apos;ll only need to speak your
-          line of thought for your creative piece out loud and it will be transcribed and
-          executed in real time while maintaining the integrity of your creative process.
+          I see a future where creators can easily talk to agents using natural language
+          instructions (text/voice commands) and then get back{' '}
+          <b className="text-white">authentic</b>, <b className="text-white">creative</b>{' '}
+          music in real time - just like Switch Angel did on this TikTok series, however, she had
+          to manually transcribe her thoughts and actions into text. With intelligent
+          voice enabled agents, this will soon all be automated and you&apos;ll only
+          need to speak the line of thought for your creative piece out loud and it will
+          be transcribed and executed in real time while maintaining the integrity of your
+          creative process.
         </p>
       </section>
 
@@ -184,8 +186,8 @@ export default function AboutPage() {
               Even though CC signals aren&apos;t currently a widely adopted standard and
               there is no definite framework to implementing them, on algorave CC signals
               aren&apos;t just suggestions, they&apos;re enforced using custom logic i
-              came up with in the hopes of pioneering/contributing to the mainstrem
-              adoptation of these signals.
+              came up with in the hopes of pioneering/contributing to the mainstream
+              adoption of these signals.
             </p>
           </div>
 
@@ -266,8 +268,9 @@ export default function AboutPage() {
             </p>
             <p className="text-muted-foreground mt-3">
               This ensures you&apos;ve genuinely engaged with and transformed the code
-              before AI can assist in creating derivative work and also makes surethat you&apos;re not
-              using AI to create derivative work without the creator&apos;s consent.
+              before AI can assist in creating derivative work and also makes sure that
+              you&apos;re not using AI to create derivative work without the
+              creator&apos;s consent.
             </p>
           </div>
 
@@ -468,31 +471,45 @@ export default function AboutPage() {
           inherit both of their capabilities and their commitment to staying open.
         </p>
         <p className="text-muted-foreground my-4">
-          Some documentation located in the server repository on github include:
+          Some documentation located in the server repository on Codeberg include:
         </p>
         <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-2 mb-6">
           <li>
-            <a href="./ENFORCING-CC-SIGNALS.md" className="text-white hover:underline">
+            <a
+              href="https://codeberg.org/algorave/server/src/branch/main/docs/system-specs/ENFORCING-CC-SIGNALS.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:underline">
               Enforcing CC Signals
             </a>{' '}
             - Technical details of paste lock detection
           </li>
           <li>
             <a
-              href="./REDIS_BUFFER_ARCHITECTURE.md"
+              href="https://codeberg.org/algorave/server/src/branch/main/docs/system-specs/REDIS_BUFFER_ARCHITECTURE.md"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-white hover:underline">
               Redis Buffer Architecture
             </a>{' '}
             - How real-time state is handled
           </li>
           <li>
-            <a href="./RAG_ARCHITECTURE.md" className="text-white hover:underline">
+            <a
+              href="https://codeberg.org/algorave/server/src/branch/main/docs/system-specs/RAG_ARCHITECTURE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:underline">
               RAG Architecture
             </a>{' '}
             - How AI retrieval works
           </li>
           <li>
-            <a href="./PRODUCT_ARCHITECTURE.md" className="text-white hover:underline">
+            <a
+              href="https://codeberg.org/algorave/server/src/branch/main/docs/system-specs/PRODUCT_ARCHITECTURE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:underline">
               Product Architecture
             </a>{' '}
             - Full system overview
