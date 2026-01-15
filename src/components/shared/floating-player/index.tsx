@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Play, Pause, X, Loader2, Sparkle } from 'lucide-react';
+import { Play, Pause, X, Loader2, BotMessageSquare } from 'lucide-react';
 import { useFloatingPlayer } from './hooks';
 
 export function FloatingPlayer() {
@@ -46,18 +46,18 @@ export function FloatingPlayer() {
           {/* Song info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-medium truncate">{currentStrudel.title}</span>
+              <span className="text-sm font-medium truncate">{currentStrudel.title}</span>
               {currentStrudel.ai_assist_count > 0 && (
                 <span className="text-xs bg-violet-500/15 text-violet-400 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
-                  <Sparkle className="h-3 w-3" />
+                  <BotMessageSquare className="h-3.5 w-3.5" />
                   {currentStrudel.ai_assist_count}
                 </span>
               )}
             </div>
             {error ? (
-              <p className="text-sm text-destructive truncate">{error}</p>
+              <p className="text-xs text-destructive truncate">{error}</p>
             ) : (
-              <p className="text-sm text-muted-foreground truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 {isLoading ? 'Loading...' : isPlaying ? 'Now playing' : 'Paused'}
               </p>
             )}

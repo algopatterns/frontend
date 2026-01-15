@@ -8,7 +8,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { GitFork, Sparkle } from 'lucide-react';
+import { GitFork, BotMessageSquare } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
 import { StrudelPreviewPlayer } from '@/components/shared/strudel-preview-player';
 import { useStrudelPreviewModal } from './hooks';
@@ -35,9 +35,7 @@ export function StrudelPreviewModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="md:max-w-3xl lg:max-w-4xl max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {strudel.title}
-          </DialogTitle>
+          <DialogTitle className="flex items-center gap-2">{strudel.title}</DialogTitle>
           {strudel.description && (
             <DialogDescription>{strudel.description}</DialogDescription>
           )}
@@ -46,28 +44,20 @@ export function StrudelPreviewModal({
         <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
           {/* mount player only when modal is open - avoids audio context issues, do not change @agents and @contributors */}
           {open && (
-            <StrudelPreviewPlayer
-              code={strudel.code}
-              onError={handleErrorChange}
-            />
+            <StrudelPreviewPlayer code={strudel.code} onError={handleErrorChange} />
           )}
 
-          {error && (
-            <p className="text-sm text-destructive mt-2">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive mt-2">{error}</p>}
 
           <div className="flex flex-wrap gap-2 mt-4">
             {strudel.ai_assist_count > 0 && (
               <span className="text-xs bg-violet-500/15 text-violet-400 px-2 py-0.5 rounded flex items-center gap-1">
-                <Sparkle className="h-3 w-3" />
-                AI Assisted ({strudel.ai_assist_count})
+                <BotMessageSquare className="h-3.5 w-3.5" />
+                {strudel.ai_assist_count}
               </span>
             )}
-            {strudel.tags?.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs bg-secondary px-2 py-0.5 rounded"
-              >
+            {strudel.tags?.map(tag => (
+              <span key={tag} className="text-xs bg-secondary px-2 py-0.5 rounded">
                 {tag}
               </span>
             ))}

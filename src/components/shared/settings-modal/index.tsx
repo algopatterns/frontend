@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Sparkle, User } from 'lucide-react';
+import { Settings, BotMessageSquare, User } from 'lucide-react';
 import { useSettingsModal, getAnonDisplayName } from './hooks';
 
 export { getAnonDisplayName } from './hooks';
@@ -87,7 +87,7 @@ export function SettingsModal() {
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium flex items-center gap-2">
-              <Sparkle className="h-4 w-4" />
+              <BotMessageSquare className="h-4 w-4" />
               AI Features
             </h3>
             <div className="flex items-center justify-between rounded-lg border p-4">

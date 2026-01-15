@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Sparkle } from 'lucide-react';
+import { BotMessageSquare } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
 
 interface StrudelCardProps {
@@ -27,17 +27,11 @@ export function StrudelCard({
   return (
     <Card className="rounded-md">
       <CardHeader className="relative">
-        {actions && (
-          <div className="absolute -top-1 right-4 flex gap-1">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="absolute -top-1 right-4 flex gap-1">{actions}</div>}
         <CardDescription>
           {new Date(strudel.updated_at).toLocaleDateString()}
         </CardDescription>
-        <CardTitle className="text-lg truncate max-w-[70%]">
-          {strudel.title}
-        </CardTitle>
+        <CardTitle className="text-lg truncate max-w-[70%]">{strudel.title}</CardTitle>
         {showDescription && strudel.description && (
           <CardDescription className="truncate max-w-[75%] -mt-1">
             {strudel.description}
@@ -49,8 +43,8 @@ export function StrudelCard({
         <div className="flex gap-1 overflow-hidden">
           {strudel.ai_assist_count > 0 && (
             <span className="text-xs bg-violet-500/15 text-violet-400 px-2 py-0.5 rounded flex items-center gap-1 shrink-0">
-              <Sparkle className="h-3 w-3" />
-              AI ({strudel.ai_assist_count})
+              <BotMessageSquare className="h-3.5 w-3.5" />
+              {strudel.ai_assist_count}
             </span>
           )}
           {strudel.tags?.slice(0, maxTags).map(tag => (

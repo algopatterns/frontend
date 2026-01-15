@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Eye, BarChart3, Sparkle, Loader2 } from 'lucide-react';
+import { Play, Pause, Eye, BarChart3, BotMessageSquare, Loader2 } from 'lucide-react';
 import { usePlayerStore } from '@/lib/stores/player';
 import type { Strudel } from '@/lib/api/strudels/types';
 
@@ -59,7 +59,7 @@ export function StrudelListItem({
           <span className="font-medium truncate">{strudel.title}</span>
           {strudel.ai_assist_count > 0 && (
             <span className="text-xs bg-violet-500/15 text-violet-400 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
-              <Sparkle className="h-3 w-3" />
+              <BotMessageSquare className="h-3.5 w-3.5" />
               {strudel.ai_assist_count}
             </span>
           )}
