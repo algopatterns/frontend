@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { StrudelCard } from "@/components/shared/strudel-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useInfinitePublicStrudels, usePublicTags } from "@/lib/hooks/use-strudels";
-import { Eye, GitFork, Loader2, Search, Filter, X, Sparkles, BarChart3, AlertTriangle, RefreshCw } from "lucide-react";
+import { Eye, GitFork, Loader2, Search, Filter, X, BarChart3, AlertTriangle, RefreshCw } from "lucide-react";
 import { StrudelStatsDialog } from "@/components/shared/strudel-stats-dialog";
 import { StrudelPreviewModal } from "@/components/shared/strudel-preview-modal";
 import type { Strudel } from "@/lib/api/strudels/types";
@@ -239,9 +240,12 @@ export default function ExplorePage() {
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {strudels.map((strudel) => (
-              <Card key={strudel.id} className="rounded-md">
-                <CardHeader className="relative">
-                  <div className="absolute -top-1 right-4 flex gap-1">
+              <StrudelCard
+                key={strudel.id}
+                strudel={strudel}
+                showDescription
+                actions={
+                  <>
                     <Button
                       size="icon-round-sm"
                       variant="outline"
@@ -258,37 +262,17 @@ export default function ExplorePage() {
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="icon-round-sm" variant="outline" className="text-muted-foreground hover:text-foreground" onClick={() => handleFork(strudel.id)}>
+                    <Button
+                      size="icon-round-sm"
+                      variant="outline"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => handleFork(strudel.id)}
+                    >
                       <GitFork className="h-4 w-4" />
                     </Button>
-                  </div>
-                  <CardDescription>{new Date(strudel.updated_at).toLocaleDateString()}</CardDescription>
-                  <CardTitle className="text-lg truncate max-w-[70%]">{strudel.title}</CardTitle>
-                  <CardDescription className="line-clamp-1 max-w-[75%] -mt-1">{strudel.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <pre className="text-xs bg-muted p-2 rounded overflow-hidden text-ellipsis whitespace-nowrap mb-3">
-                    {strudel.code.slice(0, 100)}
-                    {strudel.code.length > 100 && "..."}
-                  </pre>
-                  <div className="flex flex-wrap gap-1">
-                    {strudel.ai_assist_count > 0 && (
-                      <span className="text-xs bg-violet-500/15 text-violet-400 px-2 py-0.5 rounded flex items-center gap-1">
-                        <Sparkles className="h-3 w-3" />
-                        AI Assisted ({strudel.ai_assist_count})
-                      </span>
-                    )}
-                    {strudel.tags?.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs bg-secondary px-2 py-0.5 rounded"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                  </>
+                }
+              />
             ))}
           </div>
 
