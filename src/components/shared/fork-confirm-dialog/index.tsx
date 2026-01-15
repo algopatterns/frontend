@@ -1,14 +1,15 @@
 'use client';
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { useForkConfirmDialog } from './hooks';
 
 export function ForkConfirmDialog() {
@@ -32,29 +33,27 @@ export function ForkConfirmDialog() {
       : 'Sign in to save your current work before forking, or continue as a guest.';
 
     return (
-      <Dialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader className="space-y-3">
-            <DialogTitle>
+      <AlertDialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
               {isReforkingSameStrudel ? 'Re-fork Strudel' : 'Fork Strudel'}
-            </DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 pt-2">
-            <Button variant="ghost" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button variant="outline" onClick={handleFork}>
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogBody>{description}</AlertDialogBody>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleClose}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleFork}>
               {isReforkingSameStrudel
                 ? 'Overwrite & Re-fork'
                 : hasUnsavedChanges
                 ? 'Save Draft & Fork'
                 : 'Fork'}
-            </Button>
-            <Button onClick={handleLogin}>Sign In</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogin}>Sign In</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   }
 
@@ -67,23 +66,21 @@ export function ForkConfirmDialog() {
       : 'Your current work will be saved as a draft so you can continue later.';
 
     return (
-      <Dialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader className="space-y-3">
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 pt-2">
-            <Button variant="ghost" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button variant="outline" onClick={handleFork}>
-              {isReforkingSameStrudel ? 'Overwrite & Re-fork' : 'Continue With Fork'}
-            </Button>
-            {!currentStrudelId && <Button onClick={handleSaveFirst}>Save First</Button>}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AlertDialog open={!!pendingForkId} onOpenChange={open => !open && handleClose()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogBody>{description}</AlertDialogBody>
+          <AlertDialogFooter>
+            <AlertDialogCancel className='border-none hover:bg-transparent hover:opacity-80' onClick={handleClose}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleFork}>
+              {isReforkingSameStrudel ? 'Overwrite' : 'Fork Anyways'}
+            </AlertDialogCancel>
+            {!currentStrudelId && <AlertDialogAction onClick={handleSaveFirst}>Save First</AlertDialogAction>}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   }
 

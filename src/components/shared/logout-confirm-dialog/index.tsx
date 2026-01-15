@@ -1,14 +1,15 @@
 'use client';
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { useLogoutConfirmDialog } from './hooks';
 
 export function LogoutConfirmDialog() {
@@ -16,24 +17,25 @@ export function LogoutConfirmDialog() {
     useLogoutConfirmDialog();
 
   return (
-    <Dialog open={isLogoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader className="space-y-3">
-          <DialogTitle>Log out?</DialogTitle>
-          <DialogDescription>
-            Your current session code will not be saved. You&apos;ll start fresh as a guest when
-            you reconnect.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="gap-2 pt-2">
-          <Button variant="ghost" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={handleLogout}>
+    <AlertDialog open={isLogoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Log out?</AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogBody>
+          Your current session code will not be saved. You&apos;ll start fresh as a guest when
+          you reconnect.
+        </AlertDialogBody>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleCancel}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleLogout}
+            className="bg-red-500 text-destructive-foreground hover:bg-red-600"
+          >
             Log out
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

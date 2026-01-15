@@ -1,14 +1,15 @@
 'use client';
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { useNewStrudelDialog } from './hooks';
 
 export function NewStrudelDialog() {
@@ -27,58 +28,50 @@ export function NewStrudelDialog() {
 
   if (!isAuthenticated) {
     return (
-      <Dialog open={isNewStrudelDialogOpen} onOpenChange={setNewStrudelDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader className="space-y-3">
-            <DialogTitle>Start a New Strudel</DialogTitle>
-            <DialogDescription>
-              Sign in to save your strudels and access them later. As a guest, you can
-              clear the editor to start fresh.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 pt-2">
-            <Button variant="ghost" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button variant="outline" onClick={handleClearEditor}>
-              Clear Editor
-            </Button>
-            <Button onClick={handleLogin}>Sign In</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AlertDialog open={isNewStrudelDialogOpen} onOpenChange={setNewStrudelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Start a New Strudel</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            Sign in to save your strudels and access them later. As a guest, you can
+            clear the editor to start fresh.
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleClose}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleClearEditor}>Clear Editor</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogin}>Sign In</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   }
 
   return (
-    <Dialog open={isNewStrudelDialogOpen} onOpenChange={setNewStrudelDialogOpen}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader className="space-y-3">
-          <DialogTitle>Start a New Strudel</DialogTitle>
-          <DialogDescription>
-            {hasUnsavedChanges
-              ? currentStrudelId
-                ? "You have changes that haven't been autosaved yet. Your current work will be saved as a draft."
-                : 'Your current work will be saved as a draft so you can continue later.'
-              : 'Start fresh with a new strudel session.'}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="gap-2 pt-2">
-          <Button variant="ghost" onClick={handleClose}>
-            Cancel
-          </Button>
+    <AlertDialog open={isNewStrudelDialogOpen} onOpenChange={setNewStrudelDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Start a New Strudel</AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogBody>
+          {hasUnsavedChanges
+            ? currentStrudelId
+              ? "You have changes that haven't been autosaved yet. Your current work will be saved as a draft."
+              : 'Your current work will be saved as a draft so you can continue later.'
+            : 'Start fresh with a new strudel session.'}
+        </AlertDialogBody>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleClose}>Cancel</AlertDialogCancel>
           {hasUnsavedChanges ? (
             <>
-              <Button variant="outline" onClick={handleStartNew}>
-                Start New
-              </Button>
-              {!currentStrudelId && <Button onClick={handleSaveFirst}>Save First</Button>}
+              <AlertDialogCancel onClick={handleStartNew}>Start New</AlertDialogCancel>
+              {!currentStrudelId && <AlertDialogAction onClick={handleSaveFirst}>Save First</AlertDialogAction>}
             </>
           ) : (
-            <Button onClick={handleStartNew}>Start New</Button>
+            <AlertDialogAction onClick={handleStartNew}>Start New</AlertDialogAction>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
