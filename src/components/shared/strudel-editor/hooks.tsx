@@ -81,6 +81,17 @@ export interface StrudelMirrorInstance {
   setFontSize?: (size: number) => void;
   setLineNumbers?: (show: boolean) => void;
   setLineWrapping?: (wrap: boolean) => void;
+  editor?: {
+    scrollDOM: HTMLElement;
+    dom: HTMLElement;
+    coordsAtPos: (
+      pos: number
+    ) => { left: number; right: number; top: number; bottom: number } | null;
+    state: {
+      selection: { main: { head: number } };
+      doc: { lineAt: (pos: number) => { number: number; from: number; to: number } };
+    };
+  };
 }
 
 let strudelMirrorInstance: StrudelMirrorInstance | null = null;
@@ -116,6 +127,30 @@ export function setSuperdoughFn(
     | null
 ) {
   superdoughFn = fn;
+}
+
+// cursor change callback for remote cursor tracking
+type CursorChangeCallback = (line: number, col: number) => void;
+let cursorChangeCallback: CursorChangeCallback | null = null;
+
+export function setCursorChangeCallback(callback: CursorChangeCallback | null) {
+  cursorChangeCallback = callback;
+}
+
+export function getCursorPosition(): { line: number; col: number } | null {
+  const instance = getStrudelMirrorInstance();
+  if (!instance?.editor) return null;
+
+  try {
+    const { head } = instance.editor.state.selection.main;
+    const lineInfo = instance.editor.state.doc.lineAt(head);
+    return {
+      line: lineInfo.number, // 1-indexed
+      col: head - lineInfo.from, // 0-indexed column within line
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function isAudioContextSuspended(): boolean {
@@ -290,8 +325,10 @@ export function useStrudelEditor(
 
     // apply read-only state via CSS on the container
     if (containerRef.current) {
-      const cmContent = containerRef.current.querySelector('.cm-content') as HTMLElement | null;
-      
+      const cmContent = containerRef.current.querySelector(
+        '.cm-content'
+      ) as HTMLElement | null;
+
       if (cmContent) {
         cmContent.contentEditable = readOnly ? 'false' : 'true';
       }
@@ -474,7 +511,9 @@ export function useStrudelEditor(
 
         // apply read-only state after editor is created
         if (readOnlyRef.current && containerRef.current) {
-          const cmContent = containerRef.current.querySelector('.cm-content') as HTMLElement | null;
+          const cmContent = containerRef.current.querySelector(
+            '.cm-content'
+          ) as HTMLElement | null;
           if (cmContent) {
             cmContent.contentEditable = 'false';
           }
@@ -493,6 +532,25 @@ export function useStrudelEditor(
           useEditorStore.getState().setNextUpdateSource('paste');
         };
         containerRef.current?.addEventListener('paste', handlePaste);
+
+        // cursor position tracking for collaboration
+        let lastCursorLine = 0;
+        let lastCursorCol = 0;
+
+        const emitCursorPosition = () => {
+          const pos = getCursorPosition();
+          if (pos && (pos.line !== lastCursorLine || pos.col !== lastCursorCol)) {
+            lastCursorLine = pos.line;
+            lastCursorCol = pos.col;
+            cursorChangeCallback?.(pos.line, pos.col);
+          }
+        };
+
+        // listen for events that change cursor position
+        const editorEl = containerRef.current;
+        editorEl?.addEventListener('keyup', emitCursorPosition);
+        editorEl?.addEventListener('mouseup', emitCursorPosition);
+        editorEl?.addEventListener('click', emitCursorPosition);
 
         if (initialCode) {
           setCode(initialCode, true);

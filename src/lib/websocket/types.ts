@@ -11,7 +11,8 @@ export type ClientMessageType =
   | "chat_message"
   | "play"
   | "stop"
-  | "ping";
+  | "ping"
+  | "cursor_position";
 
 export type ServerMessageType =
   | "session_state"
@@ -24,7 +25,8 @@ export type ServerMessageType =
   | "session_ended"
   | "paste_lock_changed"
   | "error"
-  | "pong";
+  | "pong"
+  | "cursor_position";
 
 export interface WebSocketMessage<T = unknown> {
   type: ServerMessageType | ClientMessageType;
@@ -128,4 +130,18 @@ export interface SessionEndedPayload {
 export interface PasteLockChangedPayload {
   locked: boolean;
   reason?: string; // "paste_detected", "edits_sufficient", "ttl_expired"
+}
+
+// cursor position payloads
+export interface CursorPositionPayload {
+  line: number; // 1-indexed line number
+  col: number;  // 0-indexed column
+}
+
+export interface CursorPositionBroadcastPayload {
+  line: number;
+  col: number;
+  display_name: string;
+  user_id?: string;
+  role: SessionRole;
 }

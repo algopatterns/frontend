@@ -198,6 +198,28 @@ Keep connection alive. Server responds with `pong`.
 
 ---
 
+### `cursor_position`
+
+Send cursor position for live collaboration. Requires `host` or `co-author` role.
+
+```json
+{
+  "type": "cursor_position",
+  "session_id": "uuid",
+  "payload": {
+    "line": 5,
+    "col": 12
+  }
+}
+```
+
+| Field  | Type | Required | Description                    |
+| ------ | ---- | -------- | ------------------------------ |
+| `line` | int  | Yes      | Cursor line number (1-indexed) |
+| `col`  | int  | Yes      | Cursor column (0-indexed)      |
+
+---
+
 ## Server Messages (Receive)
 
 ### `session_state`
@@ -361,6 +383,28 @@ Sent when a user sends a chat message.
   "payload": {
     "message": "Hey, try adding some reverb!",
     "display_name": "DJ Cool"
+  }
+}
+```
+
+---
+
+### `cursor_position` (broadcast)
+
+Sent when a host or co-author moves their cursor. Used for live collaboration cursor tracking.
+
+```json
+{
+  "type": "cursor_position",
+  "session_id": "uuid",
+  "user_id": "uuid",
+  "timestamp": "2024-01-01T00:00:00Z",
+  "payload": {
+    "line": 5,
+    "col": 12,
+    "display_name": "DJ Cool",
+    "user_id": "uuid",
+    "role": "co-author"
   }
 }
 ```
