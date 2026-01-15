@@ -20,7 +20,7 @@ export function useStrudelForm(
 
   const {
     code,
-    conversationHistory,
+    conversationHistory: editorConversationHistory,
     currentDraftId,
     forkedFromId,
     parentCCSignal,
@@ -30,6 +30,10 @@ export function useStrudelForm(
   } = useEditorStore();
 
   // check if AI was used (any message has is_code_response)
+  // in edit mode, check the strudel's saved history; in create mode, check current editor session
+  const conversationHistory = mode === 'edit' && strudel?.conversation_history?.length
+    ? strudel.conversation_history
+    : editorConversationHistory;
   const hasAIAssistance = conversationHistory.some(msg => msg.is_code_response);
 
   const {
@@ -139,6 +143,11 @@ export function useStrudelForm(
           conversation_history: conversationHistory.map(h => ({
             role: h.role as 'user' | 'assistant',
             content: h.content,
+            is_actionable: h.is_actionable,
+            is_code_response: h.is_code_response,
+            clarifying_questions: h.clarifying_questions,
+            strudel_references: h.strudel_references,
+            doc_references: h.doc_references,
           })),
         });
 

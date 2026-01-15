@@ -156,7 +156,7 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
                 <span className="text-xs text-muted-foreground leading-0">(inferred from license)</span>
               )}
               {signalOverridden && (
-                <span className="text-xs text-orange-400">(custom)</span>
+                <span className="text-xs text-orange-400 leading-0">(custom)</span>
               )}
             </div>
             <Select

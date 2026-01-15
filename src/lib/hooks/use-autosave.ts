@@ -59,6 +59,11 @@ export function useAutosave() {
             conversation_history: conversationHistory.map(h => ({
               role: h.role as "user" | "assistant",
               content: h.content,
+              is_actionable: h.is_actionable,
+              is_code_response: h.is_code_response,
+              clarifying_questions: h.clarifying_questions,
+              strudel_references: h.strudel_references,
+              doc_references: h.doc_references,
             })),
           },
         });
@@ -106,6 +111,11 @@ export function useAutosave() {
           conversation_history: conversationHistory.map(h => ({
             role: h.role as "user" | "assistant",
             content: h.content,
+            is_actionable: h.is_actionable,
+            is_code_response: h.is_code_response,
+            clarifying_questions: h.clarifying_questions,
+            strudel_references: h.strudel_references,
+            doc_references: h.doc_references,
           })),
         },
       });
