@@ -9,6 +9,15 @@ interface Participant {
   role: SessionRole;
 }
 
+export interface RemoteCursor {
+  participantId: string;
+  displayName: string;
+  role: SessionRole;
+  line: number;
+  col: number;
+  lastUpdated: number;
+}
+
 interface WebSocketState {
   status: ConnectionStatus;
   sessionId: string | null;
@@ -18,6 +27,7 @@ interface WebSocketState {
   myRole: SessionRole | null;
   sessionStateReceived: boolean;
   pasteLocked: boolean;
+  remoteCursors: Map<string, RemoteCursor>;
 
   setStatus: (status: ConnectionStatus) => void;
   setSessionId: (id: string | null) => void;
@@ -30,6 +40,9 @@ interface WebSocketState {
   clearMessages: () => void;
   setSessionStateReceived: (received: boolean) => void;
   setPasteLocked: (locked: boolean) => void;
+  updateRemoteCursor: (cursor: RemoteCursor) => void;
+  removeRemoteCursor: (participantId: string) => void;
+  clearRemoteCursors: () => void;
   reset: () => void;
 }
 
@@ -37,11 +50,12 @@ const initialState = {
   status: 'disconnected' as ConnectionStatus,
   sessionId: null,
   error: null,
-  participants: [],
-  messages: [],
-  myRole: null,
+  participants: [] as Participant[],
+  messages: [] as ChatMessage[],
+  myRole: null as SessionRole | null,
   sessionStateReceived: false,
   pasteLocked: false,
+  remoteCursors: new Map<string, RemoteCursor>(),
 };
 
 export const useWebSocketStore = create<WebSocketState>(set => ({
@@ -99,5 +113,25 @@ export const useWebSocketStore = create<WebSocketState>(set => ({
     return set(state => ({
       messages: [...state.messages, message],
     }));
+  },
+
+  updateRemoteCursor: cursor => {
+    return set(state => {
+      const newCursors = new Map(state.remoteCursors);
+      newCursors.set(cursor.participantId, cursor);
+      return { remoteCursors: newCursors };
+    });
+  },
+
+  removeRemoteCursor: participantId => {
+    return set(state => {
+      const newCursors = new Map(state.remoteCursors);
+      newCursors.delete(participantId);
+      return { remoteCursors: newCursors };
+    });
+  },
+
+  clearRemoteCursors: () => {
+    return set({ remoteCursors: new Map() });
   },
 }));

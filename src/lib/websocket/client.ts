@@ -16,6 +16,7 @@ import type {
   StopPayload,
   SessionEndedPayload,
   PasteLockChangedPayload,
+  CursorPositionBroadcastPayload,
 } from './types';
 
 interface ConnectionOptions {
@@ -457,7 +458,10 @@ class AlgoraveWebSocket {
 
       case 'user_left': {
         const payload = message.payload as UserLeftPayload;
+        const { removeRemoteCursor } = useWebSocketStore.getState();
+
         removeParticipant(payload.user_id, payload.display_name);
+        removeRemoteCursor(payload.user_id || payload.display_name);
 
         addMessage({
           id: crypto.randomUUID(),
@@ -541,7 +545,7 @@ class AlgoraveWebSocket {
       case 'paste_lock_changed': {
         const payload = message.payload as PasteLockChangedPayload;
         const { setPasteLocked } = useWebSocketStore.getState();
-        
+
         setPasteLocked(payload.locked);
 
         // if locked due to parent no-ai signal, set permanent block in editor store
@@ -556,6 +560,26 @@ class AlgoraveWebSocket {
           if (!forkedFromId) {
             setForkedFromId('unknown');
           }
+        }
+
+        break;
+      }
+
+      case 'cursor_position': {
+        const payload = message.payload as CursorPositionBroadcastPayload;
+
+        // only track hosts and co-authors
+        if (payload.role === 'host' || payload.role === 'co-author') {
+          const { updateRemoteCursor } = useWebSocketStore.getState();
+
+          updateRemoteCursor({
+            participantId: payload.user_id || payload.display_name,
+            displayName: payload.display_name,
+            role: payload.role,
+            line: payload.line,
+            col: payload.col,
+            lastUpdated: Date.now(),
+          });
         }
 
         break;
@@ -657,6 +681,10 @@ class AlgoraveWebSocket {
     this.send('stop', {});
   }
 
+  sendCursorPosition(line: number, col: number) {
+    this.send('cursor_position', { line, col });
+  }
+
   /**
    * restore editor state from localStorage when WS connection fails.
    * used as fallback so user isn't blocked from working.
@@ -691,6 +719,8 @@ class AlgoraveWebSocket {
     this.cleanup();
     // reject all pending requests
     this.rejectAllPendingRequests(new Error('WebSocket disconnected'));
+    // clear remote cursors
+    useWebSocketStore.getState().clearRemoteCursors();
     // reset state for fresh start on next connect
     this.initialLoadComplete = false;
     useWebSocketStore.getState().reset();

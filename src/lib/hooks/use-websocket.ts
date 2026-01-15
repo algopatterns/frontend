@@ -6,7 +6,8 @@ import { useWebSocketStore } from "@/lib/stores/websocket";
 import { useEditorStore } from "@/lib/stores/editor";
 import { useAuthStore } from "@/lib/stores/auth";
 import { storage } from "@/lib/utils/storage";
-import { debounce } from "@/lib/utils/debounce";
+import { debounce, throttle } from "@/lib/utils/debounce";
+import { setCursorChangeCallback } from "@/components/shared/strudel-editor/hooks";
 
 interface UseWebSocketOptions {
   sessionId?: string;
@@ -81,6 +82,30 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       wsClient.sendCodeUpdate(code, line, col, source);
     }, 100)
   );
+
+  // create throttled cursor position sender (50ms = max 20 updates/sec)
+  const throttledSendCursorRef = useRef(
+    throttle((line: number, col: number) => {
+      wsClient.sendCursorPosition(line, col);
+    }, 50)
+  );
+
+  // set up cursor change callback for collaboration
+  useEffect(() => {
+    const canEdit = myRole === "host" || myRole === "co-author";
+
+    if (canEdit && status === "connected") {
+      setCursorChangeCallback((line, col) => {
+        throttledSendCursorRef.current(line, col);
+      });
+    } else {
+      setCursorChangeCallback(null);
+    }
+
+    return () => {
+      setCursorChangeCallback(null);
+    };
+  }, [myRole, status]);
 
   const sendCode = useCallback(
     (newCode: string) => {
