@@ -288,8 +288,13 @@ export function useStrudelEditor(
   useEffect(() => {
     readOnlyRef.current = readOnly;
 
-    if (strudelMirrorInstance) {
-      strudelMirrorInstance.reconfigureExtension?.('isEditable', !readOnly);
+    // apply read-only state via CSS on the container
+    if (containerRef.current) {
+      const cmContent = containerRef.current.querySelector('.cm-content') as HTMLElement | null;
+      
+      if (cmContent) {
+        cmContent.contentEditable = readOnly ? 'false' : 'true';
+      }
     }
   }, [readOnly]);
 
@@ -467,8 +472,12 @@ export function useStrudelEditor(
         mirror.reconfigureExtension?.('isPatternHighlightingEnabled', true);
         mirror.reconfigureExtension?.('isFlashEnabled', true);
 
-        if (readOnlyRef.current) {
-          mirror.reconfigureExtension?.('isEditable', false);
+        // apply read-only state after editor is created
+        if (readOnlyRef.current && containerRef.current) {
+          const cmContent = containerRef.current.querySelector('.cm-content') as HTMLElement | null;
+          if (cmContent) {
+            cmContent.contentEditable = 'false';
+          }
         }
 
         if (!isMounted) {
