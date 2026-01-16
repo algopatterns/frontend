@@ -19,6 +19,27 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+  openGraph: {
+    title: "Algorave",
+    description: "Live code music with friends using strudel",
+    url: "https://algorave.cc",
+    siteName: "Algorave",
+    images: [
+      {
+        url: "/site-banner.png",
+        width: 1200,
+        height: 630,
+        alt: "Algorave - Live code music with friends",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Algorave",
+    description: "Live code music with friends using strudel",
+    images: ["/site-banner.png"],
+  },
 };
 
 export default function RootLayout({
