@@ -4,11 +4,11 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'A Letter from the Creator | Algorave',
   description:
-    'Learn about Algorave, an open-source collaborative live coding music platform powered by Strudel. Built with ethical AI principles and respect for creator rights.',
+    'Learn about Algorave, an open-source collaborative live coding music platform powered by Strudel. Built with responsible AI principles and respect for creator rights.',
   openGraph: {
     title: 'A Letter from the Creator | Algorave',
     description:
-      'Learn about Algorave, an open-source collaborative live coding music platform built with ethical AI principles.',
+      'Learn about Algorave, an open-source collaborative live coding music platform built with responsible AI principles.',
     type: 'website',
   },
 };
@@ -20,7 +20,7 @@ export default function AboutPage() {
       <p className="text-lg mb-12">
         <span className="text-orange-400">Live Code Music.</span>{' '}
         <span className="text-emerald-400">Respect Creators.</span>{' '}
-        <span className="text-blue-400">Use AI &quot;Ethically&quot;.</span>
+        <span className="text-blue-400">Use AI &quot;Responsibly&quot;.</span>
       </p>
 
       <section className="mb-12">
@@ -69,7 +69,7 @@ export default function AboutPage() {
           for live coding could be lower, while still respecting the craft?
         </p>
         <p className="text-muted-foreground mb-4">
-          The goal was never to replace the skill and artistry of live coders. It was to
+          The goal is never to replace the skill and artistry of live coders. It is to
           open a door. To let curious newcomers like me to experiment with Strudel
           patterns, help stuck musicians find their next idea and generally make the
           language more accessible without diminishing its depth.
@@ -78,12 +78,12 @@ export default function AboutPage() {
           I see a future where creators can easily talk to agents using natural language
           instructions (text/voice commands) and then get back{' '}
           <b className="text-white">authentic</b>, <b className="text-white">creative</b>{' '}
-          music in real time - just like Switch Angel did on this TikTok series, however, she had
-          to manually transcribe her thoughts and actions into text. With intelligent
-          voice enabled agents, this will soon all be automated and you&apos;ll only
-          need to speak the line of thought for your creative piece out loud and it will
-          be transcribed and executed in real time while maintaining the integrity of your
-          creative process.
+          music in real time - just like Switch Angel did on this TikTok series, however,
+          she had to manually transcribe her thoughts and actions into text. With
+          intelligent voice enabled agents, this will soon all be automated and
+          you&apos;ll only need to speak the line of thought for your creative piece out
+          loud and it will be transcribed and executed in real time while maintaining the
+          integrity of your creative process.
         </p>
       </section>
 
@@ -139,7 +139,7 @@ export default function AboutPage() {
 
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">
-          How Algorave Enforces &quot;Ethical&quot; AI Use
+          How Algorave Enforces &quot;Responsible&quot; AI Use
         </h2>
 
         <div className="space-y-8 mt-6">
@@ -347,7 +347,7 @@ export default function AboutPage() {
           I know this. I built the system anyway.
         </p>
         <p className="text-muted-foreground mb-4">
-          Here&apos;s my thinking: perfect enforcement is impossible, but that was never
+          Here&apos;s my thinking: perfect enforcement is impossible, but that is never
           the goal. The goal is to make respecting creator wishes the default, and to make
           circumvention require deliberate effort. If someone has to go out of their way
           to bypass these protections, they&apos;ve made a conscious choice to disregard a
@@ -467,8 +467,9 @@ export default function AboutPage() {
         <p className="text-muted-foreground mb-4">
           AGPL-3.0 is the right call because Strudel itself is AGPL-licensed, and Algorave
           as a platform wouldn&apos;t be possible without the incredible work done by all
-          strudel open-source contributors. If you build on Strudel and/or Algorave, you
-          inherit both of their capabilities and their commitment to staying open.
+          the open-source contributors who built Strudel. If you build on Strudel and/or
+          Algorave, you inherit both of their capabilities and their commitment to staying
+          open.
         </p>
         <p className="text-muted-foreground my-4">
           Some documentation located in the server repository on Codeberg include:
@@ -523,23 +524,23 @@ export default function AboutPage() {
       <hr className="my-8 border-border" />
 
       <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">To the Strudel Community</h2>
+        <h2 className="text-2xl font-semibold mb-4">To Creatives & the Strudel Community</h2>
         <p className="text-muted-foreground mb-4">
-          I know you&apos;ve been burned before. I know AI tools have extracted value from
-          your work without permission. I understand the skepticism.
+          I know AI tools have extracted value from your work without permission before
+          now and is still doing so. I understand the skepticism.
         </p>
         <p className="text-muted-foreground mb-4">
-          I&apos;m not asking for blind trust. I&apos;m asking for the chance to
-          demonstrate that AI assistance and creator rights can coexist. And I&apos;m
-          inviting you to hold me accountable if this project falls short.
+          I&apos;m not asking for a blind or instant benefit of doubt granted to algorave
+          by the community. I&apos;m asking for the chance to demonstrate that AI
+          assistance and creator rights can coexist. And I&apos;m inviting you to join me
+          in this experiment.
         </p>
         <p className="text-muted-foreground mb-4">
           If you find a flaw in these safeguards, tell me. If you think I&apos;ve missed
           something, open an issue. If you want to make this system stronger, contribute.
         </p>
         <p className="text-muted-foreground mb-4">
-          I built Algorave, but I&apos;m not building it alone. It&apos;s open source, and
-          the community will shape where it goes from here.
+          Algorave is open source, and the community will shape where it goes from here.
         </p>
       </section>
 
@@ -548,16 +549,20 @@ export default function AboutPage() {
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">Features</h2>
         <p className="text-muted-foreground mb-4">
-          Beyond the experimental &quot;ethical&quot; framework, Algorave offers:
+          Beyond the experimental &quot;responsible&quot; framework, Algorave offers:
         </p>
         <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-2">
           <li>
-            <strong className="text-white">Clean editor interface</strong> with syntax
-            highlighting and a distraction-free design
+            <strong className="text-white">Clean editor interface</strong> with kind ux
+            and a distraction-free design
           </li>
           <li>
             <strong className="text-white">DAW-style sample browser</strong> with
             categorized sound groups in the sidebar
+          </li>
+          <li>
+            <strong className="text-white">Strudel Player</strong> browse and play
+            patterns from the community
           </li>
           <li>
             <strong className="text-white">Full Strudel support</strong> with the complete
