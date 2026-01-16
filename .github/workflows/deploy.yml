@@ -41,7 +41,8 @@ jobs:
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
             cd ~/algorave/frontend
-            docker compose down
+            docker compose down || true
+            docker ps -q --filter "publish=3000" | xargs -r docker stop | xargs -r docker rm || true
             docker compose pull
             docker compose up -d
             docker image prune -f
