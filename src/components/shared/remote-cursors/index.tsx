@@ -39,8 +39,13 @@ export function RemoteCursors() {
 
     remoteCursors.forEach((cursor: RemoteCursor) => {
       try {
-        // get the line from the document
-        const line = editor.state.doc.lineAt(cursor.line);
+        // access the CodeMirror Text document (line() is 1-indexed)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const doc = editor.state.doc as any;
+        const totalLines = doc.lines || 1;
+        const lineNum = Math.max(1, Math.min(cursor.line, totalLines));
+        const line = doc.line(lineNum);
+
         // calculate the document position (line.from + column, clamped to line end)
         const pos = Math.min(line.from + cursor.col, line.to);
 
@@ -85,9 +90,8 @@ export function RemoteCursors() {
         cursorEl.appendChild(label);
 
         containerRef.current?.appendChild(cursorEl);
-      } catch (e) {
+      } catch {
         // ignore errors from invalid positions
-        console.warn('[remote-cursors] Failed to render cursor:', e);
       }
     });
   }, [remoteCursors]);

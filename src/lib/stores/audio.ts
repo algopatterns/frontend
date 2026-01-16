@@ -31,12 +31,7 @@ const initialState = {
 export const useAudioStore = create<AudioState>((set) => ({
   ...initialState,
 
-  setPlaying: (isPlaying) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[audio-store] setPlaying:', isPlaying);
-    }
-    set({ isPlaying });
-  },
+  setPlaying: (isPlaying) => set({ isPlaying }),
   setInitialized: (isInitialized) => set({ isInitialized }),
   setError: (error) => set({ error }),
   setPendingPlayback: (pendingPlaybackAction) => set({ pendingPlaybackAction }),

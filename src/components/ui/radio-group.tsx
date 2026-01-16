@@ -66,7 +66,7 @@ function RadioGroupItem({
   disabled: itemDisabled = false,
   className,
 }: RadioGroupItemProps) {
-  const { value: groupValue, onValueChange, disabled: groupDisabled, name } = useRadioGroup()
+  const { value: groupValue, onValueChange, disabled: groupDisabled } = useRadioGroup()
   const checked = value === groupValue
   const disabled = groupDisabled || itemDisabled
 

@@ -27,7 +27,9 @@ export function OpenStrudelConfirmDialog() {
   }
 
   return (
-    <AlertDialog open={!!pendingOpenStrudelId} onOpenChange={(open) => !open && handleClose()}>
+    <AlertDialog
+      open={!!pendingOpenStrudelId}
+      onOpenChange={open => !open && handleClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
@@ -39,9 +41,9 @@ export function OpenStrudelConfirmDialog() {
         </AlertDialogBody>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={handleClose}>Cancel</AlertDialogCancel>
-          <AlertDialogCancel onClick={handleOpen}>Save Draft & Open</AlertDialogCancel>
+          <AlertDialogCancel onClick={handleOpen}>Open Anyways</AlertDialogCancel>
           {!currentStrudelId && (
-            <AlertDialogAction onClick={handleSaveFirst}>Save as Strudel</AlertDialogAction>
+            <AlertDialogAction onClick={handleSaveFirst}>Save First</AlertDialogAction>
           )}
         </AlertDialogFooter>
       </AlertDialogContent>

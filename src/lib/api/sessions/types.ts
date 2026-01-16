@@ -141,4 +141,5 @@ export interface LiveStatusResponse {
   is_live: boolean;
   participant_count: number;
   has_active_invite_tokens: boolean;
+  is_discoverable: boolean;
 }

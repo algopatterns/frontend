@@ -1,19 +1,48 @@
+interface DebouncedFunction<T extends (...args: Parameters<T>) => void> {
+  (...args: Parameters<T>): void;
+  flush: () => void;
+  cancel: () => void;
+}
+
 export function debounce<T extends (...args: Parameters<T>) => void>(
   func: T,
   wait: number
-): (...args: Parameters<T>) => void {
+): DebouncedFunction<T> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let lastArgs: Parameters<T> | null = null;
 
-  return function (this: unknown, ...args: Parameters<T>) {
+  const debounced = function (...args: Parameters<T>) {
+    lastArgs = args;
+
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
 
     timeoutId = setTimeout(() => {
-      func.apply(this, args);
+      func(...(lastArgs as Parameters<T>));
       timeoutId = null;
+      lastArgs = null;
     }, wait);
+  } as DebouncedFunction<T>;
+
+  debounced.flush = () => {
+    if (timeoutId && lastArgs) {
+      clearTimeout(timeoutId);
+      func(...(lastArgs as Parameters<T>));
+      timeoutId = null;
+      lastArgs = null;
+    }
   };
+
+  debounced.cancel = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+      lastArgs = null;
+    }
+  };
+
+  return debounced;
 }
 
 export function throttle<T extends (...args: Parameters<T>) => void>(

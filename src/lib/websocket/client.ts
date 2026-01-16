@@ -52,6 +52,17 @@ class AlgoraveWebSocket {
   // flag to skip code restoration in session_state when forking
   public skipCodeRestoration = false;
 
+  // flag to track pending code updates (used to skip cursor-only updates during typing)
+  private _hasPendingCodeUpdate = false;
+
+  setPendingCodeUpdate(pending: boolean) {
+    this._hasPendingCodeUpdate = pending;
+  }
+
+  get hasPendingCodeUpdate() {
+    return this._hasPendingCodeUpdate;
+  }
+
   // generic request/reply correlation
   // maps request_id -> pending request with resolve/reject/timeout
   private pendingRequests = new Map<string, PendingRequest>();
@@ -100,17 +111,22 @@ class AlgoraveWebSocket {
   }
 
   connect(options: ConnectionOptions = {}) {
-    // don't interrupt an existing connection
-    if (
-      this.ws &&
-      (this.ws.readyState === WebSocket.CONNECTING ||
-        this.ws.readyState === WebSocket.OPEN)
-    ) {
-      return;
+    // if joining a specific session, disconnect from any existing session first
+    if (options.sessionId) {
+      this.cleanup();
+      this.initialLoadComplete = false; // reset for new session
+    } else {
+      // don't interrupt an existing connection for non-session-specific connects
+      if (
+        this.ws &&
+        (this.ws.readyState === WebSocket.CONNECTING ||
+          this.ws.readyState === WebSocket.OPEN)
+      ) {
+        return;
+      }
+      // clean up any stale connection
+      this.cleanup();
     }
-
-    // clean up any stale connection
-    this.cleanup();
 
     this.connectionOptions = options;
     this.shouldReconnect = true;
@@ -336,16 +352,6 @@ class AlgoraveWebSocket {
 
         const decision = processSessionState(ctx);
 
-        // log decision for debugging
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[SessionState] Decision:', {
-            action: decision.codeAction.type,
-            reason: decision.codeAction.reason,
-            draftSave: decision.draftSave,
-            debug: decision.debug.context,
-          });
-        }
-
         // clear skip flag after reading it
         if (this.skipCodeRestoration) {
           this.skipCodeRestoration = false;
@@ -419,6 +425,26 @@ class AlgoraveWebSocket {
       case 'code_update': {
         const payload = message.payload as CodeUpdateBroadcastPayload;
         setCode(payload.code, true);
+
+        // sync remote cursor with code update for accurate display
+        // only track hosts and co-authors
+        if (
+          payload.cursor_line !== undefined &&
+          payload.cursor_col !== undefined &&
+          payload.display_name &&
+          payload.role &&
+          (payload.role === 'host' || payload.role === 'co-author')
+        ) {
+          const { updateRemoteCursor } = useWebSocketStore.getState();
+          updateRemoteCursor({
+            participantId: payload.user_id || payload.display_name,
+            displayName: payload.display_name,
+            role: payload.role,
+            line: payload.cursor_line,
+            col: payload.cursor_col,
+            lastUpdated: Date.now(),
+          });
+        }
         break;
       }
 

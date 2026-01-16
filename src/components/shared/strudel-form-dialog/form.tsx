@@ -46,7 +46,6 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
     ccSignal,
     handleSignalChange,
     signalOverridden,
-    error,
     setError,
     isCreate,
     isPending,

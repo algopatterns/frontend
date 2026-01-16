@@ -23,10 +23,11 @@ export function useAgentGenerate() {
   return useMutation({
     meta: { skipGlobalErrorToast: true }, // errors shown in conversation UI instead
     mutationFn: async (query: string) => {
-      // block AI requests if parent strudel has no-ai restriction
-      // this takes precedence over any websocket paste lock state
-      if (forkedFromId && parentCCSignal === 'no-ai') {
-        throw new Error('AI assistant is permanently disabled - the original author restricted AI use for this strudel');
+      // block AI requests if forked and parent has no signal or no-ai restriction
+      // default to restrictive (no-ai) when signal is missing
+      const parentSignalBlocksAI = !parentCCSignal || parentCCSignal === 'no-ai';
+      if (forkedFromId && parentSignalBlocksAI) {
+        throw new Error('AI assistant is disabled - the original strudel does not permit AI use');
       }
 
       // for saved strudels: server loads history from DB (strudel_messages table)

@@ -13,8 +13,10 @@ import { useUIStore } from '@/lib/stores/ui';
 import { useAuthStore } from '@/lib/stores/auth';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useAudioStore } from '@/lib/stores/audio';
+import { useWebSocketStore } from '@/lib/stores/websocket';
 import { wsClient } from '@/lib/websocket/client';
 import { storage } from '@/lib/utils/storage';
+import { EDITOR } from '@/lib/constants';
 import {
   evaluateStrudel,
   stopStrudel,
@@ -90,11 +92,14 @@ export const useEditor = ({
   const hasActiveInvites = (invitesData?.tokens?.length ?? 0) > 0;
 
   // check if session is live (for host to show End Live button)
+  // combine API response with local state for immediate updates
   const { data: liveStatus } = useSessionLiveStatus(
     token && sessionId && canEdit ? sessionId : '',
     !!token && !!sessionId && canEdit
   );
-  const isLive = liveStatus?.is_live ?? false;
+  // isLive is true only for editors, when: API says so, OR there are active invites, OR there are multiple participants
+  // also consider discoverable status from session data (via invite dialog hook)
+  const isLive = canEdit && (liveStatus?.is_live || hasActiveInvites || participants.length > 1);
 
   // soft-end live session mutation
   const softEndSession = useSoftEndSession();
@@ -331,6 +336,59 @@ export const useEditor = ({
       setShowSyncOverlay(false);
       setPendingPlayback(null);
       toast(reason || 'Session ended by host');
+
+      // for viewers: clear session, restore their state, and reconnect
+      const { myRole } = useWebSocketStore.getState();
+      if (myRole === 'viewer') {
+        // clear viewer session storage
+        storage.clearViewerSession();
+
+        // disconnect from the ended session
+        wsClient.disconnect();
+
+        // check if user is authenticated
+        const { token } = useAuthStore.getState();
+        const isAuthenticated = !!token;
+
+        if (isAuthenticated) {
+          // authenticated viewer: restore their previous state
+          const savedStrudelId = storage.getCurrentStrudelId();
+          const savedDraftId = storage.getCurrentDraftId();
+
+          if (savedStrudelId) {
+            // redirect to load the saved strudel (will reconnect via useWebSocket)
+            router.replace(`/?id=${savedStrudelId}`);
+            return;
+          }
+
+          if (savedDraftId) {
+            // try to restore a local draft
+            const draft = storage.getDraft(savedDraftId);
+            if (draft) {
+              useEditorStore.getState().setCode(draft.code, false);
+              useEditorStore.getState().setCurrentDraftId(draft.id);
+              useEditorStore.getState().setForkedFromId(draft.forkedFromId ?? null);
+              useEditorStore.getState().setParentCCSignal(draft.parentCCSignal ?? null);
+              // reconnect to start a fresh session with their draft
+              wsClient.connect();
+              router.replace('/');
+              return;
+            }
+          }
+        }
+
+        // anonymous viewer or no saved state: fresh slate
+        useEditorStore.getState().setCode(EDITOR.DEFAULT_CODE, false);
+        useEditorStore.getState().setCurrentStrudel(null, null);
+        useEditorStore.getState().setCurrentDraftId(null);
+        useEditorStore.getState().setForkedFromId(null);
+        useEditorStore.getState().setParentCCSignal(null);
+        useEditorStore.getState().setConversationHistory([]);
+
+        // reconnect to start a fresh session
+        wsClient.connect();
+        router.replace('/');
+      }
     });
 
     return () => {
@@ -338,7 +396,7 @@ export const useEditor = ({
       cleanupStop();
       cleanupSessionEnded();
     };
-  }, []);
+  }, [router]);
 
   const handlePlay = useCallback(() => {
     evaluate();

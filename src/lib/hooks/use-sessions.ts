@@ -92,6 +92,10 @@ export function useCreateInvite() {
       queryClient.invalidateQueries({
         queryKey: sessionKeys.invites(sessionId),
       });
+      // also update live status since having invites makes session "live"
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.liveStatus(sessionId),
+      });
     },
   });
 }
@@ -167,6 +171,10 @@ export function useSetDiscoverable() {
       queryClient.invalidateQueries({ queryKey: sessionKeys.live() });
       queryClient.invalidateQueries({
         queryKey: sessionKeys.detail(variables.sessionId),
+      });
+      // also update live status since discoverable affects live state
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.liveStatus(variables.sessionId),
       });
     },
   });

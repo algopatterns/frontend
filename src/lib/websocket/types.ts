@@ -76,6 +76,8 @@ export interface CodeUpdateBroadcastPayload {
   cursor_line?: number;
   cursor_col?: number;
   display_name: string;
+  user_id?: string;
+  role?: SessionRole;
 }
 
 export interface ChatMessageBroadcastPayload {
