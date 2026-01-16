@@ -66,24 +66,46 @@ export default function AboutPage() {
         <p className="text-muted-foreground italic my-6 pl-4 border-l-2 border-violet-500">
           What if you could explore music production and pattern-making using natural
           language instructions? without memorizing syntax? What if the barrier to entry
-          for live coding could be lower, while still respecting the craft?
+          for creating music patterns with code could be lower, while still respecting the
+          craft?
         </p>
         <p className="text-muted-foreground mb-4">
-          The goal is never to replace the skill and artistry of live coders. It is to
-          open a door. To let curious newcomers like me to experiment with Strudel
-          patterns, help stuck musicians find their next idea and generally make the
-          language more accessible without diminishing its depth.
+          The goal is never to replace the skill and artistry involved in live coding
+          music. It is to open a door. To let curious newcomers like me to experiment with
+          Strudel patterns, help stuck musicians find their next idea and generally make
+          the language more accessible without diminishing its depth.
         </p>
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">My Vision</h2>
         <p className="text-muted-foreground mb-4">
           I see a future where creators can easily talk to agents using natural language
-          instructions (text/voice commands) and then get back{' '}
+          instructions (text/voice commands) and get back{' '}
           <b className="text-white">authentic</b>, <b className="text-white">creative</b>{' '}
-          music in real time - just like Switch Angel did on this TikTok series, however,
-          she had to manually transcribe her thoughts and actions into text. With
-          intelligent voice enabled agents, this will soon all be automated and
-          you&apos;ll only need to speak the line of thought for your creative piece out
-          loud and it will be transcribed and executed in real time while maintaining the
-          integrity of your creative process.
+          material in real time - just like Switch Angel did on her TikTok video but in
+          her case, she had to manually transcribe her thoughts and actions into text/code
+          which in turn, instructs her computer on what patterns and sounds to play.
+        </p>
+
+        <p className="text-muted-foreground mb-4">
+          With voice activated ai agents, creating music with code or even creating art
+          generally could possibly evolve to a point where all you&apos;ll need to do to
+          bring your creative musical masterpiece? chord progression? drum loop that has
+          been stuck in your head? or something else to life will be to simply: speak the
+          line of thought out loud and your it will be transcribed, executed and played
+          back to you in real time while maintaining the integrity of your creative
+          process.
+        </p>
+
+        <p className="text-muted-foreground mb-4">
+          As nice and fururistic as all of this sounds, it may turn out to be that only
+          creatives who actually know the craft will be able to administer surgically
+          precise commands and instructions hence defeating the purpose of lowering the
+          entry barrier via the use of ai agents or even worse, that writing the code out
+          or controlling the DAW yourself is more effective than instructing an ai agent
+          with a feedback speaker and a microphone to do it for you. I still believe this
+          should be explored and experimented with nonetheless.
         </p>
       </section>
 
