@@ -25,6 +25,7 @@ interface WebSocketState {
   participants: Participant[];
   messages: ChatMessage[];
   myRole: SessionRole | null;
+  myDisplayName: string | null;
   sessionStateReceived: boolean;
   pasteLocked: boolean;
   remoteCursors: Map<string, RemoteCursor>;
@@ -33,6 +34,7 @@ interface WebSocketState {
   setSessionId: (id: string | null) => void;
   setError: (error: string | null) => void;
   setMyRole: (role: SessionRole | null) => void;
+  setMyDisplayName: (name: string | null) => void;
   setParticipants: (participants: Participant[]) => void;
   addParticipant: (participant: Participant) => void;
   removeParticipant: (id: string | undefined, displayName?: string) => void;
@@ -53,6 +55,7 @@ const initialState = {
   participants: [] as Participant[],
   messages: [] as ChatMessage[],
   myRole: null as SessionRole | null,
+  myDisplayName: null as string | null,
   sessionStateReceived: false,
   pasteLocked: false,
   remoteCursors: new Map<string, RemoteCursor>(),
@@ -64,6 +67,7 @@ export const useWebSocketStore = create<WebSocketState>(set => ({
   reset: () => set(initialState),
   setError: error => set({ error }),
   setMyRole: myRole => set({ myRole }),
+  setMyDisplayName: myDisplayName => set({ myDisplayName }),
   setStatus: status => set({ status }),
   clearMessages: () => set({ messages: [] }),
   setSessionId: sessionId => set({ sessionId }),

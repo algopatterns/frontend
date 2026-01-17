@@ -62,6 +62,7 @@ export interface SessionStateChatMessage {
 export interface SessionStatePayload {
   code: string;
   your_role: SessionRole;
+  your_display_name: string;
   chat_history?: SessionStateChatMessage[];
   participants: Array<{
     user_id: string;
