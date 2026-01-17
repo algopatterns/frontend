@@ -33,20 +33,22 @@ export function AIMessage({ message, onApplyCode }: AIMessageProps) {
 
   if (role === 'user') {
     return (
-      <div className="rounded-lg rounded-br-none bg-muted/50 border border-muted p-3 lg:ml-[6rem]">
-        <div className="flex items-center gap-2 mb-1">
-          <span className={`font-medium text-[12px] ${userColor}`}>You</span>
-          {formattedTime && (
-            <span className="text-muted-foreground/60 text-[10px]">{formattedTime}</span>
-          )}
+      <div className="flex justify-end">
+        <div className="rounded-lg rounded-br-none bg-muted/30 border border-muted/60 p-3 w-fit max-w-full">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`font-medium text-[12px] ${userColor}`}>You</span>
+            {formattedTime && (
+              <span className="text-muted-foreground/60 text-[10px]">{formattedTime}</span>
+            )}
+          </div>
+          <p className="text-foreground/70 text-[13px]">{content}</p>
         </div>
-        <p className="text-foreground/70 text-[13px]">{content}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg rounded-bl-none bg-muted/30 border border-muted/60 p-3 lg:max-w-[calc(100%-6rem)]">
+    <div className="rounded-lg rounded-bl-none bg-transparent border border-muted/40 p-3">
         <div className="flex items-center gap-2 mb-2">
           <span className={`font-medium text-[12px] ${assistantColor}`}>Assistant</span>
           {formattedTime && (
