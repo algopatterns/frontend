@@ -127,12 +127,9 @@ function HomePageContent() {
           )}
         </div>
 
-        <div className={cn(
-          "overflow-hidden shrink-0 transition-[height] duration-200 ease-out",
-          canEdit && aiEnabled ? "h-16" : "h-0"
-        )}>
+        {canEdit && aiEnabled && (
           <AIInput onSendAIRequest={handleSendAIRequest} disabled={!isConnected} />
-        </div>
+        )}
       </div>
 
       <Button
