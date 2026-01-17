@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="max-w-4xl mx-auto py-6 md:py-12 px-4 md:px-6">
-      <h1 className="text-3xl md:text-4xl font-bold mb-2">
+      <h1 className="text-3xl md:text-4xl font-bold mb-6 md:mb-2">
         <span className="md:hidden">Creator&apos;s Letter</span>
         <span className="hidden md:inline">A Letter from the Creator</span>
       </h1>
