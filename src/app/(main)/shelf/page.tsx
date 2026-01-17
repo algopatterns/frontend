@@ -47,7 +47,7 @@ function DashboardContent() {
 
   return (
     <AuthGuard>
-      <div className={`container p-4 md:p-8 w-full max-w-full ${playerStrudel ? 'pb-24' : ''}`}>
+      <div className={`container px-6 py-4 md:p-8 w-full max-w-full ${playerStrudel ? 'pb-24' : ''}`}>
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Shelf</h1>

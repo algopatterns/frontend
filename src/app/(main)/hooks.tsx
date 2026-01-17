@@ -78,6 +78,7 @@ export const useEditor = ({
     canEdit,
     isViewer,
     isCoAuthor,
+    isHost,
     sessionId,
     participants,
   } = useWebSocket({
@@ -473,6 +474,7 @@ export const useEditor = ({
     isConnected,
     canEdit,
     isViewer,
+    isHost,
     sessionId,
     token,
     saveStatus,

@@ -58,6 +58,7 @@ function HomePageContent() {
     toggleChatPanel,
     isConnected,
     isViewer,
+    isHost,
     canEdit,
     sessionId,
     saveStatus,
@@ -113,7 +114,7 @@ function HomePageContent() {
             onRestore={handleRestore}
             onNew={handleNewStrudel}
             onGoLive={handleGoLive}
-            onEndLive={handleEndLive}
+            onEndLive={isHost ? handleEndLive : undefined}
             showSave={canEdit}
             showNew={canEdit}
             showGoLive={!!sessionId && canEdit}
