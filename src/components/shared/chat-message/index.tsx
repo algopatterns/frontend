@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Highlight, themes } from 'prism-react-renderer';
 import type { ChatMessage as ChatMessageType } from '@/lib/websocket/types';
 import { getUserColor, formatTimestamp } from './hooks';
+import { useWebSocketStore } from '@/lib/stores/websocket';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -11,8 +12,16 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ message, compact = false }: ChatMessageProps) {
-  const { type, content, displayName, clarifyingQuestions, timestamp, isCodeResponse } =
+  const { type, content, displayName: rawDisplayName, clarifyingQuestions, timestamp, isCodeResponse } =
     message;
+  const myDisplayName = useWebSocketStore(state => state.myDisplayName);
+
+  // determine if this is the current user's message
+  const isCurrentUser = rawDisplayName === myDisplayName;
+  // use myDisplayName as fallback for color consistency when showing "You"
+  const colorName = rawDisplayName || myDisplayName || 'Anonymous';
+  // show "You" for current user's messages, otherwise first name
+  const displayName = isCurrentUser ? 'You' : rawDisplayName?.split(' ')[0];
 
   const formattedTime = formatTimestamp(timestamp);
 
@@ -118,9 +127,9 @@ export function ChatMessage({ message, compact = false }: ChatMessageProps) {
             'font-medium',
             compact
               ? 'text-rose-300/70 text-[12px]'
-              : `${getUserColor(displayName || 'You')} text-xs`
+              : `${getUserColor(colorName)} text-xs`
           )}>
-          {(displayName || 'You').split(' ')[0]}
+          {displayName || 'You'}
         </span>
         <span
           className={cn('text-muted-foreground', compact ? 'text-[10px]' : 'text-xs')}>

@@ -73,7 +73,7 @@ export function RemoteCursors() {
         // add name label
         const label = document.createElement('div');
         label.className = 'remote-cursor-label';
-        label.textContent = cursor.displayName;
+        label.textContent = cursor.displayName.split(' ')[0];
         label.style.cssText = `
           position: absolute;
           top: -18px;

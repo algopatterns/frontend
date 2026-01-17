@@ -26,6 +26,15 @@ interface ConnectionOptions {
   displayName?: string;
 }
 
+// returns "You" if displayName matches current user, otherwise first name
+function getDisplayLabel(displayName: string): string {
+  const { myDisplayName } = useWebSocketStore.getState();
+  if (myDisplayName && displayName === myDisplayName) {
+    return 'You';
+  }
+  return displayName.split(' ')[0];
+}
+
 interface PendingRequest<T = unknown> {
   resolve: (value: T) => void;
   reject: (error: Error) => void;
@@ -278,6 +287,7 @@ class AlgoraveWebSocket {
     const {
       setSessionId,
       setMyRole,
+      setMyDisplayName,
       setParticipants,
       addParticipant,
       removeParticipant,
@@ -297,6 +307,7 @@ class AlgoraveWebSocket {
 
         setSessionId(message.session_id);
         setMyRole(payload.your_role);
+        setMyDisplayName(payload.your_display_name);
         setParticipants(
           payload.participants.map((p, index) => ({
             id: p.user_id || `participant-${index}`,
@@ -475,7 +486,7 @@ class AlgoraveWebSocket {
         addMessage({
           id: crypto.randomUUID(),
           type: 'system',
-          content: `${payload.display_name} joined`,
+          content: `${getDisplayLabel(payload.display_name)} joined`,
           timestamp: message.timestamp,
         });
 
@@ -492,7 +503,7 @@ class AlgoraveWebSocket {
         addMessage({
           id: crypto.randomUUID(),
           type: 'system',
-          content: `${payload.display_name} left`,
+          content: `${getDisplayLabel(payload.display_name)} left`,
           timestamp: message.timestamp,
         });
 
@@ -527,7 +538,7 @@ class AlgoraveWebSocket {
         addMessage({
           id: crypto.randomUUID(),
           type: 'system',
-          content: `${payload.display_name} started playback`,
+          content: `${getDisplayLabel(payload.display_name)} started playback`,
           timestamp: message.timestamp,
         });
 
@@ -544,7 +555,7 @@ class AlgoraveWebSocket {
         addMessage({
           id: crypto.randomUUID(),
           type: 'system',
-          content: `${payload.display_name} stopped playback`,
+          content: `${getDisplayLabel(payload.display_name)} stopped playback`,
           timestamp: message.timestamp,
         });
 
