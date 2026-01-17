@@ -6,6 +6,8 @@ import { Check, Copy, ExternalLink } from 'lucide-react';
 import type { AgentMessage } from '@/lib/api/strudels/types';
 import Link from 'next/link';
 import { useAIMessage, formatTime, STRUDEL_BASE_URL, STRUDEL_DOCS_URL } from './hooks';
+import { getUserColor } from '../chat-message/hooks';
+import { useWebSocketStore } from '@/lib/stores/websocket';
 
 interface AIMessageProps {
   message: AgentMessage;
@@ -24,13 +26,16 @@ export function AIMessage({ message, onApplyCode }: AIMessageProps) {
   } = message;
 
   const { copied, applied, handleCopy, handleApply } = useAIMessage(content, onApplyCode);
+  const myDisplayName = useWebSocketStore(state => state.myDisplayName);
   const formattedTime = formatTime(created_at);
+  const userColor = getUserColor(myDisplayName || 'Anonymous');
+  const assistantColor = getUserColor('Assistant');
 
   if (role === 'user') {
     return (
-      <div className="rounded-sm bg-black/30 p-3">
+      <div className="rounded-lg rounded-br-none bg-muted/50 border border-muted p-3 lg:ml-[6rem]">
         <div className="flex items-center gap-2 mb-1">
-          <span className="font-medium text-rose-300/70 text-[12px]">You</span>
+          <span className={`font-medium text-[12px] ${userColor}`}>You</span>
           {formattedTime && (
             <span className="text-muted-foreground/60 text-[10px]">{formattedTime}</span>
           )}
@@ -41,13 +46,13 @@ export function AIMessage({ message, onApplyCode }: AIMessageProps) {
   }
 
   return (
-    <div className="rounded-sm bg-black/30 p-3">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="font-medium text-teal-300/70 text-[12px]">Assistant</span>
-        {formattedTime && (
-          <span className="text-muted-foreground/60 text-[10px]">{formattedTime}</span>
-        )}
-      </div>
+    <div className="rounded-lg rounded-bl-none bg-muted/30 border border-muted/60 p-3 lg:max-w-[calc(100%-6rem)]">
+        <div className="flex items-center gap-2 mb-2">
+          <span className={`font-medium text-[12px] ${assistantColor}`}>Assistant</span>
+          {formattedTime && (
+            <span className="text-muted-foreground/60 text-[10px]">{formattedTime}</span>
+          )}
+        </div>
 
       {content && (
         <>
