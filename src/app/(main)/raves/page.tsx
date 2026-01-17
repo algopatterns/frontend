@@ -165,7 +165,7 @@ export default function LivePage() {
               Start your own session and go live to appear here!
             </p>
             <Button asChild>
-              <Link href="/">Start Coding</Link>
+              <Link href="/">Start Raving</Link>
             </Button>
           </CardContent>
         </Card>
