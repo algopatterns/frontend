@@ -14,8 +14,11 @@ const BYOK_API_KEY = 'algorave_byok_api_key';
 export type BYOKProvider = 'anthropic' | 'openai';
 
 function getAnonAIEnabled(): boolean {
-  if (typeof window === 'undefined') return true;
-  return localStorage.getItem(AI_DISABLED_KEY) !== 'true';
+  if (typeof window === 'undefined') return false;
+  // Default to disabled - user must explicitly enable after configuring BYOK
+  const stored = localStorage.getItem(AI_DISABLED_KEY);
+  if (stored === null) return false; // no preference stored = default off
+  return stored !== 'true';
 }
 
 export function getAnonDisplayName(): string {

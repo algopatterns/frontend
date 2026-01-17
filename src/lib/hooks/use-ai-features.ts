@@ -12,8 +12,10 @@ const BYOK_API_KEY = "algorave_byok_api_key";
 const FREE_TIER_ENABLED = false;
 
 function getAnonAIDisabled() {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(AI_DISABLED_KEY) === "true";
+  if (typeof window === "undefined") return true; // default disabled on server
+  const stored = localStorage.getItem(AI_DISABLED_KEY);
+  if (stored === null) return true; // no preference = default disabled
+  return stored === "true";
 }
 
 function hasBYOKKey() {

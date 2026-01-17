@@ -114,13 +114,14 @@ export function SettingsModal() {
                     AI Assistant
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Quick docs retrieval and code snippets
+                    {getBYOKApiKey() ? 'Quick docs retrieval and code snippets' : 'Add your API key below to enable'}
                   </p>
                 </div>
                 <Switch
                   id="ai-toggle"
                   checked={aiEnabled}
                   onCheckedChange={handleAiToggle}
+                  disabled={!getBYOKApiKey()}
                 />
               </div>
 
