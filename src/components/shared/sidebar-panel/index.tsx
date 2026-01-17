@@ -31,7 +31,11 @@ export function SidebarPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Main content */}
-      <div className="flex-1 min-h-0 bg-background overflow-hidden">
+      <div
+        className={cn(
+          'flex-1 min-h-0 bg-background overflow-hidden',
+          effectiveTab === 'samples' && 'rounded-bl-xl'
+        )}>
         <Tabs
           value={effectiveTab}
           onValueChange={setSelectedTab}
@@ -77,7 +81,8 @@ export function SidebarPanel({
       {/* Footer */}
       <div
         className={cn(
-          'h-16 shrink-0 bg-background flex items-stretch justify-stretch transition-[border] duration-200 ease-out', {
+          'h-16 shrink-0 bg-background flex items-stretch justify-stretch transition-[border] duration-200 ease-out',
+          {
             'border-b': effectiveTab === 'chat',
           }
         )}>
