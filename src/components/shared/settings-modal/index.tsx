@@ -127,7 +127,7 @@ export function SettingsModal() {
               <div className="pt-4 border-t border-dashed space-y-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Key className="h-4 w-4" />
-                  <span>Bring Your Own Key (optional)</span>
+                  <span>Bring Your Own Key</span>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="byok-provider">Provider</Label>
