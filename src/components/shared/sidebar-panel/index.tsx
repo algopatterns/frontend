@@ -48,8 +48,9 @@ export function SidebarPanel({
               <TabsTrigger
                 value="samples"
                 className={cn(
-                  "flex-1 h-full rounded-none !border-none shadow-none",
-                  bothTabsVisible && "!bg-transparent data-[state=active]:!bg-foreground/80 data-[state=active]:!text-background data-[state=active]:!rounded-none"
+                  'flex-1 h-full rounded-none !border-none shadow-none',
+                  bothTabsVisible &&
+                    '!bg-transparent data-[state=active]:!bg-foreground/80 data-[state=active]:!text-background data-[state=active]:!rounded-none'
                 )}>
                 <Headphones className="h-4 w-4 mr-1" />
                 Samples
@@ -60,8 +61,9 @@ export function SidebarPanel({
               <TabsTrigger
                 value="chat"
                 className={cn(
-                  "flex-1 h-full rounded-none !border-none shadow-none",
-                  bothTabsVisible && "!bg-transparent data-[state=active]:!bg-foreground/80 data-[state=active]:!text-background data-[state=active]:!rounded-none"
+                  'flex-1 h-full rounded-none !border-none shadow-none',
+                  bothTabsVisible &&
+                    '!bg-transparent data-[state=active]:!bg-foreground/80 data-[state=active]:!text-background data-[state=active]:!rounded-none'
                 )}>
                 <MessageCircle className="h-4 w-4 mr-1" />
                 Chat
@@ -115,7 +117,7 @@ export function SidebarPanel({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                STRUDEL
+                DOCS
               </a>
             </div>
           </div>
