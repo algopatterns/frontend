@@ -13,6 +13,7 @@ import {
 import { AIMessage } from '../ai-message';
 import { useAIInput } from './hooks';
 import { useUIStore } from '@/lib/stores/ui';
+import { usePlayerStore } from '@/lib/stores/player';
 import { useResizable } from '@/lib/hooks/use-resizable';
 
 interface AIInputProps {
@@ -37,6 +38,7 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
   } = useAIInput(onSendAIRequest, disabled);
 
   const { aiDrawerHeight, setAIDrawerHeight } = useUIStore();
+  const { currentStrudel: playerStrudel } = usePlayerStore();
   const { handleMouseDown } = useResizable({
     initialSize: aiDrawerHeight,
     onResize: setAIDrawerHeight,
@@ -74,8 +76,9 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
     );
   }
 
-  // calculate max available height for drawer
-  const maxDrawerHeight = 'calc(100vh - var(--spacing-toolbar) - var(--spacing-footer) - 4.67rem)';
+  // calculate max available height for drawer (subtract floating player height when visible)
+  const playerHeight = playerStrudel ? '4rem' : '0px';
+  const maxDrawerHeight = `calc(100vh - var(--spacing-toolbar) - var(--spacing-footer) - 4.67rem - ${playerHeight})`;
   const drawerHeight = `min(${aiDrawerHeight}px, ${maxDrawerHeight})`;
 
   return (
