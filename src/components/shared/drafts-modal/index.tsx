@@ -29,8 +29,9 @@ export function DraftsModal() {
             <FileText className="h-5 w-5" />
             Drafts
           </DialogTitle>
-          <DialogDescription>
-            Your unsaved work is stored locally in your browser
+          <DialogDescription className="text-left">
+            <span className="md:hidden">Stored locally in browser</span>
+            <span className="hidden md:inline">Your unsaved work is stored locally in your browser</span>
           </DialogDescription>
         </DialogHeader>
 

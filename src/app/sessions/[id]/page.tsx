@@ -113,7 +113,7 @@ export default function SessionJoinPage() {
   // loading state
   if (isAuthLoading || isLoadingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardContent className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -126,7 +126,7 @@ export default function SessionJoinPage() {
   // error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -153,7 +153,7 @@ export default function SessionJoinPage() {
   // session not discoverable and user not authenticated
   if (!sessionInfo?.is_discoverable && !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Private Session</CardTitle>
@@ -178,7 +178,7 @@ export default function SessionJoinPage() {
 
   // join form for discoverable sessions
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center gap-2 mb-2">
