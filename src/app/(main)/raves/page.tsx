@@ -97,7 +97,7 @@ export default function LivePage() {
           ))}
         </div>
       ) : isError ? (
-        <Card>
+        <Card className="rounded-lg">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
             <h3 className="text-lg font-medium mb-2">Failed to load live sessions</h3>
@@ -156,7 +156,7 @@ export default function LivePage() {
           ))}
         </div>
       ) : (
-        <Card>
+        <Card className="rounded-lg">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Radio className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No live sessions right now</h3>

@@ -126,7 +126,7 @@ function DashboardContent() {
             </div>
           </>
         ) : (
-          <Card>
+          <Card className="rounded-lg">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <svg
                 viewBox="0 0 24 24"

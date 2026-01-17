@@ -208,7 +208,7 @@ export default function ExplorePage() {
           ))}
         </div>
       ) : isError ? (
-        <Card>
+        <Card className="rounded-lg">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
             <h3 className="text-lg font-medium mb-2">Failed to load strudels</h3>
@@ -241,7 +241,7 @@ export default function ExplorePage() {
           </div>
         </>
       ) : (
-        <Card>
+        <Card className="rounded-lg">
           <CardContent className="flex flex-col items-center justify-center py-12">
             {hasActiveFilters ? (
               <>
