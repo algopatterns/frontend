@@ -158,16 +158,19 @@ export function EditorToolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                size="sm"
-                variant="destructive"
+                size="icon-round-sm"
+                variant="outline"
                 onClick={onEndLive}
                 disabled={isEndingLive}
-                className="gap-1">
-                <X className="h-3 w-3" />
-                End Live
+                className="relative text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30">
+                <Radio className="h-4 w-4" />
+                <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
+                </span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>End live session and kick all participants</TooltipContent>
+            <TooltipContent>End live session</TooltipContent>
           </Tooltip>
         </>
       )}
