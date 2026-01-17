@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { SAMPLE_DATA } from '@/lib/data/samples';
@@ -100,31 +99,6 @@ export function SamplesPanel() {
         )}
       </div>
 
-      <div className="px-3 py-2 border-t h-footer flex items-center justify-center">
-        <div className="flex items-center gap-4 opacity-80">
-          <Link
-            href="/about"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            ABOUT
-          </Link>
-
-          <a
-            href="https://codeberg.org/algorave"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            CODEBERG
-          </a>
-
-          <a
-            href="https://strudel.cc/workshop/getting-started"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            STRUDEL
-          </a>
-        </div>
-      </div>
     </div>
   );
 }

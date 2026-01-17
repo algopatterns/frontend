@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+import { useUIStore } from '@/lib/stores/ui';
 
 const subscribe = () => () => {};
 const getSnapshot = () => true;
 const getServerSnapshot = () => false;
 
 export function useSidebarPanel(showChat: boolean, isViewer: boolean) {
-  const [selectedTab, setSelectedTab] = useState<string | null>(null);
+  const { sidebarTab, setSidebarTab } = useUIStore();
   const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const effectiveTab = (() => {
@@ -15,20 +16,28 @@ export function useSidebarPanel(showChat: boolean, isViewer: boolean) {
       return 'samples';
     }
 
-    if (selectedTab === null) {
-      return isViewer && showChat ? 'chat' : 'samples';
-    }
-
-    if (isViewer && selectedTab === 'samples' && showChat) {
+    if (isViewer && showChat) {
       return 'chat';
     }
 
-    return selectedTab;
+    return sidebarTab;
   })();
 
+  // Sync effective tab back to store
+  useEffect(() => {
+    if (mounted && effectiveTab !== sidebarTab) {
+      setSidebarTab(effectiveTab as 'samples' | 'chat');
+    }
+  }, [mounted, effectiveTab, sidebarTab, setSidebarTab]);
+
+  const handleTabChange = (value: string) => {
+    if (value === 'samples' || value === 'chat') {
+      setSidebarTab(value);
+    }
+  };
+
   return {
-    selectedTab,
-    setSelectedTab,
+    setSelectedTab: handleTabChange,
     mounted,
     effectiveTab,
   };

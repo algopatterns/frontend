@@ -31,6 +31,7 @@ function HomePageContent() {
     setChatPanelOpen,
     chatPanelWidth,
     setChatPanelWidth,
+    sidebarTab,
   } = useUIStore();
   const { currentStrudel: playerStrudel } = usePlayerStore();
   const aiEnabled = useAIFeaturesEnabled();
@@ -94,28 +95,36 @@ function HomePageContent() {
   };
 
   return (
-    <div className={cn("flex h-full overflow-hidden", playerStrudel && "pb-16")}>
+    <div className={cn("flex h-full overflow-hidden pl-3", !(canEdit && aiEnabled) && "pb-3", playerStrudel && "pb-16")}>
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <EditorToolbar
-          onPlay={handlePlay}
-          onStop={handleStop}
-          onUpdate={handleUpdate}
-          onSave={handleSave}
-          onRestore={handleRestore}
-          onNew={handleNewStrudel}
-          onGoLive={handleGoLive}
-          onEndLive={handleEndLive}
-          showSave={canEdit}
-          showNew={canEdit}
-          showGoLive={!!sessionId && canEdit}
-          isLive={isLive}
-          isEndingLive={isEndingLive}
-          saveStatus={saveStatus}
-          hasRestorableVersion={hasRestorableVersion()}
-          isViewer={isViewer}
-        />
-        <div className="flex-1 overflow-hidden">
-          <StrudelEditor onCodeChange={handleCodeChange} readOnly={isViewer} />
+        <div className={cn("flex-1 flex flex-col min-w-0 overflow-hidden rounded-l-xl border border-border bg-background relative", ((canEdit && aiEnabled) || sidebarTab === 'samples') && "rounded-br-xl")}>
+          <EditorToolbar
+            onPlay={handlePlay}
+            onStop={handleStop}
+            onUpdate={handleUpdate}
+            onSave={handleSave}
+            onRestore={handleRestore}
+            onNew={handleNewStrudel}
+            onGoLive={handleGoLive}
+            onEndLive={handleEndLive}
+            showSave={canEdit}
+            showNew={canEdit}
+            showGoLive={!!sessionId && canEdit}
+            isLive={isLive}
+            isEndingLive={isEndingLive}
+            saveStatus={saveStatus}
+            hasRestorableVersion={hasRestorableVersion()}
+            isViewer={isViewer}
+          />
+          <div className="flex-1 overflow-hidden">
+            <StrudelEditor onCodeChange={handleCodeChange} readOnly={isViewer} />
+          </div>
+          {isChatPanelOpen && (
+            <div
+              onMouseDown={handleSidebarMouseDown}
+              className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize z-10"
+            />
+          )}
         </div>
 
         {canEdit && aiEnabled && (
@@ -149,20 +158,14 @@ function HomePageContent() {
         })}
         style={{ width: isChatPanelOpen ? chatPanelWidth : 0 }}>
         {isChatPanelOpen && (
-          <>
-            <div
-              onMouseDown={handleSidebarMouseDown}
-              className="w-1 cursor-col-resize shrink-0"
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <SidebarPanel
+              showChat={showChat}
+              onSendMessage={handleSendMessage}
+              disabled={!isConnected}
+              isViewer={isViewer}
             />
-            <div className="flex-1 min-w-0">
-              <SidebarPanel
-                showChat={showChat}
-                onSendMessage={handleSendMessage}
-                disabled={!isConnected}
-                isViewer={isViewer}
-              />
-            </div>
-          </>
+          </div>
         )}
       </div>
 

@@ -47,14 +47,14 @@ export function EditorToolbar({
   const { isPlaying, isInitialized, isCodeDirty, status } = useEditorToolbar();
 
   return (
-    <div className="flex items-center gap-2 p-2 border-b bg-background h-12">
+    <div className="flex items-center gap-2 p-2 bg-background h-12">
       <div className="flex items-center gap-1">
         <Button
           size="sm"
           variant={isPlaying ? 'outline' : 'default'}
           onClick={isPlaying ? onStop : onPlay}
           disabled={isViewer || (!isInitialized && !isPlaying)}
-          className="rounded-none min-w-20"
+          className="rounded-sm min-w-20"
           title={
             isViewer
               ? 'Only hosts can control playback'
@@ -74,7 +74,7 @@ export function EditorToolbar({
           variant="outline"
           onClick={onUpdate}
           disabled={isViewer || !isPlaying || !isCodeDirty}
-          className="rounded-none aspect-square px-0">
+          className="rounded-sm aspect-square px-0">
           <RefreshCw className="h-3 w-3" />
         </Button>
       </div>

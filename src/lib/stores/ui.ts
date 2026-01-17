@@ -14,6 +14,7 @@ interface UIState {
   isChatPanelOpen: boolean;
   chatPanelWidth: number;
   aiDrawerHeight: number;
+  sidebarTab: 'samples' | 'chat';
   isDraftsModalOpen: boolean;
   isInviteDialogOpen: boolean;
   isLoginModalOpen: boolean;
@@ -29,6 +30,7 @@ interface UIState {
   setChatPanelOpen: (open: boolean) => void;
   setChatPanelWidth: (width: number) => void;
   setAIDrawerHeight: (height: number) => void;
+  setSidebarTab: (tab: 'samples' | 'chat') => void;
   setDraftsModalOpen: (open: boolean) => void;
   setInviteDialogOpen: (open: boolean) => void;
   setLoginModalOpen: (open: boolean) => void;
@@ -46,6 +48,7 @@ export const useUIStore = create<UIState>(set => ({
   isChatPanelOpen: true,
   chatPanelWidth: CHAT_PANEL_DEFAULT_WIDTH,
   aiDrawerHeight: AI_DRAWER_DEFAULT_HEIGHT,
+  sidebarTab: 'samples',
   isDraftsModalOpen: false,
   isInviteDialogOpen: false,
   isLoginModalOpen: false,
@@ -76,6 +79,7 @@ export const useUIStore = create<UIState>(set => ({
   },
 
   setSidebarOpen: isSidebarOpen => set({ isSidebarOpen }),
+  setSidebarTab: sidebarTab => set({ sidebarTab }),
   setPendingForkId: pendingForkId => set({ pendingForkId }),
   setPendingOpenStrudelId: pendingOpenStrudelId => set({ pendingOpenStrudelId }),
   setChatPanelOpen: isChatPanelOpen => set({ isChatPanelOpen }),
