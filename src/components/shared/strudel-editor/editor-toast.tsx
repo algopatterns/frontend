@@ -1,54 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, AlertCircle, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAudioStore } from '@/lib/stores/audio';
 import { cn } from '@/lib/utils';
 
-interface ToastMessage {
-  id: string;
-  type: 'error' | 'warning';
-  message: string;
-}
-
 export function EditorToast() {
-  const error = useAudioStore(state => state.error);
-  const setError = useAudioStore(state => state.setError);
-  const isPlaying = useAudioStore(state => state.isPlaying);
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const toasts = useAudioStore(state => state.editorToasts);
+  const dismissToast = useAudioStore(state => state.dismissEditorToast);
+  const clearToasts = useAudioStore(state => state.clearEditorToasts);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Add new errors to the stack
-  useEffect(() => {
-    if (error) {
-      const newToast: ToastMessage = {
-        id: Date.now().toString(),
-        type: 'error',
-        message: error,
-      };
-      setToasts(prev => [...prev, newToast]);
-      setError(null);
-    }
-  }, [error, setError]);
-
-  // Clear all toasts when code is evaluated (isPlaying changes to true)
-  useEffect(() => {
-    if (isPlaying) {
-      setToasts([]);
-      setIsExpanded(false);
-    }
-  }, [isPlaying]);
-
   const handleDismiss = (id: string) => {
-    setToasts(prev => {
-      const filtered = prev.filter(t => t.id !== id);
-      if (filtered.length <= 1) setIsExpanded(false);
-      return filtered;
-    });
+    dismissToast(id);
+    if (toasts.length <= 2) setIsExpanded(false);
   };
 
   const handleDismissAll = () => {
-    setToasts([]);
+    clearToasts();
     setIsExpanded(false);
   };
 
@@ -58,7 +27,7 @@ export function EditorToast() {
   const warningCount = toasts.filter(t => t.type === 'warning').length;
   const latestToast = toasts[toasts.length - 1];
 
-  // Collapsed view - show only the latest with a count badge
+  // collapsed view - show only the latest with a count badge
   if (!isExpanded && toasts.length > 1) {
     return (
       <div className="absolute bottom-3 left-3 z-50 max-w-md">
@@ -102,7 +71,7 @@ export function EditorToast() {
     );
   }
 
-  // Expanded view or single toast
+  // expanded view or single toast
   return (
     <div className="absolute bottom-3 left-3 z-50 flex flex-col gap-2 max-w-md">
       {toasts.length > 1 && (

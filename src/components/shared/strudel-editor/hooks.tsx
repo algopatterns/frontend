@@ -209,6 +209,12 @@ export async function evaluateStrudel() {
     // revert state on error - clear timestamp so onToggle(false) won't be ignored
     lastExplicitPlayTime = 0;
     useAudioStore.getState().setPlaying(false);
+    // add error to toast system
+    const msg = error instanceof Error ? error.message : String(error);
+    useAudioStore.getState().addEditorToast({
+      type: 'error',
+      message: msg,
+    });
   }
 }
 
@@ -347,17 +353,78 @@ export function useStrudelEditor(
 
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      const msg = event.reason?.message || '';
+      const msg = event.reason?.message || String(event.reason) || 'Unknown error';
 
+      // always prevent default to stop Next.js overlay
+      event.preventDefault();
+
+      // suppress known non-critical patterns
       if (SUPPRESSED_ERROR_PATTERNS.some(pattern => msg.includes(pattern))) {
-        event.preventDefault();
+        return;
+      }
+
+      // add to toast system
+      useAudioStore.getState().addEditorToast({
+        type: 'error',
+        message: msg,
+      });
+    };
+
+    const handleError = (event: ErrorEvent) => {
+      const msg = event.message || 'Unknown error';
+
+      // suppress known non-critical patterns
+      if (SUPPRESSED_ERROR_PATTERNS.some(pattern => msg.includes(pattern))) {
+        return;
+      }
+
+      // prevent default to stop Next.js overlay
+      event.preventDefault();
+
+      // add to toast system
+      useAudioStore.getState().addEditorToast({
+        type: 'error',
+        message: msg,
+      });
+    };
+
+    // intercept console.error to catch strudel's internal errors
+    const originalConsoleError = console.error;
+    console.error = (...args: unknown[]) => {
+      originalConsoleError.apply(console, args);
+
+      const firstArg = String(args[0] || '');
+
+      // check if this is a strudel eval error
+      if (firstArg.includes('[eval] error:')) {
+        const errorMsg = args[1] ? String(args[1]) : firstArg.replace('[eval] error:', '').trim();
+        useAudioStore.getState().addEditorToast({
+          type: 'error',
+          message: errorMsg,
+        });
+        return;
+      }
+
+      // check if first arg is a SyntaxError or similar
+      if (args[0] instanceof Error) {
+        const error = args[0] as Error;
+        if (error.name === 'SyntaxError' || error.message.includes('Unexpected token')) {
+          useAudioStore.getState().addEditorToast({
+            type: 'error',
+            message: error.message,
+          });
+        }
       }
     };
 
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
 
-    return () =>
+    return () => {
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
+      console.error = originalConsoleError;
+    };
   }, []);
 
   useEffect(() => {
