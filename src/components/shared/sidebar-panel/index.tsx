@@ -28,6 +28,9 @@ export function SidebarPanel({
     disabled
   );
 
+  // both tabs visible when user is not a viewer and chat is enabled
+  const bothTabsVisible = mounted && showChat && !isViewer;
+
   return (
     <div className="flex flex-col h-full">
       {/* Main content */}
@@ -44,7 +47,10 @@ export function SidebarPanel({
             {(!mounted || !isViewer) && (
               <TabsTrigger
                 value="samples"
-                className="flex-1 h-full rounded-none border-none shadow-none data-[state=active]:!bg-foreground data-[state=active]:!text-background">
+                className={cn(
+                  "flex-1 h-full rounded-none !border-none shadow-none",
+                  bothTabsVisible ? "!bg-transparent data-[state=active]:!bg-foreground data-[state=active]:!text-background" : ""
+                )}>
                 <Headphones className="h-4 w-4 mr-1" />
                 Samples
               </TabsTrigger>
@@ -53,7 +59,10 @@ export function SidebarPanel({
             {(!mounted || showChat) && (
               <TabsTrigger
                 value="chat"
-                className="flex-1 h-full rounded-none border-none shadow-none data-[state=active]:!bg-foreground data-[state=active]:!text-background">
+                className={cn(
+                  "flex-1 h-full rounded-none !border-none shadow-none",
+                  bothTabsVisible ? "!bg-transparent data-[state=active]:!bg-foreground data-[state=active]:!text-background" : ""
+                )}>
                 <MessageCircle className="h-4 w-4 mr-1" />
                 Chat
               </TabsTrigger>
