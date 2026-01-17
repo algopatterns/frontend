@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react';
 import { useStrudelEditor } from './hooks';
 import { RemoteCursors } from '@/components/shared/remote-cursors';
+import { EditorToast } from './editor-toast';
 
 export {
   isAudioContextSuspended,
@@ -36,6 +37,7 @@ export function StrudelEditor({
         className="strudel-editor h-full w-full overflow-auto rounded-none"
       />
       <RemoteCursors />
+      <EditorToast />
       {isLoadingStrudel && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
