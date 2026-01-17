@@ -8,6 +8,7 @@ import { SidebarPanel } from '@/components/shared/sidebar-panel';
 import { SyncPlaybackOverlay } from '@/components/shared/sync-playback-overlay';
 import { AIInput } from '@/components/shared/ai-input';
 import { Button } from '@/components/ui/button';
+import { MessageCircle, Headphones } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEditor } from './hooks';
 import { useUIStore } from '@/lib/stores/ui';
@@ -141,21 +142,17 @@ function HomePageContent() {
       <Button
         variant="outline"
         size="icon"
-        className="fixed bottom-20 right-8 z-50 md:hidden rounded-full h-12 w-12 shadow-lg !bg-background"
+        className={cn(
+          "fixed right-8 z-50 md:hidden rounded-full h-12 w-12 shadow-lg !bg-background",
+          canEdit && aiEnabled ? "bottom-20" : "bottom-6"
+        )}
         onClick={toggleChatPanel}
-        aria-label={isChatPanelOpen ? 'Close samples panel' : 'Open samples panel'}>
-        <svg
-          className="h-5 w-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round">
-          <path d="M9 18V5l12-2v13" />
-          <circle cx="6" cy="18" r="3" />
-          <circle cx="18" cy="16" r="3" />
-        </svg>
+        aria-label={isChatPanelOpen ? 'Close panel' : 'Open panel'}>
+        {sidebarTab === 'chat' ? (
+          <MessageCircle className="h-5 w-5" />
+        ) : (
+          <Headphones className="h-5 w-5" />
+        )}
       </Button>
 
       <div
