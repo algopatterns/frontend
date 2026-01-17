@@ -68,6 +68,9 @@ export function useSettingsModal() {
   // track optimistic state for pending updates
   const [optimisticValue, setOptimisticValue] = useState<boolean | null>(null);
 
+  // track BYOK API key reactively for enabling/disabling toggle
+  const [byokApiKey, setBYOKApiKeyState] = useState<string>(() => getBYOKApiKey());
+
   // debounce timer for display name updates
   const displayNameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -98,6 +101,7 @@ export function useSettingsModal() {
 
   const handleBYOKApiKeyChange = useCallback((key: string) => {
     setBYOKApiKey(key);
+    setBYOKApiKeyState(key);
   }, []);
 
   const handleOpenChange = useCallback((open: boolean) => {
@@ -164,5 +168,6 @@ export function useSettingsModal() {
     handleDisplayNameChange,
     handleBYOKProviderChange,
     handleBYOKApiKeyChange,
+    byokApiKey,
   };
 }
