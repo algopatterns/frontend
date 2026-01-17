@@ -95,9 +95,9 @@ function HomePageContent() {
   };
 
   return (
-    <div className={cn("flex h-full overflow-hidden pl-3 transition-[padding] duration-200 ease-out", !(canEdit && aiEnabled) && "pb-3", playerStrudel && "pb-16")}>
+    <div className={cn("flex h-full overflow-hidden pl-3 pr-3 md:pr-0 transition-[padding] duration-200 ease-out", !(canEdit && aiEnabled) && "pb-3", playerStrudel && "pb-16")}>
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <div className={cn("flex-1 flex flex-col min-w-0 overflow-hidden rounded-l-xl border border-border bg-background relative transition-[border-radius] duration-200 ease-out", sidebarTab === 'samples' && "rounded-br-xl")}>
+        <div className={cn("flex-1 flex flex-col min-w-0 overflow-hidden rounded-xl md:rounded-l-xl md:rounded-r-none border border-border bg-background relative transition-[border-radius] duration-200 ease-out", sidebarTab === 'samples' && "md:rounded-br-xl")}>
           <EditorToolbar
             onPlay={handlePlay}
             onStop={handleStop}
@@ -135,7 +135,7 @@ function HomePageContent() {
       <Button
         variant="outline"
         size="icon"
-        className="fixed bottom-20 right-3 z-50 md:hidden rounded-full h-12 w-12 shadow-lg !bg-background"
+        className="fixed bottom-20 right-8 z-50 md:hidden rounded-full h-12 w-12 shadow-lg !bg-background"
         onClick={toggleChatPanel}
         aria-label={isChatPanelOpen ? 'Close samples panel' : 'Open samples panel'}>
         <svg
@@ -170,7 +170,7 @@ function HomePageContent() {
       </div>
 
       {isChatPanelOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
+        <div className="fixed inset-0 z-[60] md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={toggleChatPanel} />
           <div className="absolute right-0 top-0 bottom-0 w-80 bg-background">
             <SidebarPanel

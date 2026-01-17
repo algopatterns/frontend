@@ -44,7 +44,7 @@ export function SidebarPanel({
             {(!mounted || !isViewer) && (
               <TabsTrigger
                 value="samples"
-                className="flex-1 h-full rounded-none border-none shadow-none data-[state=active]:bg-transparent">
+                className="flex-1 h-full rounded-none border-none shadow-none data-[state=active]:bg-foreground data-[state=active]:text-background">
                 <Headphones className="h-4 w-4 mr-1" />
                 Samples
               </TabsTrigger>
@@ -53,7 +53,7 @@ export function SidebarPanel({
             {(!mounted || showChat) && (
               <TabsTrigger
                 value="chat"
-                className="flex-1 h-full rounded-none border-none shadow-none data-[state=active]:bg-transparent">
+                className="flex-1 h-full rounded-none border-none shadow-none data-[state=active]:bg-foreground data-[state=active]:text-background">
                 <MessageCircle className="h-4 w-4 mr-1" />
                 Chat
               </TabsTrigger>
