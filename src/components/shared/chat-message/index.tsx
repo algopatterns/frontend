@@ -120,7 +120,7 @@ export function ChatMessage({ message, compact = false }: ChatMessageProps) {
               ? 'text-rose-300/70 text-[12px]'
               : `${getUserColor(displayName || 'You')} text-xs`
           )}>
-          {displayName || 'You'}
+          {(displayName || 'You').split(' ')[0]}
         </span>
         <span
           className={cn('text-muted-foreground', compact ? 'text-[10px]' : 'text-xs')}>
