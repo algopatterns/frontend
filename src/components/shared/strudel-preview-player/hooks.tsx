@@ -66,7 +66,7 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
           initialCode: code || EDITOR.DEFAULT_CODE,
           pattern: silence,
           drawTime: [-2, 2],
-          autodraw: true,
+          autodraw: false,
           bgFill: false,
           prebake: async () => {
             initAudioOnFirstClick();
