@@ -318,10 +318,8 @@ export function useStrudelEditor(
   const initializedRef = useRef(false);
   const onCodeChangeRef = useRef(onCodeChange);
   const readOnlyRef = useRef(readOnly);
-  const previousStrudelIdRef = useRef<string | null | undefined>(undefined);
 
   const { code, setCode, currentStrudelId } = useEditorStore();
-  const [reinitKey, setReinitKey] = useState(0);
   const { setPlaying, setInitialized, setError } = useAudioStore();
   const wsStatus = useWebSocketStore(state => state.status);
   const sessionStateReceived = useWebSocketStore(state => state.sessionStateReceived);
@@ -437,39 +435,6 @@ export function useStrudelEditor(
       strudelMirrorInstance.code = code;
     }
   }, [code]);
-
-  // reinitialize StrudelMirror when strudel ID changes (for visualizers to work)
-  useEffect(() => {
-    // skip first render
-    if (previousStrudelIdRef.current === undefined) {
-      previousStrudelIdRef.current = currentStrudelId;
-      return;
-    }
-
-    // if strudel ID changed and we have an instance, reinitialize
-    if (currentStrudelId !== previousStrudelIdRef.current && strudelMirrorInstance) {
-      previousStrudelIdRef.current = currentStrudelId;
-
-      // destroy current instance
-      const instance = getStrudelMirrorInstance();
-      if (instance) {
-        (instance as StrudelMirrorInstance & { _cleanup?: () => void })._cleanup?.();
-        instance.stop();
-        instance.destroy?.();
-        setStrudelMirrorInstance(null);
-      }
-
-      const interval = getCodePollingInterval();
-      if (interval) {
-        clearInterval(interval);
-        setCodePollingInterval(null);
-      }
-
-      // trigger reinitialization
-      initializedRef.current = false;
-      setReinitKey(k => k + 1);
-    }
-  }, [currentStrudelId]);
 
   // main initialization effect
   useEffect(() => {
@@ -744,8 +709,8 @@ export function useStrudelEditor(
       }
     };
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: init runs on mount and reinitKey change
-  }, [reinitKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: init runs once on mount
+  }, []);
 
   const isLoadingStrudel =
     effectiveStrudelId &&
