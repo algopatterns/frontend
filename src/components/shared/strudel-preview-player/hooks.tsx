@@ -1,15 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { EDITOR } from '@/lib/constants';
-import {
-  SAMPLE_SOURCES,
-  INSTRUMENT_SHORTCUTS,
-  DRUM_MACHINE_ALIASES,
-  DRUM_HIT_TYPES,
-  SUPPRESSED_ERROR_PATTERNS,
-  generateId,
-} from '@/components/shared/strudel-editor/hooks';
+import { getGlobalMirror, getOrCreatePlaybackMirror, StrudelMirrorInstance } from '@/components/shared/strudel-editor/hooks';
 
 interface UseStrudelPreviewPlayerOptions {
   code: string;
@@ -17,230 +9,121 @@ interface UseStrudelPreviewPlayerOptions {
 }
 
 export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlayerOptions) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  // use a local ref to track THIS component's mirror instance
-  // this prevents race conditions where old cleanup affects new instances
-  const mirrorRef = useRef<InstanceType<typeof import('@strudel/codemirror').StrudelMirror> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  // unique canvas ID per component instance to avoid stale canvas issues on navigation
-  const canvasIdRef = useRef<string>(`strudel-preview-canvas-${generateId()}`);
+  const originalCodeRef = useRef<string | null>(null);
+  const mirrorRef = useRef<StrudelMirrorInstance | null>(null);
 
-  // initialize the mini player
+  // get or create a mirror for playback
   useEffect(() => {
-    if (!containerRef.current) return;
-
     let isMounted = true;
 
-    async function initPlayer() {
-      try {
-        // FIRST: aggressively clean up any stale canvases BEFORE importing modules
-        // Change IDs before removing so widgetElements references become orphaned
-        document.querySelectorAll('#test-canvas, [id^="_widget__"]').forEach(c => {
-          c.id = `_stale_${c.id}_${Date.now()}`;
-          c.remove();
-        });
-        if (containerRef.current) {
-          containerRef.current.querySelectorAll('[id^="_widget__"]').forEach(c => {
-            c.id = `_stale_${c.id}_${Date.now()}`;
-            c.remove();
-          });
-          containerRef.current.innerHTML = '';
+    async function initMirror() {
+      // first check if global mirror exists
+      let globalMirror = getGlobalMirror();
+      if (globalMirror) {
+        mirrorRef.current = globalMirror;
+        if (isMounted) {
+          setIsInitialized(true);
         }
+        return;
+      }
 
-        const [
-          { StrudelMirror },
-          { transpiler },
-          webaudioModule,
-          { registerSoundfonts },
-          coreModule,
-        ] = await Promise.all([
-          import('@strudel/codemirror'),
-          import('@strudel/transpiler'),
-          import('@strudel/webaudio'),
-          import('@strudel/soundfonts'),
-          import('@strudel/core'),
-        ]);
+      // wait a bit to see if main editor will create a global mirror
+      // this avoids creating a playback mirror on pages that have the main editor
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-        const {
-          getAudioContext,
-          webaudioOutput,
-          initAudioOnFirstClick,
-          registerSynthSounds,
-          samples,
-        } = webaudioModule;
+      if (!isMounted) return;
 
-        if (!containerRef.current || !isMounted) return;
-
-        const { evalScope, silence } = coreModule;
-
-        // import draw module and stop any running animations
-        const { getDrawContext, cleanupDraw } = await import('@strudel/draw');
-        cleanupDraw(true);
-
-        // create fresh draw context with unique ID
-        const drawContext = getDrawContext(canvasIdRef.current);
-
-        // initialize audio on first click and capture the promise
-        const audioReady = initAudioOnFirstClick();
-
-        const mirror = new StrudelMirror({
-          transpiler,
-          defaultOutput: webaudioOutput,
-          getTime: () => getAudioContext().currentTime,
-          root: containerRef.current,
-          initialCode: code || EDITOR.DEFAULT_CODE,
-          pattern: silence,
-          drawTime: [-2, 2],
-          drawContext,
-          autodraw: false,
-          bgFill: false,
-          beforeEval: () => audioReady,
-          prebake: async () => {
-
-            const { doughSamples: ds, uzuDrumkit: tc, dirtSamples } = SAMPLE_SOURCES;
-
-            await Promise.all([
-              evalScope(
-                import('@strudel/core'),
-                import('@strudel/codemirror'),
-                import('@strudel/webaudio'),
-                import('@strudel/draw'),
-                import('@strudel/mini'),
-                import('@strudel/tonal')
-              ),
-
-              registerSynthSounds(),
-              registerSoundfonts(),
-
-              samples(`${ds}/tidal-drum-machines.json`),
-              samples(`${ds}/piano.json`),
-              samples(`${ds}/vcsl.json`),
-              samples(`${ds}/Dirt-Samples.json`),
-              samples(`${ds}/EmuSP12.json`),
-              samples(`${ds}/mridangam.json`),
-
-              samples(`${dirtSamples}?v=${Date.now()}`),
-              samples(`${tc}/strudel.json`),
-              samples('github:tidalcycles/dirt-samples'),
-            ]);
-
-            const soundAlias = (webaudioModule as Record<string, unknown>).soundAlias as
-              | ((from: string, to: string) => void)
-              | undefined;
-
-            if (soundAlias) {
-              for (const [shorthand, full] of Object.entries(DRUM_MACHINE_ALIASES)) {
-                for (const hit of DRUM_HIT_TYPES) {
-                  soundAlias(`${full}_${hit}`, `${shorthand}_${hit}`);
-                }
-              }
-            }
-
-            const setLogger = (webaudioModule as Record<string, unknown>).setLogger as
-              | ((fn: (msg: string) => void) => void)
-              | undefined;
-
-            if (process.env.NODE_ENV === 'development') {
-              setLogger?.((msg: string) => {
-                if (!SUPPRESSED_ERROR_PATTERNS.some(pattern => msg.includes(pattern))) {
-                  console.log('[strudel-preview]', msg);
-                }
-              });
-            }
-
-            const { Pattern } = await import('@strudel/core');
-            const proto = Pattern.prototype as Record<string, (name: string) => unknown>;
-
-            for (const inst of INSTRUMENT_SHORTCUTS) {
-              if (!proto[inst]) {
-                proto[inst] = function () {
-                  return proto.s.call(this, inst);
-                };
-              }
-            }
-          },
-
-          onToggle: (started: boolean) => {
-            if (isMounted) {
-              setIsPlaying(started);
-              if (started) onError?.(null);
-            }
-          },
-
-          onError: (error: Error) => {
-            console.error('strudel preview error:', error);
-            onError?.(error.message);
-          },
-        });
-
-        mirror.setFontSize?.(13);
-        mirror.setLineNumbers?.(true);
-        mirror.setLineWrapping?.(true);
-        mirror.setFontFamily?.('var(--font-geist-mono), monospace');
-        mirror.reconfigureExtension?.('isPatternHighlightingEnabled', true);
-        mirror.reconfigureExtension?.('isFlashEnabled', true);
-        mirror.reconfigureExtension?.('isEditable', false); // read-only
-
-        if (!isMounted) {
-          mirror.stop();
-          mirror.destroy?.();
-          return;
+      // check again after waiting
+      globalMirror = getGlobalMirror();
+      if (globalMirror) {
+        mirrorRef.current = globalMirror;
+        if (isMounted) {
+          setIsInitialized(true);
         }
+        return;
+      }
 
-        mirrorRef.current = mirror;
+      // still no global mirror, create/get playback mirror (we're likely on explore page)
+      const playbackMirror = await getOrCreatePlaybackMirror();
+      if (playbackMirror && isMounted) {
+        mirrorRef.current = playbackMirror;
         setIsInitialized(true);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('failed to initialize strudel preview:', error);
-        onError?.('Failed to initialize audio engine');
-        setIsLoading(false);
       }
     }
 
-    initPlayer();
+    initMirror();
 
     return () => {
       isMounted = false;
-      if (mirrorRef.current) {
-        mirrorRef.current.stop();
-        mirrorRef.current.destroy?.();
-        mirrorRef.current = null;
-      }
+    };
+  }, []);
 
-      // Only remove THIS component's canvas (by unique ID), not all widget canvases
-      // The new mount handles full cleanup of stale widgets before initializing
-      const myCanvas = document.getElementById(canvasIdRef.current);
-      if (myCanvas) {
-        myCanvas.id = `_stale_${myCanvas.id}_${Date.now()}`;
-        myCanvas.remove();
+  // cleanup effect - stop playback when component unmounts
+  useEffect(() => {
+    return () => {
+      // use a ref check to avoid stale closure issues
+      if (mirrorRef.current && originalCodeRef.current !== null) {
+        mirrorRef.current.stop();
+        mirrorRef.current.setCode(originalCodeRef.current);
+        mirrorRef.current.code = originalCodeRef.current;
+        originalCodeRef.current = null;
       }
     };
-  }, [code, onError]);
+  }, []);
 
   const handlePlay = useCallback(async () => {
-    if (!mirrorRef.current) return;
+    const mirror = mirrorRef.current || getGlobalMirror();
+    if (!mirror || !code) {
+      onError?.('Editor not initialized');
+      return;
+    }
 
     try {
+      setIsLoading(true);
+      onError?.(null);
+
       // resume audio context if needed
       const { getAudioContext } = await import('@strudel/webaudio');
       const ctx = getAudioContext();
       if (ctx.state === 'suspended') {
         await ctx.resume();
       }
-      mirrorRef.current.evaluate();
+
+      // save original code so we can restore it
+      originalCodeRef.current = mirror.code || '';
+
+      // set the preview code and evaluate
+      mirror.setCode(code);
+      mirror.code = code;
+      await mirror.evaluate();
+
+      setIsPlaying(true);
+      setIsLoading(false);
     } catch (error) {
-      console.error('failed to play:', error);
+      console.error('preview play error:', error);
+      onError?.(error instanceof Error ? error.message : 'Failed to play');
+      setIsLoading(false);
     }
-  }, []);
+  }, [code, onError]);
 
   const handleStop = useCallback(() => {
-    mirrorRef.current?.stop();
+    const mirror = mirrorRef.current || getGlobalMirror();
+    if (mirror) {
+      mirror.stop();
+      // restore original code
+      if (originalCodeRef.current !== null) {
+        mirror.setCode(originalCodeRef.current);
+        mirror.code = originalCodeRef.current;
+        originalCodeRef.current = null;
+      }
+    }
+    setIsPlaying(false);
   }, []);
 
   return {
-    containerRef,
     isPlaying,
     isLoading,
     isInitialized,
