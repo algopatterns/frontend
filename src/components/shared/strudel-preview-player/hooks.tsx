@@ -56,6 +56,13 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
 
         const { evalScope, silence } = coreModule;
 
+        // import draw module for visualization context
+        const { getDrawContext } = await import('@strudel/draw');
+        const drawContext = getDrawContext();
+
+        // initialize audio on first click and capture the promise
+        const audioReady = initAudioOnFirstClick();
+
         containerRef.current.innerHTML = '';
 
         const mirror = new StrudelMirror({
@@ -66,10 +73,11 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
           initialCode: code || EDITOR.DEFAULT_CODE,
           pattern: silence,
           drawTime: [-2, 2],
+          drawContext,
           autodraw: false,
           bgFill: false,
+          beforeEval: () => audioReady,
           prebake: async () => {
-            initAudioOnFirstClick();
 
             const { doughSamples: ds, uzuDrumkit: tc, dirtSamples } = SAMPLE_SOURCES;
 

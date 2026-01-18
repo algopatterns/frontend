@@ -484,6 +484,14 @@ export function useStrudelEditor(
 
         const { evalScope, silence } = coreModule;
 
+        // import draw module for visualization context
+        const { getDrawContext } = await import('@strudel/draw');
+        const drawContext = getDrawContext();
+
+        // initialize audio on first click and capture the promise
+        // this must be called before StrudelMirror is created
+        const audioReady = initAudioOnFirstClick();
+
         containerRef.current.innerHTML = '';
 
         const mirror = new StrudelMirror({
@@ -494,10 +502,11 @@ export function useStrudelEditor(
           initialCode: initialCode || code || EDITOR.DEFAULT_CODE,
           pattern: silence,
           drawTime: [-2, 2],
+          drawContext,
           autodraw: false,
           bgFill: false,
+          beforeEval: () => audioReady,
           prebake: async () => {
-            initAudioOnFirstClick();
 
             const { doughSamples: ds, uzuDrumkit: tc, dirtSamples } = SAMPLE_SOURCES;
 
