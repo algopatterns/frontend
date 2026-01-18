@@ -7,9 +7,12 @@ declare module "@strudel/codemirror" {
     initialCode?: string;
     pattern?: unknown;
     drawTime?: [number, number];
+    drawContext?: CanvasRenderingContext2D;
     autodraw?: boolean;
     bgFill?: boolean;
     prebake?: () => Promise<void>;
+    beforeEval?: () => Promise<void> | void;
+    afterEval?: (options: unknown) => void;
     onToggle?: (started: boolean) => void;
     onUpdateState?: (state: { isDirty?: boolean; code?: string; activeCode?: string }) => void;
     onError?: (error: Error) => void;
@@ -45,7 +48,11 @@ declare module "@strudel/transpiler" {
 
 declare module "@strudel/webaudio" {
   export function getAudioContext(): AudioContext;
-  export function initAudioOnFirstClick(callback?: () => void): void;
+  export function initAudioOnFirstClick(options?: {
+    maxPolyphony?: number;
+    audioDeviceName?: string;
+    multiChannelOrbits?: boolean;
+  }): Promise<void>;
   export const webaudioOutput: unknown;
   export function registerSynthSounds(): Promise<void>;
   export function samples(
@@ -56,6 +63,12 @@ declare module "@strudel/webaudio" {
 }
 
 declare module "@strudel/draw" {
+  export function getDrawContext(id?: string, options?: {
+    contextType?: string;
+    pixelated?: boolean;
+    pixelRatio?: number;
+  }): CanvasRenderingContext2D;
+  export function cleanupDraw(clearScreen?: boolean, id?: string): void;
   const draw: unknown;
   export default draw;
 }
