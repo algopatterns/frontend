@@ -152,7 +152,7 @@ export default function AboutPage() {
           My Philosophy: Consent as Architecture
         </h2>
         <p className="text-muted-foreground font-light mb-4">
-          Most AI systems treat creator preferences as an obstacle to work around. I treat
+          Most AI systems treat creator preferences as an obstacle to work around. I see
           them as the foundation to build upon.
         </p>
         <p className="text-muted-foreground font-light mb-4">
