@@ -27,7 +27,6 @@ export function StrudelPreviewPlayer({
   onStateChange,
 }: StrudelPreviewPlayerProps) {
   const {
-    containerRef,
     isPlaying,
     isLoading,
     isInitialized,
@@ -42,10 +41,12 @@ export function StrudelPreviewPlayer({
 
   return (
     <div className="flex flex-col gap-3">
-      <div
-        ref={containerRef}
-        className="strudel-editor h-96 w-full overflow-auto rounded-lg border bg-muted/30"
-      />
+      {/* Simple read-only code display */}
+      <div className="h-96 w-full overflow-auto rounded-lg border bg-muted/30 p-4">
+        <pre className="font-mono text-sm whitespace-pre-wrap break-words text-foreground/90">
+          {code}
+        </pre>
+      </div>
 
       {!hideControls && (
         <div className="flex items-center gap-2">

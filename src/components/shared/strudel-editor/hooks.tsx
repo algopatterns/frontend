@@ -106,10 +106,26 @@ let superdoughFn:
 let lastExplicitPlayTime: number = 0;
 const TOGGLE_DEBOUNCE_MS = 1000;
 
+// Flag to track if we're in the middle of an evaluate() call
+// Used to ignore ALL stop events during evaluation
+let isEvaluating = false;
+
+// Counter to track evaluate calls - helps ignore stale callbacks
+let evaluateCounter = 0;
+
 // Global audio initialization - must only be called ONCE
 // Calling multiple times registers duplicate callbacks that cause issues
 let audioReadyPromise: Promise<void> | null = null;
 let audioInitialized = false;
+
+// Export function to get/initialize audio - shared by editor and preview player
+export function getOrInitAudio(initAudioOnFirstClick: () => Promise<void>): Promise<void> {
+  if (!audioInitialized) {
+    audioReadyPromise = initAudioOnFirstClick();
+    audioInitialized = true;
+  }
+  return audioReadyPromise!;
+}
 
 // Global StrudelMirror instance - reused across navigation
 // Destroying and recreating causes issues with Strudel's internal callbacks
@@ -117,6 +133,11 @@ let globalMirrorInstance: StrudelMirrorInstance | null = null;
 
 export function getStrudelMirrorInstance() {
   return strudelMirrorInstance;
+}
+
+// Get the global mirror for use by preview/floating players
+export function getGlobalMirror() {
+  return globalMirrorInstance;
 }
 
 export function setStrudelMirrorInstance(instance: StrudelMirrorInstance | null) {
@@ -199,6 +220,13 @@ export async function resumeAudioContext(): Promise<boolean> {
 }
 
 export async function evaluateStrudel() {
+  console.log('[DEBUG evaluateStrudel] START', {
+    hasInstance: !!strudelMirrorInstance,
+    hasGlobalMirror: !!globalMirrorInstance,
+    areSame: strudelMirrorInstance === globalMirrorInstance,
+    widgetCanvasesBefore: Array.from(document.querySelectorAll('[id^="_widget__"]')).map(c => c.id),
+  });
+
   await resumeAudioContext();
 
   if (!strudelMirrorInstance) {
@@ -206,16 +234,34 @@ export async function evaluateStrudel() {
     return;
   }
 
+  // Increment counter and set flag BEFORE evaluate
+  const thisEvaluate = ++evaluateCounter;
+  isEvaluating = true;
+
   try {
     // optimistically set playing state before evaluate
     // this ensures UI updates even if onToggle callback is delayed
     lastExplicitPlayTime = Date.now();
     useAudioStore.getState().setPlaying(true);
 
+    console.log('[DEBUG evaluateStrudel] calling evaluate()...', { evaluateId: thisEvaluate });
     await strudelMirrorInstance.evaluate();
+    console.log('[DEBUG evaluateStrudel] evaluate() returned', {
+      evaluateId: thisEvaluate,
+      widgetCanvasesAfter: Array.from(document.querySelectorAll('[id^="_widget__"]')).map(c => c.id),
+    });
+
+    // Keep the flag set for a short time after evaluate returns
+    // This handles async stop events that arrive after evaluate() completes
+    setTimeout(() => {
+      if (evaluateCounter === thisEvaluate) {
+        isEvaluating = false;
+      }
+    }, 500);
   } catch (error) {
     console.error('[strudel] Evaluate failed:', error);
-    // revert state on error - clear timestamp so onToggle(false) won't be ignored
+    // revert state on error - clear flags so onToggle(false) won't be ignored
+    isEvaluating = false;
     lastExplicitPlayTime = 0;
     useAudioStore.getState().setPlaying(false);
     // add error to toast system
@@ -228,12 +274,20 @@ export async function evaluateStrudel() {
 }
 
 export function stopStrudel() {
+  // Log who is calling stopStrudel
+  console.log('[DEBUG stopStrudel] called', {
+    isEvaluating,
+    evaluateCounter,
+    stack: new Error().stack?.split('\n').slice(1, 5).join('\n'),
+  });
+
   if (!strudelMirrorInstance) {
     console.warn('[strudel] No instance available for stop');
     return;
   }
 
-  // clear the play timestamp so onToggle(false) won't be ignored
+  // clear all flags so onToggle(false) won't be ignored
+  isEvaluating = false;
   lastExplicitPlayTime = 0;
 
   // optimistically set playing state to false
@@ -466,9 +520,20 @@ export function useStrudelEditor(
 
     async function initEditor() {
       try {
+        console.log('[DEBUG initEditor] START', {
+          hasGlobalMirror: !!globalMirrorInstance,
+          hasEditorDom: !!globalMirrorInstance?.editor?.dom,
+          widgetCanvases: Array.from(document.querySelectorAll('[id^="_widget__"]')).map(c => c.id),
+        });
+
         // If we have a global mirror instance, REUSE it instead of creating a new one
         // This avoids issues with Strudel's internal callbacks that persist after destroy()
         if (globalMirrorInstance && globalMirrorInstance.editor?.dom) {
+          console.log('[DEBUG initEditor] REUSING global mirror', {
+            strudelMirrorInstance: !!strudelMirrorInstance,
+            areSame: strudelMirrorInstance === globalMirrorInstance,
+            editorDomParent: globalMirrorInstance.editor.dom.parentElement?.className,
+          });
 
           // Move the editor DOM to the new container
           if (containerRef.current && globalMirrorInstance.editor.dom.parentElement !== containerRef.current) {
@@ -484,10 +549,16 @@ export function useStrudelEditor(
             globalMirrorInstance.code = targetCode;
           }
 
-          // Update refs and state
+          // CRITICAL: Also update strudelMirrorInstance to match globalMirrorInstance
+          // Otherwise evaluateStrudel() will use a stale reference
           mirrorInstanceRef.current = globalMirrorInstance;
           setStrudelMirrorInstance(globalMirrorInstance);
           setInitialized(true);
+
+          console.log('[DEBUG initEditor] REUSE complete', {
+            strudelMirrorInstanceNow: !!getStrudelMirrorInstance(),
+            areSameNow: getStrudelMirrorInstance() === globalMirrorInstance,
+          });
 
           // Set up code polling
           const interval = setInterval(() => {
@@ -563,14 +634,8 @@ export function useStrudelEditor(
         // create fresh draw context with unique ID
         const drawContext = getDrawContext(canvasIdRef.current);
 
-        // Initialize audio ONLY ONCE globally
-        // Calling initAudioOnFirstClick multiple times registers duplicate callbacks
-        // that cause the cyclist to stop immediately after starting
-        if (!audioInitialized) {
-          audioReadyPromise = initAudioOnFirstClick();
-          audioInitialized = true;
-        }
-        const audioReady = audioReadyPromise!;
+        // Initialize audio ONLY ONCE globally (shared with preview player)
+        const audioReady = getOrInitAudio(initAudioOnFirstClick);
 
         const mirror = new StrudelMirror({
           transpiler,
@@ -650,12 +715,30 @@ export function useStrudelEditor(
           },
 
           onToggle: (started: boolean) => {
-            // ignore spurious onToggle(false) calls that arrive too soon after
+            console.log('[DEBUG onToggle]', {
+              started,
+              isEvaluating,
+              evaluateCounter,
+              widgetCanvases: Array.from(document.querySelectorAll('[id^="_widget__"]')).map(c => c.id),
+              lastExplicitPlayTime,
+              timeSincePlay: lastExplicitPlayTime > 0 ? Date.now() - lastExplicitPlayTime : null,
+            });
+
+            // CRITICAL: Ignore ALL stop events while we're evaluating
+            // This prevents stale callbacks from other StrudelMirror instances
+            // (floating player, preview player) from stopping our playback
+            if (!started && isEvaluating) {
+              console.log('[DEBUG onToggle] IGNORING stop during evaluate');
+              return;
+            }
+
+            // Also ignore spurious onToggle(false) calls that arrive too soon after
             // an explicit play request - this prevents race conditions where
             // strudel fires false before true during startup
             if (!started && lastExplicitPlayTime > 0) {
               const timeSincePlay = Date.now() - lastExplicitPlayTime;
               if (timeSincePlay < TOGGLE_DEBOUNCE_MS) {
+                console.log('[DEBUG onToggle] IGNORING spurious stop (debounce)');
                 return;
               }
             }
@@ -778,6 +861,13 @@ export function useStrudelEditor(
     initEditor();
 
     return () => {
+      console.log('[DEBUG editor cleanup] START', {
+        hasGlobalMirror: !!globalMirrorInstance,
+        hasMirrorInstanceRef: !!mirrorInstanceRef.current,
+        areSame: mirrorInstanceRef.current === globalMirrorInstance,
+        widgetCanvases: Array.from(document.querySelectorAll('[id^="_widget__"]')).map(c => c.id),
+      });
+
       isMounted = false;
       initializedRef.current = false;
 
@@ -800,6 +890,7 @@ export function useStrudelEditor(
         // DON'T clear globalMirrorInstance
         // Only clear module-level if it's ours
         if (getStrudelMirrorInstance() === instance) {
+          console.log('[DEBUG editor cleanup] clearing strudelMirrorInstance');
           setStrudelMirrorInstance(null);
         }
         mirrorInstanceRef.current = null;
@@ -812,6 +903,11 @@ export function useStrudelEditor(
         myCanvas.id = `_stale_${myCanvas.id}_${Date.now()}`;
         myCanvas.remove();
       }
+
+      console.log('[DEBUG editor cleanup] END', {
+        hasGlobalMirror: !!globalMirrorInstance,
+        widgetCanvasesAfter: Array.from(document.querySelectorAll('[id^="_widget__"]')).map(c => c.id),
+      });
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: init runs once on mount
