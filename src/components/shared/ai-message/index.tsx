@@ -1,6 +1,7 @@
 'use client';
 
 import { Highlight, themes } from 'prism-react-renderer';
+import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Check, Copy, ExternalLink } from 'lucide-react';
 import type { AgentMessage } from '@/lib/api/strudels/types';
@@ -117,22 +118,11 @@ export function AIMessage({ message, onApplyCode }: AIMessageProps) {
               </div>
             </>
           ) : (
-            <p className="whitespace-pre-wrap text-foreground/70 text-[13px]">
-              {content}
-            </p>
+            <div className="prose prose-sm prose-invert max-w-none text-foreground/70 text-[13px] [&_p]:my-2 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-0.5 [&_code]:bg-muted/50 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12px] [&_pre]:bg-muted/30 [&_pre]:p-2 [&_pre]:rounded [&_pre]:overflow-x-auto [&_a]:text-teal-400/70 [&_a:hover]:text-teal-300 [&_strong]:text-foreground/80">
+              <ReactMarkdown>{content}</ReactMarkdown>
+            </div>
           )}
         </>
-      )}
-
-      {clarifying_questions && clarifying_questions.length > 0 && (
-        <div className="space-y-1 mt-1">
-          <p className="text-muted-foreground text-sm">I need more information:</p>
-          <ul className="list-disc list-inside space-y-1 text-foreground/70 text-xs">
-            {clarifying_questions.map((q, i) => (
-              <li key={i}>{q}</li>
-            ))}
-          </ul>
-        </div>
       )}
 
       {(strudel_references?.length || doc_references?.length) && (
