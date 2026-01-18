@@ -346,7 +346,7 @@ export const useEditor = ({
       stopStrudel();
       setShowSyncOverlay(false);
       setPendingPlayback(null);
-      toast(reason || 'Session ended by host');
+      toast.info(reason || 'Session ended by host');
 
       // for viewers: clear session, restore their state, and reconnect
       const { myRole } = useWebSocketStore.getState();
