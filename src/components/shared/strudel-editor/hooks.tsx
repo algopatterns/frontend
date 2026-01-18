@@ -198,9 +198,6 @@ export async function evaluateStrudel() {
   }
 
   try {
-    // enable autodraw before evaluate so visualizers work
-    strudelMirrorInstance.reconfigureExtension?.('autodraw', true);
-
     // optimistically set playing state before evaluate
     // this ensures UI updates even if onToggle callback is delayed
     lastExplicitPlayTime = Date.now();
@@ -235,9 +232,6 @@ export function stopStrudel() {
   useAudioStore.getState().setPlaying(false);
 
   strudelMirrorInstance.stop();
-
-  // disable autodraw after stop to hide visualizers
-  strudelMirrorInstance.reconfigureExtension?.('autodraw', false);
 }
 
 // sounds that need a note parameter to play (pitched instruments)
@@ -535,7 +529,7 @@ export function useStrudelEditor(
           initialCode: initialCode || code || EDITOR.DEFAULT_CODE,
           pattern: silence,
           drawTime: [-2, 2],
-          autodraw: false,
+          autodraw: true,
           bgFill: false,
           prebake: async () => {
             initAudioOnFirstClick();
