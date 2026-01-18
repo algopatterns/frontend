@@ -15,12 +15,12 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
   const originalCodeRef = useRef<string | null>(null);
   const mirrorRef = useRef<StrudelMirrorInstance | null>(null);
 
-  // Get or create a mirror for playback
+  // get or create a mirror for playback
   useEffect(() => {
     let isMounted = true;
 
     async function initMirror() {
-      // First check if global mirror exists
+      // first check if global mirror exists
       let globalMirror = getGlobalMirror();
       if (globalMirror) {
         mirrorRef.current = globalMirror;
@@ -30,13 +30,13 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
         return;
       }
 
-      // Wait a bit to see if main editor will create a global mirror
-      // This avoids creating a playback mirror on pages that have the main editor
+      // wait a bit to see if main editor will create a global mirror
+      // this avoids creating a playback mirror on pages that have the main editor
       await new Promise(resolve => setTimeout(resolve, 500));
 
       if (!isMounted) return;
 
-      // Check again after waiting
+      // check again after waiting
       globalMirror = getGlobalMirror();
       if (globalMirror) {
         mirrorRef.current = globalMirror;
@@ -46,7 +46,7 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
         return;
       }
 
-      // Still no global mirror, create/get playback mirror (we're likely on explore page)
+      // still no global mirror, create/get playback mirror (we're likely on explore page)
       const playbackMirror = await getOrCreatePlaybackMirror();
       if (playbackMirror && isMounted) {
         mirrorRef.current = playbackMirror;
@@ -61,10 +61,10 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
     };
   }, []);
 
-  // Cleanup effect - stop playback when component unmounts
+  // cleanup effect - stop playback when component unmounts
   useEffect(() => {
     return () => {
-      // Use a ref check to avoid stale closure issues
+      // use a ref check to avoid stale closure issues
       if (mirrorRef.current && originalCodeRef.current !== null) {
         mirrorRef.current.stop();
         mirrorRef.current.setCode(originalCodeRef.current);
@@ -85,17 +85,17 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
       setIsLoading(true);
       onError?.(null);
 
-      // Resume audio context if needed
+      // resume audio context if needed
       const { getAudioContext } = await import('@strudel/webaudio');
       const ctx = getAudioContext();
       if (ctx.state === 'suspended') {
         await ctx.resume();
       }
 
-      // Save original code so we can restore it
+      // save original code so we can restore it
       originalCodeRef.current = mirror.code || '';
 
-      // Set the preview code and evaluate
+      // set the preview code and evaluate
       mirror.setCode(code);
       mirror.code = code;
       await mirror.evaluate();
@@ -113,7 +113,7 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
     const mirror = mirrorRef.current || getGlobalMirror();
     if (mirror) {
       mirror.stop();
-      // Restore original code
+      // restore original code
       if (originalCodeRef.current !== null) {
         mirror.setCode(originalCodeRef.current);
         mirror.code = originalCodeRef.current;

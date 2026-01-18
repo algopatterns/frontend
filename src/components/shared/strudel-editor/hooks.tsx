@@ -106,19 +106,19 @@ let superdoughFn:
 let lastExplicitPlayTime: number = 0;
 const TOGGLE_DEBOUNCE_MS = 1000;
 
-// Flag to track if we're in the middle of an evaluate() call
-// Used to ignore ALL stop events during evaluation
+// flag to track if we're in the middle of an evaluate() call
+// used to ignore ALL stop events during evaluation
 let isEvaluating = false;
 
-// Counter to track evaluate calls - helps ignore stale callbacks
+// counter to track evaluate calls - helps ignore stale callbacks
 let evaluateCounter = 0;
 
-// Global audio initialization - must only be called ONCE
-// Calling multiple times registers duplicate callbacks that cause issues
+// global audio initialization - must only be called ONCE
+// calling multiple times registers duplicate callbacks that cause issues
 let audioReadyPromise: Promise<void> | null = null;
 let audioInitialized = false;
 
-// Export function to get/initialize audio - shared by editor and preview player
+// export function to get/initialize audio - shared by editor and preview player
 export function getOrInitAudio(initAudioOnFirstClick: () => Promise<void>): Promise<void> {
   if (!audioInitialized) {
     audioReadyPromise = initAudioOnFirstClick();
@@ -127,44 +127,44 @@ export function getOrInitAudio(initAudioOnFirstClick: () => Promise<void>): Prom
   return audioReadyPromise!;
 }
 
-// Global StrudelMirror instance - reused across navigation
-// Destroying and recreating causes issues with Strudel's internal callbacks
+// global StrudelMirror instance - reused across navigation
+// destroying and recreating causes issues with Strudel's internal callbacks
 let globalMirrorInstance: StrudelMirrorInstance | null = null;
 
 export function getStrudelMirrorInstance() {
   return strudelMirrorInstance;
 }
 
-// Get the global mirror for use by preview/floating players
+// get the global mirror for use by preview/floating players
 export function getGlobalMirror() {
   return globalMirrorInstance;
 }
 
-// Playback-only mirror for pages without the main editor (e.g., explore page)
-// This is created lazily and shared between preview/floating players
-// IMPORTANT: When created, it becomes the global mirror to avoid conflicts
+// playback-only mirror for pages without the main editor (e.g., explore page)
+// this is created lazily and shared between preview/floating players
+// IMPORTANT: when created, it becomes the global mirror to avoid conflicts
 let playbackMirrorInitializing = false;
 let playbackMirrorPromise: Promise<StrudelMirrorInstance | null> | null = null;
 
-// Get or create a playback-only mirror for pages without the main editor
+// get or create a playback-only mirror for pages without the main editor
 export async function getOrCreatePlaybackMirror(): Promise<StrudelMirrorInstance | null> {
-  // If global mirror exists, use it
+  // if global mirror exists, use it
   if (globalMirrorInstance) {
     return globalMirrorInstance;
   }
 
-  // If already initializing, wait for it
+  // if already initializing, wait for it
   if (playbackMirrorInitializing && playbackMirrorPromise) {
     return playbackMirrorPromise;
   }
 
-  // Create a new playback-only mirror
+  // create a new playback-only mirror
   playbackMirrorInitializing = true;
   playbackMirrorPromise = createPlaybackMirror();
 
   try {
     const mirror = await playbackMirrorPromise;
-    // Set it as the global mirror so main editor will reuse it
+    // set it as the global mirror so main editor will reuse it
     if (mirror && !globalMirrorInstance) {
       globalMirrorInstance = mirror;
     }
@@ -201,10 +201,10 @@ async function createPlaybackMirror(): Promise<StrudelMirrorInstance | null> {
 
     const { evalScope, silence } = coreModule;
 
-    // Use shared audio initialization
+    // use shared audio initialization
     await getOrInitAudio(initAudioOnFirstClick);
 
-    // Create a hidden container for the mirror
+    // create a hidden container for the mirror
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.left = '-9999px';
@@ -367,7 +367,7 @@ export async function evaluateStrudel() {
     return;
   }
 
-  // Increment counter and set flag BEFORE evaluate
+  // increment counter and set flag BEFORE evaluate
   const thisEvaluate = ++evaluateCounter;
   isEvaluating = true;
 
@@ -379,8 +379,8 @@ export async function evaluateStrudel() {
 
     await strudelMirrorInstance.evaluate();
 
-    // Keep the flag set for a short time after evaluate returns
-    // This handles async stop events that arrive after evaluate() completes
+    // keep the flag set for a short time after evaluate returns
+    // this handles async stop events that arrive after evaluate() completes
     setTimeout(() => {
       if (evaluateCounter === thisEvaluate) {
         isEvaluating = false;
@@ -641,22 +641,22 @@ export function useStrudelEditor(
 
     async function initEditor() {
       try {
-        // Wait for any pending playback mirror creation to avoid race conditions
+        // wait for any pending playback mirror creation to avoid race conditions
         if (playbackMirrorInitializing && playbackMirrorPromise) {
           await playbackMirrorPromise;
         }
 
-        // If we have a global mirror instance, REUSE it instead of creating a new one
-        // This avoids issues with Strudel's internal callbacks that persist after destroy()
+        // if we have a global mirror instance, REUSE it instead of creating a new one
+        // this avoids issues with Strudel's internal callbacks that persist after destroy()
         if (globalMirrorInstance && globalMirrorInstance.editor?.dom) {
 
-          // Move the editor DOM to the new container
+          // move the editor DOM to the new container
           if (containerRef.current && globalMirrorInstance.editor.dom.parentElement !== containerRef.current) {
             containerRef.current.innerHTML = '';
             containerRef.current.appendChild(globalMirrorInstance.editor.dom);
           }
 
-          // Update code if needed
+          // update code if needed
           const currentCode = globalMirrorInstance.code || '';
           const targetCode = initialCode || code || EDITOR.DEFAULT_CODE;
           if (currentCode !== targetCode) {
@@ -664,13 +664,13 @@ export function useStrudelEditor(
             globalMirrorInstance.code = targetCode;
           }
 
-          // CRITICAL: Also update strudelMirrorInstance to match globalMirrorInstance
-          // Otherwise evaluateStrudel() will use a stale reference
+          // CRITICAL: also update strudelMirrorInstance to match globalMirrorInstance
+          // otherwise evaluateStrudel() will use a stale reference
           mirrorInstanceRef.current = globalMirrorInstance;
           setStrudelMirrorInstance(globalMirrorInstance);
           setInitialized(true);
 
-          // Set up code polling
+          // set up code polling
           const interval = setInterval(() => {
             const inst = getStrudelMirrorInstance();
             if (!inst) return;
@@ -685,7 +685,7 @@ export function useStrudelEditor(
           return;
         }
 
-        // Clean up any stale canvases BEFORE importing modules
+        // clean up any stale canvases BEFORE importing modules
         document.querySelectorAll('#test-canvas, [id^="_widget__"]').forEach(c => {
           c.id = `_stale_${c.id}_${Date.now()}`;
           c.remove();
@@ -744,7 +744,7 @@ export function useStrudelEditor(
         // create fresh draw context with unique ID
         const drawContext = getDrawContext(canvasIdRef.current);
 
-        // Initialize audio ONLY ONCE globally (shared with preview player)
+        // initialize audio ONLY ONCE globally (shared with preview player)
         const audioReady = getOrInitAudio(initAudioOnFirstClick);
 
         const mirror = new StrudelMirror({
@@ -825,14 +825,14 @@ export function useStrudelEditor(
           },
 
           onToggle: (started: boolean) => {
-            // Ignore ALL stop events while we're evaluating
-            // This prevents stale callbacks from other StrudelMirror instances
+            // ignore ALL stop events while we're evaluating
+            // this prevents stale callbacks from other StrudelMirror instances
             // (floating player, preview player) from stopping our playback
             if (!started && isEvaluating) {
               return;
             }
 
-            // Also ignore spurious onToggle(false) calls that arrive too soon after
+            // also ignore spurious onToggle(false) calls that arrive too soon after
             // an explicit play request - this prevents race conditions where
             // strudel fires false before true during startup
             if (!started && lastExplicitPlayTime > 0) {
@@ -881,7 +881,7 @@ export function useStrudelEditor(
           return;
         }
 
-        // Store in global, local ref, and module-level
+        // store in global, local ref, and module-level
         globalMirrorInstance = mirror;
         mirrorInstanceRef.current = mirror;
         setStrudelMirrorInstance(mirror);
@@ -971,7 +971,7 @@ export function useStrudelEditor(
       }
 
       // DON'T destroy the global mirror instance - we reuse it across navigation
-      // Just stop it and clear local refs
+      // just stop it and clear local refs
       const instance = mirrorInstanceRef.current;
 
       if (instance) {
@@ -980,15 +980,15 @@ export function useStrudelEditor(
         instance.stop();
         // DON'T call destroy() - keep the instance alive for reuse
         // DON'T clear globalMirrorInstance
-        // Only clear module-level if it's ours
+        // only clear module-level if it's ours
         if (getStrudelMirrorInstance() === instance) {
           setStrudelMirrorInstance(null);
         }
         mirrorInstanceRef.current = null;
       }
 
-      // Only remove THIS component's draw canvas, not widget canvases
-      // Widget canvases belong to the persistent global mirror
+      // only remove THIS component's draw canvas, not widget canvases
+      // widget canvases belong to the persistent global mirror
       const myCanvas = document.getElementById(canvasIdRef.current);
       if (myCanvas) {
         myCanvas.id = `_stale_${myCanvas.id}_${Date.now()}`;

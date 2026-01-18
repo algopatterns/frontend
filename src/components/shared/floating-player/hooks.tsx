@@ -24,21 +24,21 @@ export function useFloatingPlayer() {
     setShouldStop,
   } = usePlayerStore();
 
-  // Pending strudel to play once mirror is ready
+  // pending strudel to play once mirror is ready
   const pendingPlayRef = useRef<typeof currentStrudel>(null);
 
-  // Get or create a mirror for playback
+  // get or create a mirror for playback
   useEffect(() => {
     let isMounted = true;
 
     async function initMirror() {
-      // First check if global mirror exists
+      // first check if global mirror exists
       let globalMirror = getGlobalMirror();
       if (globalMirror) {
         mirrorRef.current = globalMirror;
         if (isMounted) {
           setIsInitialized(true);
-          // If there's a pending play, trigger it
+          // if there's a pending play, trigger it
           if (pendingPlayRef.current) {
             const pending = pendingPlayRef.current;
             pendingPlayRef.current = null;
@@ -48,13 +48,13 @@ export function useFloatingPlayer() {
         return;
       }
 
-      // Wait a bit to see if main editor will create a global mirror
-      // This avoids creating a playback mirror on pages that have the main editor
+      // wait a bit to see if main editor will create a global mirror
+      // this avoids creating a playback mirror on pages that have the main editor
       await new Promise(resolve => setTimeout(resolve, 500));
 
       if (!isMounted) return;
 
-      // Check again after waiting
+      // check again after waiting
       globalMirror = getGlobalMirror();
       if (globalMirror) {
         mirrorRef.current = globalMirror;
@@ -69,7 +69,7 @@ export function useFloatingPlayer() {
         return;
       }
 
-      // Still no global mirror, create/get playback mirror (we're likely on explore page)
+      // still no global mirror, create/get playback mirror (we're likely on explore page)
       const playbackMirror = await getOrCreatePlaybackMirror();
       if (playbackMirror && isMounted) {
         mirrorRef.current = playbackMirror;
@@ -89,23 +89,23 @@ export function useFloatingPlayer() {
     };
   }, []);
 
-  // Internal play function
+  // internal play function
   const playStrudelInternal = useCallback(async (strudel: NonNullable<typeof currentStrudel>, mirror: StrudelMirrorInstance) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Resume audio context if needed
+      // resume audio context if needed
       const { getAudioContext } = await import('@strudel/webaudio');
       const ctx = getAudioContext();
       if (ctx.state === 'suspended') {
         await ctx.resume();
       }
 
-      // Save original code so we can restore it
+      // save original code so we can restore it
       originalCodeRef.current = mirror.code || '';
 
-      // Set the preview code and evaluate
+      // set the preview code and evaluate
       mirror.setCode(strudel.code);
       mirror.code = strudel.code;
       await mirror.evaluate();
@@ -120,13 +120,13 @@ export function useFloatingPlayer() {
     }
   }, [setIsLoading, setIsPlaying]);
 
-  // Play when currentStrudel changes
+  // play when currentStrudel changes
   useEffect(() => {
     if (!currentStrudel) return;
 
     const mirror = mirrorRef.current || getGlobalMirror();
     if (!mirror) {
-      // Mirror not ready, queue the play for when it's ready
+      // mirror not ready, queue the play for when it's ready
       pendingPlayRef.current = currentStrudel;
       return;
     }
@@ -134,7 +134,7 @@ export function useFloatingPlayer() {
     playStrudelInternal(currentStrudel, mirror);
   }, [currentStrudel, playStrudelInternal]);
 
-  // Handle resume requests
+  // handle resume requests
   useEffect(() => {
     if (shouldResume && currentStrudel) {
       setShouldResume(false);
@@ -162,7 +162,7 @@ export function useFloatingPlayer() {
     }
   }, [shouldResume, currentStrudel, setShouldResume, setIsPlaying]);
 
-  // Handle stop requests
+  // handle stop requests
   useEffect(() => {
     if (shouldStop) {
       setShouldStop(false);
@@ -170,7 +170,7 @@ export function useFloatingPlayer() {
       const mirror = mirrorRef.current || getGlobalMirror();
       if (mirror) {
         mirror.stop();
-        // Restore original code
+        // restore original code
         if (originalCodeRef.current !== null) {
           mirror.setCode(originalCodeRef.current);
           mirror.code = originalCodeRef.current;
@@ -208,7 +208,7 @@ export function useFloatingPlayer() {
     const mirror = mirrorRef.current || getGlobalMirror();
     if (mirror) {
       mirror.stop();
-      // Restore original code
+      // restore original code
       if (originalCodeRef.current !== null) {
         mirror.setCode(originalCodeRef.current);
         mirror.code = originalCodeRef.current;
@@ -222,7 +222,7 @@ export function useFloatingPlayer() {
     const mirror = mirrorRef.current || getGlobalMirror();
     if (mirror) {
       mirror.stop();
-      // Restore original code
+      // restore original code
       if (originalCodeRef.current !== null) {
         mirror.setCode(originalCodeRef.current);
         mirror.code = originalCodeRef.current;
