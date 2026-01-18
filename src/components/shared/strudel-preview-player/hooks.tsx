@@ -18,6 +18,8 @@ interface UseStrudelPreviewPlayerOptions {
 
 export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlayerOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // use a local ref to track THIS component's mirror instance
+  // this prevents race conditions where old cleanup affects new instances
   const mirrorRef = useRef<InstanceType<typeof import('@strudel/codemirror').StrudelMirror> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +35,20 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
 
     async function initPlayer() {
       try {
+        // FIRST: aggressively clean up any stale canvases BEFORE importing modules
+        // Change IDs before removing so widgetElements references become orphaned
+        document.querySelectorAll('#test-canvas, [id^="_widget__"]').forEach(c => {
+          c.id = `_stale_${c.id}_${Date.now()}`;
+          c.remove();
+        });
+        if (containerRef.current) {
+          containerRef.current.querySelectorAll('[id^="_widget__"]').forEach(c => {
+            c.id = `_stale_${c.id}_${Date.now()}`;
+            c.remove();
+          });
+          containerRef.current.innerHTML = '';
+        }
+
         const [
           { StrudelMirror },
           { transpiler },
@@ -59,15 +75,15 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
 
         const { evalScope, silence } = coreModule;
 
-        // import draw module for visualization context
-        // use unique canvas ID to avoid stale canvas issues on Next.js navigation
-        const { getDrawContext } = await import('@strudel/draw');
+        // import draw module and stop any running animations
+        const { getDrawContext, cleanupDraw } = await import('@strudel/draw');
+        cleanupDraw(true);
+
+        // create fresh draw context with unique ID
         const drawContext = getDrawContext(canvasIdRef.current);
 
         // initialize audio on first click and capture the promise
         const audioReady = initAudioOnFirstClick();
-
-        containerRef.current.innerHTML = '';
 
         const mirror = new StrudelMirror({
           transpiler,
@@ -193,10 +209,12 @@ export function useStrudelPreviewPlayer({ code, onError }: UseStrudelPreviewPlay
         mirrorRef.current = null;
       }
 
-      // clean up the canvas element to avoid stale canvas on Next.js navigation
-      const canvas = document.getElementById(canvasIdRef.current);
-      if (canvas) {
-        canvas.remove();
+      // Only remove THIS component's canvas (by unique ID), not all widget canvases
+      // The new mount handles full cleanup of stale widgets before initializing
+      const myCanvas = document.getElementById(canvasIdRef.current);
+      if (myCanvas) {
+        myCanvas.id = `_stale_${myCanvas.id}_${Date.now()}`;
+        myCanvas.remove();
       }
     };
   }, [code, onError]);

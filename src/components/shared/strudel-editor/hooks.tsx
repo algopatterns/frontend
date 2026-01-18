@@ -106,6 +106,15 @@ let superdoughFn:
 let lastExplicitPlayTime: number = 0;
 const TOGGLE_DEBOUNCE_MS = 1000;
 
+// Global audio initialization - must only be called ONCE
+// Calling multiple times registers duplicate callbacks that cause issues
+let audioReadyPromise: Promise<void> | null = null;
+let audioInitialized = false;
+
+// Global StrudelMirror instance - reused across navigation
+// Destroying and recreating causes issues with Strudel's internal callbacks
+let globalMirrorInstance: StrudelMirrorInstance | null = null;
+
 export function getStrudelMirrorInstance() {
   return strudelMirrorInstance;
 }
@@ -327,6 +336,9 @@ export function useStrudelEditor(
   const readOnlyRef = useRef(readOnly);
   // unique canvas ID per component instance to avoid stale canvas issues on navigation
   const canvasIdRef = useRef<string>(`strudel-canvas-${generateId()}`);
+  // track the specific mirror instance created by THIS component to avoid race conditions
+  // where old cleanup stops the new instance
+  const mirrorInstanceRef = useRef<StrudelMirrorInstance | null>(null);
 
   const { code, setCode, currentStrudelId } = useEditorStore();
   const { setPlaying, setInitialized, setError } = useAudioStore();
@@ -454,6 +466,57 @@ export function useStrudelEditor(
 
     async function initEditor() {
       try {
+        // If we have a global mirror instance, REUSE it instead of creating a new one
+        // This avoids issues with Strudel's internal callbacks that persist after destroy()
+        if (globalMirrorInstance && globalMirrorInstance.editor?.dom) {
+
+          // Move the editor DOM to the new container
+          if (containerRef.current && globalMirrorInstance.editor.dom.parentElement !== containerRef.current) {
+            containerRef.current.innerHTML = '';
+            containerRef.current.appendChild(globalMirrorInstance.editor.dom);
+          }
+
+          // Update code if needed
+          const currentCode = globalMirrorInstance.code || '';
+          const targetCode = initialCode || code || EDITOR.DEFAULT_CODE;
+          if (currentCode !== targetCode) {
+            globalMirrorInstance.setCode(targetCode);
+            globalMirrorInstance.code = targetCode;
+          }
+
+          // Update refs and state
+          mirrorInstanceRef.current = globalMirrorInstance;
+          setStrudelMirrorInstance(globalMirrorInstance);
+          setInitialized(true);
+
+          // Set up code polling
+          const interval = setInterval(() => {
+            const inst = getStrudelMirrorInstance();
+            if (!inst) return;
+            const currentCode = inst.code || '';
+            const storeCode = useEditorStore.getState().code;
+            if (currentCode !== storeCode) {
+              setCode(currentCode);
+              onCodeChangeRef.current?.(currentCode);
+            }
+          }, 500);
+          setCodePollingInterval(interval);
+          return;
+        }
+
+        // Clean up any stale canvases BEFORE importing modules
+        document.querySelectorAll('#test-canvas, [id^="_widget__"]').forEach(c => {
+          c.id = `_stale_${c.id}_${Date.now()}`;
+          c.remove();
+        });
+        if (containerRef.current) {
+          containerRef.current.querySelectorAll('[id^="_widget__"]').forEach(c => {
+            c.id = `_stale_${c.id}_${Date.now()}`;
+            c.remove();
+          });
+          containerRef.current.innerHTML = '';
+        }
+
         const [
           { StrudelMirror },
           { transpiler },
@@ -493,16 +556,21 @@ export function useStrudelEditor(
 
         const { evalScope, silence } = coreModule;
 
-        // import draw module for visualization context
-        // use unique canvas ID to avoid stale canvas issues on Next.js navigation
-        const { getDrawContext } = await import('@strudel/draw');
+        // import draw module and stop any running animations
+        const { getDrawContext, cleanupDraw } = await import('@strudel/draw');
+        cleanupDraw(true);
+
+        // create fresh draw context with unique ID
         const drawContext = getDrawContext(canvasIdRef.current);
 
-        // initialize audio on first click and capture the promise
-        // this must be called before StrudelMirror is created
-        const audioReady = initAudioOnFirstClick();
-
-        containerRef.current.innerHTML = '';
+        // Initialize audio ONLY ONCE globally
+        // Calling initAudioOnFirstClick multiple times registers duplicate callbacks
+        // that cause the cyclist to stop immediately after starting
+        if (!audioInitialized) {
+          audioReadyPromise = initAudioOnFirstClick();
+          audioInitialized = true;
+        }
+        const audioReady = audioReadyPromise!;
 
         const mirror = new StrudelMirror({
           transpiler,
@@ -631,6 +699,9 @@ export function useStrudelEditor(
           return;
         }
 
+        // Store in global, local ref, and module-level
+        globalMirrorInstance = mirror;
+        mirrorInstanceRef.current = mirror;
         setStrudelMirrorInstance(mirror);
         setInitialized(true);
 
@@ -717,20 +788,29 @@ export function useStrudelEditor(
         setCodePollingInterval(null);
       }
 
-      const instance = getStrudelMirrorInstance();
+      // DON'T destroy the global mirror instance - we reuse it across navigation
+      // Just stop it and clear local refs
+      const instance = mirrorInstanceRef.current;
 
       if (instance) {
         // call cleanup for event listeners
         (instance as StrudelMirrorInstance & { _cleanup?: () => void })._cleanup?.();
         instance.stop();
-        instance.destroy?.();
-        setStrudelMirrorInstance(null);
+        // DON'T call destroy() - keep the instance alive for reuse
+        // DON'T clear globalMirrorInstance
+        // Only clear module-level if it's ours
+        if (getStrudelMirrorInstance() === instance) {
+          setStrudelMirrorInstance(null);
+        }
+        mirrorInstanceRef.current = null;
       }
 
-      // clean up the canvas element to avoid stale canvas on Next.js navigation
-      const canvas = document.getElementById(canvasIdRef.current);
-      if (canvas) {
-        canvas.remove();
+      // Only remove THIS component's draw canvas, not widget canvases
+      // Widget canvases belong to the persistent global mirror
+      const myCanvas = document.getElementById(canvasIdRef.current);
+      if (myCanvas) {
+        myCanvas.id = `_stale_${myCanvas.id}_${Date.now()}`;
+        myCanvas.remove();
       }
     };
 
