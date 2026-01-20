@@ -135,7 +135,7 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask algorave agent for help or code snippets..."
+            placeholder="Ask algojams agent for help or code snippets..."
             disabled={disabled || isAIGenerating}
             className="flex-1 bg-transparent text-base md:text-sm focus:outline-none disabled:opacity-50"
           />

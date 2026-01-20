@@ -6,10 +6,10 @@ import { useAuth } from '@/lib/hooks/use-auth';
 import { useUpdateAIFeaturesEnabled, useUpdateDisplayName } from '@/lib/hooks/use-users';
 import { toast } from 'sonner';
 
-const AI_DISABLED_KEY = 'algorave_ai_disabled';
-const ANON_DISPLAY_NAME_KEY = 'algorave_display_name';
-const BYOK_PROVIDER_KEY = 'algorave_byok_provider';
-const BYOK_API_KEY = 'algorave_byok_api_key';
+const AI_DISABLED_KEY = 'algojams_ai_disabled';
+const ANON_DISPLAY_NAME_KEY = 'algojams_display_name';
+const BYOK_PROVIDER_KEY = 'algojams_byok_provider';
+const BYOK_API_KEY = 'algojams_byok_api_key';
 
 export type BYOKProvider = 'anthropic' | 'openai';
 

@@ -31,7 +31,7 @@ function LoginContent() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Welcome to Algorave</CardTitle>
+        <CardTitle className="text-2xl">Welcome to Algojams</CardTitle>
         <CardDescription>
           Sign in to save your work and collaborate with others
         </CardDescription>

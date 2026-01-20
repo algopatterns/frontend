@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'A Letter from the Creator | Algorave',
+  title: 'A Letter from the Creator | Algojams',
   description:
-    'Learn about Algorave, an open-source collaborative live coding music platform powered by Strudel. Built with responsible AI principles and respect for creator rights.',
+    'Learn about Algojams, an open-source collaborative live coding music platform powered by Strudel. Built with responsible AI principles and respect for creator rights.',
   openGraph: {
-    title: 'A Letter from the Creator | Algorave',
+    title: 'A Letter from the Creator | Algojams',
     description:
-      'Learn about Algorave, an open-source collaborative live coding music platform built with responsible AI principles.',
+      'Learn about Algojams, an open-source collaborative live coding music platform built with responsible AI principles.',
     type: 'website',
   },
 };
@@ -28,7 +28,7 @@ export default function AboutPage() {
 
       <section className="mb-12">
         <p className="text-muted-foreground font-light mb-4">
-          Algorave is a collaborative live coding music platform built on{' '}
+          Algojams is a collaborative live coding music platform built on{' '}
           <a
             href="https://strudel.cc"
             target="_blank"
@@ -36,7 +36,7 @@ export default function AboutPage() {
             className="text-primary hover:underline">
             Strudel
           </a>
-          , the powerful pattern language for music. But more than that, Algorave is an
+          , the powerful pattern language for music. But more than that, Algojams is an
           experiment in answering one of the most pressing questions in creative
           technology today:
         </p>
@@ -55,7 +55,7 @@ export default function AboutPage() {
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">The Origin Story</h2>
         <p className="text-muted-foreground font-light mb-4">
-          Algorave began with a simple question. After watching{' '}
+          Algojams began with a simple question. After watching{' '}
           <a
             href="https://vt.tiktok.com/ZS53jrCTw/"
             target="_blank"
@@ -117,7 +117,7 @@ export default function AboutPage() {
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">The Problem I Had to Solve</h2>
         <p className="text-muted-foreground font-light mb-4">
-          While building Algorave, I watched a{' '}
+          While building Algojams, I watched a{' '}
           <a
             href="https://x.com/todepond/status/2006713609154597256"
             target="_blank"
@@ -162,7 +162,7 @@ export default function AboutPage() {
         </p>
         <p className="text-muted-foreground font-light">
           This isn&apos;t just policy. It&apos;s architecture. Every technical decision in
-          Algorave is designed to make respecting creator wishes the path of least
+          Algojams is designed to make respecting creator wishes the path of least
           resistance.
         </p>
       </section>
@@ -171,7 +171,7 @@ export default function AboutPage() {
 
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">
-          How Algorave Enforces &quot;Responsible&quot; AI Use
+          How Algojams Enforces &quot;Responsible&quot; AI Use
         </h2>
 
         <div className="space-y-8 mt-6">
@@ -216,7 +216,7 @@ export default function AboutPage() {
             </div>
             <p className="text-muted-foreground font-light mt-3">
               Even though CC signals aren&apos;t currently a widely adopted standard and
-              there is no definite framework to implementing them, on algorave CC signals
+              there is no definite framework to implementing them, on algojams CC signals
               aren&apos;t just suggestions, they&apos;re enforced using custom logic i
               came up with in the hopes of pioneering/contributing to the mainstream
               adoption of these signals.
@@ -350,7 +350,7 @@ export default function AboutPage() {
             <p className="text-muted-foreground font-light">
               Bots and agents that ignore CC signals and attempt to scrape{' '}
               <code className="text-sm bg-muted px-1.5 py-0.5 rounded">no-ai</code>{' '}
-              strudels face penalties. Algorave actively defends creator preferences
+              strudels face penalties. Algojams actively defends creator preferences
               against automated circumvention.
             </p>
           </div>
@@ -361,7 +361,7 @@ export default function AboutPage() {
             </h3>
             <p className="text-muted-foreground font-light">
               Don&apos;t want AI at all? You can disable all AI features across the entire
-              app. Algorave works perfectly fine as a pure live coding platform.
+              app. Algojams works perfectly fine as a pure live coding platform.
             </p>
           </div>
         </div>
@@ -408,7 +408,7 @@ export default function AboutPage() {
       <hr className="my-8 border-border" />
 
       <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">What AI Actually Does in Algorave</h2>
+        <h2 className="text-2xl font-semibold mb-4">What AI Actually Does in Algojams</h2>
         <p className="text-muted-foreground font-light mb-4">
           Let me be clear about what the Agent is and isn&apos;t:
         </p>
@@ -457,14 +457,14 @@ export default function AboutPage() {
       <hr className="my-8 border-border" />
 
       <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">Why This Matters Beyond Algorave</h2>
+        <h2 className="text-2xl font-semibold mb-4">Why This Matters Beyond Algojams</h2>
         <p className="text-muted-foreground font-light mb-4">
           The tension between AI and creative communities isn&apos;t going away. As AI
           capabilities grow, this conflict will only intensify. Unless we build systems
           that prove another path is possible.
         </p>
         <p className="text-muted-foreground font-light mb-4">
-          Algorave is my contribution to that proof. I&apos;m demonstrating that:
+          Algojams is my contribution to that proof. I&apos;m demonstrating that:
         </p>
         <ol className="list-decimal list-inside text-muted-foreground font-light space-y-2 ml-2">
           <li>
@@ -495,14 +495,14 @@ export default function AboutPage() {
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">Open Source and Accountability</h2>
         <p className="text-muted-foreground font-light mb-4">
-          Algorave is fully open source under AGPL-3.0. Every technical safeguard
+          Algojams is fully open source under AGPL-3.0. Every technical safeguard
           described above is in the codebase for anyone to inspect, critique, or improve.
         </p>
         <p className="text-muted-foreground font-light mb-4">
-          AGPL-3.0 is the right call because Strudel itself is AGPL-licensed, and Algorave
+          AGPL-3.0 is the right call because Strudel itself is AGPL-licensed, and Algojams
           as a platform wouldn&apos;t be possible without the incredible work done by all
           the open-source contributors who built Strudel. If you build on Strudel and/or
-          Algorave, you inherit both of their capabilities and their commitment to staying
+          Algojams, you inherit both of their capabilities and their commitment to staying
           open.
         </p>
         <p className="text-muted-foreground font-light my-4">
@@ -511,7 +511,7 @@ export default function AboutPage() {
         <ul className="list-disc list-inside text-muted-foreground font-light space-y-2 ml-2 mb-6">
           <li>
             <a
-              href="https://codeberg.org/algorave/server/src/branch/main/docs/system-specs/ENFORCING-CC-SIGNALS.md"
+              href="https://codeberg.org/algojams/server/src/branch/main/docs/system-specs/ENFORCING-CC-SIGNALS.md"
               target="_blank"
               rel="noopener noreferrer"
               className="text-white hover:underline">
@@ -521,7 +521,7 @@ export default function AboutPage() {
           </li>
           <li>
             <a
-              href="https://codeberg.org/algorave/server/src/branch/main/docs/system-specs/REDIS_BUFFER_ARCHITECTURE.md"
+              href="https://codeberg.org/algojams/server/src/branch/main/docs/system-specs/REDIS_BUFFER_ARCHITECTURE.md"
               target="_blank"
               rel="noopener noreferrer"
               className="text-white hover:underline">
@@ -531,7 +531,7 @@ export default function AboutPage() {
           </li>
           <li>
             <a
-              href="https://codeberg.org/algorave/server/src/branch/main/docs/system-specs/RAG_ARCHITECTURE.md"
+              href="https://codeberg.org/algojams/server/src/branch/main/docs/system-specs/RAG_ARCHITECTURE.md"
               target="_blank"
               rel="noopener noreferrer"
               className="text-white hover:underline">
@@ -541,7 +541,7 @@ export default function AboutPage() {
           </li>
           <li>
             <a
-              href="https://codeberg.org/algorave/server/src/branch/main/docs/system-specs/PRODUCT_ARCHITECTURE.md"
+              href="https://codeberg.org/algojams/server/src/branch/main/docs/system-specs/PRODUCT_ARCHITECTURE.md"
               target="_blank"
               rel="noopener noreferrer"
               className="text-white hover:underline">
@@ -566,7 +566,7 @@ export default function AboutPage() {
           now and is still doing so. I understand the skepticism.
         </p>
         <p className="text-muted-foreground font-light mb-4">
-          I&apos;m not asking for a blind or instant benefit of doubt granted to algorave
+          I&apos;m not asking for a blind or instant benefit of doubt granted to algojams
           by the community. I&apos;m asking for the chance to demonstrate that AI
           assistance and creator rights can coexist. And I&apos;m inviting you to join me
           in this experiment.
@@ -576,7 +576,7 @@ export default function AboutPage() {
           something, open an issue. If you want to make this system stronger, contribute.
         </p>
         <p className="text-muted-foreground font-light mb-4">
-          Algorave is open source, and the community will shape where it goes from here.
+          Algojams is open source, and the community will shape where it goes from here.
         </p>
       </section>
 
@@ -585,7 +585,7 @@ export default function AboutPage() {
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">Features</h2>
         <p className="text-muted-foreground font-light mb-4">
-          Beyond the experimental &quot;responsible&quot; framework, Algorave offers:
+          Beyond the experimental &quot;responsible&quot; framework, Algojams offers:
         </p>
         <ul className="list-disc list-inside text-muted-foreground font-light space-y-2 ml-2">
           <li>
@@ -649,7 +649,7 @@ export default function AboutPage() {
           <p className="text-muted-foreground font-light">
             <span className="block md:inline">Want to dive into the code or contribute?</span>{' '}
             <a
-              href="https://codeberg.org/algorave"
+              href="https://codeberg.org/algojams"
               target="_blank"
               rel="noopener noreferrer"
               className="text-violet-400 hover:text-violet-300 hover:underline">

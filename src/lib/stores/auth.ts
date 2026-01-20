@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "algorave-auth",
+      name: "algojams-auth",
       partialize: (state) => ({ token: state.token }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

@@ -13,8 +13,8 @@ import { useAuthStore } from '@/lib/stores/auth';
 // mock constants
 vi.mock('@/lib/constants', () => ({
   STORAGE_KEYS: {
-    SESSION_ID: 'algorave_session_id',
-    REDIRECT_AFTER_LOGIN: 'algorave_redirect',
+    SESSION_ID: 'algojams_session_id',
+    REDIRECT_AFTER_LOGIN: 'algojams_redirect',
   },
   WS_BASE_URL: 'ws://localhost:8000',
   WEBSOCKET: {

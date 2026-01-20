@@ -55,7 +55,7 @@ export function useAuth() {
 
   const logout = () => {
     clearAuth();
-    localStorage.removeItem("algorave_session_id");
+    localStorage.removeItem("algojams_session_id");
   };
 
   const updateProfile = async (data: { name: string; avatar_url?: string }) => {

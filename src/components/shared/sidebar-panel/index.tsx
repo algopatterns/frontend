@@ -106,7 +106,7 @@ export function SidebarPanel({
                 ABOUT
               </Link>
               <a
-                href="https://codeberg.org/algorave"
+                href="https://codeberg.org/algojams"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors">

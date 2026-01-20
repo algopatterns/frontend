@@ -43,7 +43,7 @@ interface PendingRequest<T = unknown> {
 
 const REQUEST_TIMEOUT_MS = 30000;
 
-class AlgoraveWebSocket {
+class AlgojamsWebSocket {
   private ws: WebSocket | null = null;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -772,4 +772,4 @@ class AlgoraveWebSocket {
   }
 }
 
-export const wsClient = new AlgoraveWebSocket();
+export const wsClient = new AlgojamsWebSocket();

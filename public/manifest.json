@@ -1,6 +1,6 @@
 {
-  "name": "Algorave",
-  "short_name": "Algorave",
+  "name": "Algojams",
+  "short_name": "Algojams",
   "description": "Live code music with friends using strudel",
   "start_url": "/",
   "display": "standalone",

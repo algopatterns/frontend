@@ -26,10 +26,10 @@ jobs:
         with:
           context: .
           push: true
-          tags: kadetxx/algorave-frontend:latest
+          tags: kadetxx/algojams-frontend:latest
           build-args: |
-            NEXT_PUBLIC_API_URL=https://algorave.cc
-            NEXT_PUBLIC_WS_URL=wss://algorave.cc
+            NEXT_PUBLIC_API_URL=https://algojams.cc
+            NEXT_PUBLIC_WS_URL=wss://algojams.cc
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -40,7 +40,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
-            cd ~/algorave/frontend
+            cd ~/algojams/frontend
             docker compose down || true
             docker ps -q --filter "publish=3000" | xargs -r docker stop | xargs -r docker rm || true
             docker compose pull
