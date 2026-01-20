@@ -6,6 +6,136 @@ import { useAudioStore } from '@/lib/stores/audio';
 import { useWebSocketStore } from '@/lib/stores/websocket';
 import { EDITOR } from '@/lib/constants';
 
+// strudel theme colors (matching code-display.tsx)
+const HL_COLORS = {
+  grey: '#7c859a',   // comments, brackets
+  purple: '#c792ea', // function names
+  blue: '#7fc9e6',   // operators: $:, /, ., ,
+  green: '#b8dd87',  // strings, numbers, identifiers
+};
+
+// simple syntax highlighter for strudel/tidal code examples
+// uses character-by-character parsing like code-display.tsx
+function highlightStrudelCode(code: string): string {
+  let result = '';
+  let i = 0;
+
+  const escape = (s: string) => s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  const span = (text: string, color: string) =>
+    `<span style="color:${color}">${escape(text)}</span>`;
+
+  while (i < code.length) {
+    // $: pattern - blue
+    if (code[i] === '$' && code[i + 1] === ':') {
+      result += span('$:', HL_COLORS.blue);
+      i += 2;
+      continue;
+    }
+
+    // comments - grey
+    if (code[i] === '/' && code[i + 1] === '/') {
+      let end = i;
+      while (end < code.length && code[end] !== '\n') end++;
+      result += span(code.slice(i, end), HL_COLORS.grey);
+      i = end;
+      continue;
+    }
+
+    // brackets - grey
+    if (/[()[\]{}]/.test(code[i])) {
+      result += span(code[i], HL_COLORS.grey);
+      i++;
+      continue;
+    }
+
+    // Operators: /, ., , - blue
+    if (code[i] === '/' || code[i] === '.' || code[i] === ',') {
+      result += span(code[i], HL_COLORS.blue);
+      i++;
+      continue;
+    }
+
+    // Identifiers and function names
+    if (/[a-zA-Z_$]/.test(code[i])) {
+      let end = i;
+      while (end < code.length && /[a-zA-Z0-9_$]/.test(code[end])) end++;
+      const word = code.slice(i, end);
+
+      // Function call (followed by open paren) - purple
+      if (code[end] === '(') {
+        result += span(word, HL_COLORS.purple);
+      } else {
+        // Regular identifier - green
+        result += span(word, HL_COLORS.green);
+      }
+      i = end;
+      continue;
+    }
+
+    // Strings - green
+    if (code[i] === '"' || code[i] === "'" || code[i] === '`') {
+      const quote = code[i];
+      let end = i + 1;
+      while (end < code.length && code[end] !== quote) {
+        if (code[end] === '\\') end++;
+        end++;
+      }
+      end++;
+      result += span(code.slice(i, end), HL_COLORS.green);
+      i = end;
+      continue;
+    }
+
+    // Numbers - green
+    if (/\d/.test(code[i])) {
+      let end = i;
+      while (end < code.length && /[\d.]/.test(code[end])) end++;
+      result += span(code.slice(i, end), HL_COLORS.green);
+      i = end;
+      continue;
+    }
+
+    // Everything else (whitespace, operators) - pass through escaped
+    result += escape(code[i]);
+    i++;
+  }
+
+  return result;
+}
+
+// Set up MutationObserver to highlight code blocks in tooltips
+function setupTooltipHighlighting() {
+  if (typeof document === 'undefined') return;
+  if ((window as Window & { __strudelHighlightObserver?: MutationObserver }).__strudelHighlightObserver) return;
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node instanceof HTMLElement) {
+          // Check if this is a tooltip or contains tooltips
+          const codeBlocks = node.querySelectorAll('.autocomplete-info-example-code:not([data-highlighted])');
+          codeBlocks.forEach((block) => {
+            const pre = block as HTMLPreElement;
+            pre.setAttribute('data-highlighted', 'true');
+            pre.innerHTML = highlightStrudelCode(pre.textContent || '');
+          });
+        }
+      }
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  (window as Window & { __strudelHighlightObserver?: MutationObserver }).__strudelHighlightObserver = observer;
+}
+
 export const SAMPLE_SOURCES = {
   doughSamples: 'https://raw.githubusercontent.com/felixroos/dough-samples/main',
   uzuDrumkit: 'https://raw.githubusercontent.com/tidalcycles/uzu-drumkit/main',
@@ -520,6 +650,7 @@ export function useStrudelEditor(
   const wsStatus = useWebSocketStore(state => state.status);
   const sessionStateReceived = useWebSocketStore(state => state.sessionStateReceived);
 
+
   // use lazy initial state for URL params (avoids setState in effect)
   const [urlStrudelId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
@@ -676,7 +807,11 @@ export function useStrudelEditor(
             containerRef.current.style.fontFamily = 'var(--font-geist-mono), monospace';
           }
 
+          // enable extensions on reused instance
+          globalMirrorInstance.reconfigureExtension?.('isAutoCompletionEnabled', true);
+
           setInitialized(true);
+          setupTooltipHighlighting();
 
           // set up code polling
           const interval = setInterval(() => {
@@ -704,6 +839,18 @@ export function useStrudelEditor(
             c.remove();
           });
           containerRef.current.innerHTML = '';
+        }
+
+        // Set autocomplete enabled BEFORE importing @strudel/codemirror
+        // The persistentAtom reads from localStorage on module load
+        try {
+          const key = 'codemirror-settings';
+          const stored = localStorage.getItem(key);
+          const settings = stored ? JSON.parse(stored) : {};
+          settings.isAutoCompletionEnabled = true;
+          localStorage.setItem(key, JSON.stringify(settings));
+        } catch (e) {
+          // ignore
         }
 
         const [
@@ -872,6 +1019,7 @@ export function useStrudelEditor(
         mirror.setFontFamily?.('var(--font-geist-mono), monospace');
         mirror.reconfigureExtension?.('isPatternHighlightingEnabled', true);
         mirror.reconfigureExtension?.('isFlashEnabled', true);
+        mirror.reconfigureExtension?.('isAutoCompletionEnabled', true);
 
         // apply read-only state after editor is created
         if (readOnlyRef.current && containerRef.current) {
@@ -894,6 +1042,7 @@ export function useStrudelEditor(
         mirrorInstanceRef.current = mirror;
         setStrudelMirrorInstance(mirror);
         setInitialized(true);
+        setupTooltipHighlighting();
 
         // paste detection for CC signals
         const currentContainer = containerRef.current;

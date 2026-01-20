@@ -159,3 +159,263 @@ body {
 .strudel-editor .cm-scroller {
   min-height: 100%;
 }
+
+/* CodeMirror autocomplete dropdown */
+.cm-tooltip.cm-tooltip-autocomplete {
+  background: oklch(0.205 0 0) !important;
+  border: 1px solid oklch(1 0 0 / 10%) !important;
+  border-radius: 0.25rem !important;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.3) !important;
+  overflow: hidden !important;
+}
+
+.cm-tooltip-autocomplete > ul {
+  font-family: var(--font-geist-mono), monospace !important;
+  font-size: 12px !important;
+  max-height: 250px !important;
+}
+
+.cm-tooltip-autocomplete > ul > li {
+  padding: 0.2rem 0.5rem !important;
+  color: oklch(0.985 0 0) !important;
+  line-height: 1.4 !important;
+}
+
+.cm-tooltip-autocomplete > ul > li[aria-selected="true"] {
+  background: oklch(0.269 0 0) !important;
+}
+
+.cm-tooltip-autocomplete .cm-completionIcon {
+  opacity: 0.5 !important;
+  padding-right: 0.35rem !important;
+}
+
+.cm-tooltip-autocomplete .cm-completionLabel {
+  font-weight: 500 !important;
+}
+
+/* Autocomplete info panel (documentation popup) */
+.cm-tooltip.cm-completionInfo {
+  background: oklch(0.205 0 0) !important;
+  border: 1px solid oklch(1 0 0 / 10%) !important;
+  border-radius: 0.25rem !important;
+  padding: 0.5rem !important;
+  max-width: 400px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.3) !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+/* Info panel content */
+.cm-completionInfo .autocomplete-info-container {
+  color: oklch(0.985 0 0) !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+.cm-completionInfo .autocomplete-info-tooltip {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.2rem !important;
+}
+
+.cm-completionInfo .autocomplete-info-function-name {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  color: oklch(0.985 0 0) !important;
+}
+
+.cm-completionInfo .autocomplete-info-function-synonyms {
+  font-size: 10px !important;
+  color: oklch(0.708 0 0) !important;
+  margin: 0 !important;
+}
+
+.cm-completionInfo .autocomplete-info-function-description {
+  margin: 0.15rem 0 !important;
+  line-height: 1.3 !important;
+  font-size: 11px !important;
+}
+
+.cm-completionInfo .autocomplete-info-function-description p {
+  margin: 0 0 0.15rem 0 !important;
+}
+
+.cm-completionInfo .autocomplete-info-function-description code {
+  background: oklch(0.269 0 0) !important;
+  padding: 0.05rem 0.2rem !important;
+  border-radius: 0.15rem !important;
+  font-size: 10px !important;
+}
+
+.cm-completionInfo .autocomplete-info-section-title,
+.cm-completionInfo .autocomplete-info-params-section h4,
+.cm-completionInfo .autocomplete-info-examples-section h4 {
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  color: oklch(0.708 0 0) !important;
+  margin: 0.25rem 0 0.1rem 0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.cm-completionInfo .autocomplete-info-params-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.cm-completionInfo .autocomplete-info-param-item {
+  margin-bottom: 0.1rem !important;
+  font-size: 10px !important;
+}
+
+.cm-completionInfo .autocomplete-info-param-name {
+  font-weight: 500 !important;
+  color: oklch(0.985 0 0) !important;
+}
+
+.cm-completionInfo .autocomplete-info-param-type {
+  color: oklch(0.708 0 0) !important;
+  margin-left: 0.3rem !important;
+  font-size: 9px !important;
+}
+
+.cm-completionInfo .autocomplete-info-param-desc {
+  color: oklch(0.708 0 0) !important;
+  font-size: 10px !important;
+  margin-left: 0.5rem !important;
+}
+
+.cm-completionInfo .autocomplete-info-examples-section {
+  margin-top: 0.15rem !important;
+}
+
+.cm-completionInfo .autocomplete-info-example-code {
+  background: oklch(0.269 0 0) !important;
+  padding: 0.25rem 0.4rem !important;
+  border-radius: 0.15rem !important;
+  font-family: var(--font-geist-mono), monospace !important;
+  font-size: 10px !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  margin: 0.1rem 0 !important;
+  display: block !important;
+}
+
+
+/* Ctrl+hover tooltip (same styling as autocomplete info panel) */
+.cm-tooltip-hover {
+  background: oklch(0.205 0 0) !important;
+  border: 1px solid oklch(1 0 0 / 10%) !important;
+  border-radius: 0.25rem !important;
+  padding: 0.5rem !important;
+  max-width: 400px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.3) !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  color: oklch(0.985 0 0) !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-container {
+  color: oklch(0.985 0 0) !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-tooltip {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.2rem !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-function-name {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  color: oklch(0.985 0 0) !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-function-synonyms {
+  font-size: 10px !important;
+  color: oklch(0.708 0 0) !important;
+  margin: 0 !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-function-description {
+  margin: 0.15rem 0 !important;
+  line-height: 1.3 !important;
+  font-size: 11px !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-function-description p {
+  margin: 0 0 0.15rem 0 !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-function-description code {
+  background: oklch(0.269 0 0) !important;
+  padding: 0.05rem 0.2rem !important;
+  border-radius: 0.15rem !important;
+  font-size: 10px !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-section-title,
+.cm-tooltip-hover .autocomplete-info-params-section h4,
+.cm-tooltip-hover .autocomplete-info-examples-section h4 {
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  color: oklch(0.708 0 0) !important;
+  margin: 0.25rem 0 0.1rem 0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-params-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-param-item {
+  margin-bottom: 0.1rem !important;
+  font-size: 10px !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-param-name {
+  font-weight: 500 !important;
+  color: oklch(0.985 0 0) !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-param-type {
+  color: oklch(0.708 0 0) !important;
+  margin-left: 0.3rem !important;
+  font-size: 9px !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-param-desc {
+  color: oklch(0.708 0 0) !important;
+  font-size: 10px !important;
+  margin-left: 0.5rem !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-examples-section {
+  margin-top: 0.15rem !important;
+}
+
+.cm-tooltip-hover .autocomplete-info-example-code {
+  background: oklch(0.269 0 0) !important;
+  padding: 0.25rem 0.4rem !important;
+  border-radius: 0.15rem !important;
+  font-family: var(--font-geist-mono), monospace !important;
+  font-size: 10px !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  margin: 0.1rem 0 !important;
+  display: block !important;
+}
+
