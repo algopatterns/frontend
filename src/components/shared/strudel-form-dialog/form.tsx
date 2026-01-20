@@ -51,6 +51,7 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
     isPending,
     parentCCSignal,
     hasAIAssistance,
+    isAuthenticated,
     handleSave,
   } = useStrudelForm(strudel, mode, onClose);
 
@@ -66,7 +67,9 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
         <DialogTitle>{isCreate ? 'Save Strudel' : 'Strudel Settings'}</DialogTitle>
         <DialogDescription>
           {isCreate
-            ? 'Save your strudel to your library.'
+            ? isAuthenticated
+              ? 'Save your strudel to your library.'
+              : 'Save your strudel locally in your browser.'
             : 'Update your strudel details and visibility.'}
         </DialogDescription>
       </DialogHeader>
@@ -120,72 +123,84 @@ export function StrudelForm({ strudel, mode, onClose }: StrudelFormProps) {
           </div>
         )}
 
-        <div className="flex items-center justify-between py-3 my-4 border-y border-border/50">
-          <Label htmlFor="strudel-private">Private Strudel</Label>
-          <Switch
-            id="strudel-private"
-            checked={!isPublic}
-            onCheckedChange={checked => setIsPublic(!checked)}
-          />
-        </div>
-
-        <div className="flex items-start gap-3">
-          <div className="flex-1 min-w-0 space-y-2">
-            <Label>License</Label>
-            <Select
-              value={license || ''}
-              onValueChange={v => handleLicenseChange((v || null) as CCLicense | null)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select license..." />
-              </SelectTrigger>
-              <SelectContent>
-                {CC_LICENSES.map(l => (
-                  <SelectItem key={l.id} value={l.id}>
-                    {l.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <ArrowRightLeft className="h-4 w-4 text-muted-foreground shrink-0 mt-9" />
-          <div className="flex-1 min-w-0 space-y-2">
-            <div className="flex items-center gap-2">
-              <Label>AI/CC Signal</Label>
-              {license && inferredSignal && !signalOverridden && (
-                <span className="text-xs text-muted-foreground leading-0">(inferred from license)</span>
-              )}
-              {signalOverridden && (
-                <span className="text-xs text-orange-400 leading-0">(custom)</span>
-              )}
+        {/* auth-only: visibility and licensing options */}
+        {isAuthenticated && (
+          <>
+            <div className="flex items-center justify-between py-3 my-4 border-y border-border/50">
+              <Label htmlFor="strudel-private">Private Strudel</Label>
+              <Switch
+                id="strudel-private"
+                checked={!isPublic}
+                onCheckedChange={checked => setIsPublic(!checked)}
+              />
             </div>
-            <Select
-              value={ccSignal || defaultSignal}
-              onValueChange={v => handleSignalChange((v as CCSignal) || null)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="AI/CC signal..." />
-              </SelectTrigger>
-              <SelectContent>
-                {CC_SIGNALS.filter(s => {
-                  // filter by parent restrictiveness
-                  if (parentCCSignal && SIGNAL_RESTRICTIVENESS[s.id] < SIGNAL_RESTRICTIVENESS[parentCCSignal]) {
-                    return false;
-                  }
-                  return true;
-                }).map(signal => {
-                  const isDisabled = hasAIAssistance && signal.id === 'no-ai';
-                  return (
-                    <SelectItem key={signal.id} value={signal.id} disabled={isDisabled}>
-                      <span className="font-medium uppercase">{signal.id}</span>
-                      <span className="text-muted-foreground ml-2 text-xs">
-                        {isDisabled ? 'Disabled - AI assistance detected' : signal.desc}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0 space-y-2">
+                <Label>License</Label>
+                <Select
+                  value={license || ''}
+                  onValueChange={v => handleLicenseChange((v || null) as CCLicense | null)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select license..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CC_LICENSES.map(l => (
+                      <SelectItem key={l.id} value={l.id}>
+                        {l.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <ArrowRightLeft className="h-4 w-4 text-muted-foreground shrink-0 mt-9" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label>AI/CC Signal</Label>
+                  {license && inferredSignal && !signalOverridden && (
+                    <span className="text-xs text-muted-foreground leading-0">(inferred from license)</span>
+                  )}
+                  {signalOverridden && (
+                    <span className="text-xs text-orange-400 leading-0">(custom)</span>
+                  )}
+                </div>
+                <Select
+                  value={ccSignal || defaultSignal}
+                  onValueChange={v => handleSignalChange((v as CCSignal) || null)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="AI/CC signal..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CC_SIGNALS.filter(s => {
+                      // filter by parent restrictiveness
+                      if (parentCCSignal && SIGNAL_RESTRICTIVENESS[s.id] < SIGNAL_RESTRICTIVENESS[parentCCSignal]) {
+                        return false;
+                      }
+                      return true;
+                    }).map(signal => {
+                      const isDisabled = hasAIAssistance && signal.id === 'no-ai';
+                      return (
+                        <SelectItem key={signal.id} value={signal.id} disabled={isDisabled}>
+                          <span className="font-medium uppercase">{signal.id}</span>
+                          <span className="text-muted-foreground ml-2 text-xs">
+                            {isDisabled ? 'Disabled - AI assistance detected' : signal.desc}
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* anon-only: note about local storage */}
+        {!isAuthenticated && (
+          <p className="text-sm text-muted-foreground pt-2">
+            Your strudel will be saved locally in your browser. Sign in to sync across devices and share publicly.
+          </p>
+        )}
       </div>
       <DialogFooter className="gap-2 sm:gap-0">
         <Button variant="ghost" onClick={onClose}>

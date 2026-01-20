@@ -5,22 +5,24 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { StrudelCard } from '@/components/shared/strudel-card';
 import { Button } from '@/components/ui/button';
-import { AuthGuard } from '@/components/shared/auth-guard';
 import { StrudelFormDialog } from '@/components/shared/strudel-form-dialog';
 import { StrudelStatsDialog } from '@/components/shared/strudel-stats-dialog';
 import { StrudelPreviewModal } from '@/components/shared/strudel-preview-modal';
+import { LocalStrudelSettingsDialog } from '@/components/shared/local-strudel-settings-dialog';
 import { useDashboard } from './hooks';
-import { Settings, Pencil, Loader2, BarChart3, Eye } from 'lucide-react';
+import { Settings, Pencil, Loader2, BarChart3, Eye, Trash2 } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useUIStore } from '@/lib/stores/ui';
 import { usePlayerStore } from '@/lib/stores/player';
+import { storage } from '@/lib/utils/storage';
 import { EDITOR } from '@/lib/constants';
 
 function DashboardContent() {
-  const { strudels, isLoading, isFetchingNextPage, loadMoreRef, router } = useDashboard();
+  const { strudels, isLoading, isFetchingNextPage, loadMoreRef, router, isAuthenticated, refreshLocalStrudels } = useDashboard();
   const [selectedStrudel, setSelectedStrudel] = useState<Strudel | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [localSettingsOpen, setLocalSettingsOpen] = useState(false);
   const [statsStrudel, setStatsStrudel] = useState<Strudel | null>(null);
   const [previewStrudel, setPreviewStrudel] = useState<Strudel | null>(null);
 
@@ -45,18 +47,27 @@ function DashboardContent() {
     }
   };
 
+  const handleDeleteLocal = (strudelId: string) => {
+    storage.deleteLocalStrudel(strudelId);
+    refreshLocalStrudels();
+  };
+
+  // check if strudel is local (for anon users)
+  const isLocalStrudel = (strudel: Strudel) => strudel.user_id === 'local';
+
   return (
-    <AuthGuard>
-      <div className={`container px-6 py-4 md:p-8 w-full max-w-full ${playerStrudel ? 'pb-24' : ''}`}>
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Shelf</h1>
-            <p className="text-[15px] md:text-base text-muted-foreground">
-              <span className="md:hidden">Your creations</span>
-              <span className="hidden md:inline">Your creations and live sessions</span>
-            </p>
-          </div>
+    <div className={`container px-6 py-4 md:p-8 w-full max-w-full ${playerStrudel ? 'pb-24' : ''}`}>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold">Shelf</h1>
+          <p className="text-[15px] md:text-base text-muted-foreground">
+            <span className="md:hidden">Your creations</span>
+            <span className="hidden md:inline">
+              {isAuthenticated ? 'Your creations and live sessions' : 'Your locally saved creations'}
+            </span>
+          </p>
         </div>
+      </div>
 
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
@@ -82,41 +93,79 @@ function DashboardContent() {
                   showCodePreview
                   maxTags={4}
                   actions={
-                    <>
-                      {strudel.is_public && (
+                    isLocalStrudel(strudel) ? (
+                      // local strudel actions (anon users)
+                      <>
                         <Button
                           size="icon-round-sm"
                           variant="outline"
                           className="text-muted-foreground hover:text-foreground"
-                          onClick={() => setStatsStrudel(strudel)}>
-                          <BarChart3 className="h-4 w-4" />
+                          onClick={() => {
+                            setSelectedStrudel(strudel);
+                            setLocalSettingsOpen(true);
+                          }}>
+                          <Settings className="h-4 w-4" />
                         </Button>
-                      )}
-                      <Button
-                        size="icon-round-sm"
-                        variant="outline"
-                        className="text-muted-foreground hover:text-foreground"
-                        onClick={() => {
-                          setSelectedStrudel(strudel);
-                          setSettingsOpen(true);
-                        }}>
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon-round-sm"
-                        variant="outline"
-                        className="text-muted-foreground hover:text-foreground"
-                        onClick={() => setPreviewStrudel(strudel)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon-round-sm"
-                        variant="outline"
-                        className="text-muted-foreground hover:text-foreground"
-                        onClick={() => handleOpenStrudel(strudel.id)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </>
+                        <Button
+                          size="icon-round-sm"
+                          variant="outline"
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => setPreviewStrudel(strudel)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon-round-sm"
+                          variant="outline"
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => handleOpenStrudel(strudel.id)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon-round-sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteLocal(strudel.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      // cloud strudel actions (auth users)
+                      <>
+                        {strudel.is_public && (
+                          <Button
+                            size="icon-round-sm"
+                            variant="outline"
+                            className="text-muted-foreground hover:text-foreground"
+                            onClick={() => setStatsStrudel(strudel)}>
+                            <BarChart3 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          size="icon-round-sm"
+                          variant="outline"
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => {
+                            setSelectedStrudel(strudel);
+                            setSettingsOpen(true);
+                          }}>
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon-round-sm"
+                          variant="outline"
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => setPreviewStrudel(strudel)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon-round-sm"
+                          variant="outline"
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => handleOpenStrudel(strudel.id)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )
                   }
                 />
               ))}
@@ -147,7 +196,9 @@ function DashboardContent() {
               <h3 className="text-lg font-medium mb-2">No strudels yet</h3>
 
               <p className="text-muted-foreground text-center mb-4">
-                Start creating music patterns with AI assistance
+                {isAuthenticated
+                  ? 'Start creating music patterns with AI assistance'
+                  : 'Create and save strudels locally, or sign in to sync across devices'}
               </p>
 
               <Button asChild>
@@ -157,11 +208,20 @@ function DashboardContent() {
           </Card>
         )}
 
+        {/* cloud strudel settings (auth users) */}
         <StrudelFormDialog
           strudel={selectedStrudel}
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
           mode="edit"
+        />
+
+        {/* local strudel settings (anon users) */}
+        <LocalStrudelSettingsDialog
+          strudel={selectedStrudel}
+          open={localSettingsOpen}
+          onOpenChange={setLocalSettingsOpen}
+          onSave={refreshLocalStrudels}
         />
 
         <StrudelStatsDialog
@@ -177,7 +237,6 @@ function DashboardContent() {
           onOpenChange={open => !open && setPreviewStrudel(null)}
         />
       </div>
-    </AuthGuard>
   );
 }
 

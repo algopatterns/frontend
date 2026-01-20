@@ -11,6 +11,11 @@ type SaveStatus = "saved" | "saving" | "unsaved";
 
 const AUTOSAVE_DEBOUNCE_MS = 10000;
 
+// check if a strudel ID is a local strudel
+function isLocalStrudelId(id: string | null): boolean {
+  return !!id && id.startsWith("local_");
+}
+
 export function useAutosave() {
   const { isDirty, code, conversationHistory, currentStrudelId, markSaved, setCode } = useEditorStore();
   const { token } = useAuthStore();
@@ -21,15 +26,20 @@ export function useAutosave() {
 
   const isAuthenticated = !!token;
   const hasStrudel = !!currentStrudelId;
+  const isLocalStrudel = isLocalStrudelId(currentStrudelId);
 
   // Determine save status
   const getSaveStatus = useCallback((): SaveStatus => {
     if (isSaving) return "saving";
-    if (!isAuthenticated) return "unsaved"; // Always show unsaved for anonymous
+    // local strudels: check dirty state
+    if (isLocalStrudel) {
+      return isDirty ? "unsaved" : "saved";
+    }
+    if (!isAuthenticated) return "unsaved"; // No strudel saved yet for anon
     if (!hasStrudel) return "unsaved"; // No strudel saved yet
     if (isDirty) return "unsaved";
     return "saved";
-  }, [isSaving, isAuthenticated, hasStrudel, isDirty]);
+  }, [isSaving, isAuthenticated, hasStrudel, isDirty, isLocalStrudel]);
 
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(getSaveStatus);
 
@@ -49,9 +59,9 @@ export function useAutosave() {
     }
   }, [currentStrudelId]); // only on strudel change, not code change
 
-  // Autosave for authenticated users with an existing strudel
+  // Autosave for authenticated users with an existing cloud strudel
   useEffect(() => {
-    if (!isAuthenticated || !hasStrudel || !isDirty) {
+    if (!isAuthenticated || !hasStrudel || !isDirty || isLocalStrudel) {
       return;
     }
 
@@ -92,13 +102,97 @@ export function useAutosave() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [isAuthenticated, hasStrudel, isDirty, currentStrudelId, code, conversationHistory, markSaved, updateStrudel]);
+  }, [isAuthenticated, hasStrudel, isDirty, isLocalStrudel, currentStrudelId, code, conversationHistory, markSaved, updateStrudel]);
+
+  // Autosave for local strudels (anonymous users)
+  useEffect(() => {
+    if (!isLocalStrudel || !isDirty || !currentStrudelId) {
+      return;
+    }
+
+    // Clear any pending save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Debounce the autosave
+    saveTimeoutRef.current = setTimeout(() => {
+      setIsSaving(true);
+      try {
+        const existingStrudel = storage.getLocalStrudel(currentStrudelId);
+        if (existingStrudel) {
+          storage.setLocalStrudel({
+            ...existingStrudel,
+            code,
+            conversation_history: conversationHistory.map(h => ({
+              role: h.role as "user" | "assistant",
+              content: h.content,
+              is_actionable: h.is_actionable,
+              is_code_response: h.is_code_response,
+              clarifying_questions: h.clarifying_questions,
+              strudel_references: h.strudel_references,
+              doc_references: h.doc_references,
+            })),
+            updated_at: new Date().toISOString(),
+          });
+          markSaved();
+        }
+      } catch (error) {
+        console.error("Local autosave failed:", error);
+      } finally {
+        setIsSaving(false);
+      }
+    }, AUTOSAVE_DEBOUNCE_MS);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [isLocalStrudel, isDirty, currentStrudelId, code, conversationHistory, markSaved]);
 
   // Handle manual save click
   const handleSave = useCallback(async () => {
+    // For local strudels, save immediately to localStorage
+    if (isLocalStrudel && currentStrudelId) {
+      // Clear any pending autosave
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      setIsSaving(true);
+      try {
+        const existingStrudel = storage.getLocalStrudel(currentStrudelId);
+        if (existingStrudel) {
+          storage.setLocalStrudel({
+            ...existingStrudel,
+            code,
+            conversation_history: conversationHistory.map(h => ({
+              role: h.role as "user" | "assistant",
+              content: h.content,
+              is_actionable: h.is_actionable,
+              is_code_response: h.is_code_response,
+              clarifying_questions: h.clarifying_questions,
+              strudel_references: h.strudel_references,
+              doc_references: h.doc_references,
+            })),
+            updated_at: new Date().toISOString(),
+          });
+          // manual save = mark this as "good version" checkpoint
+          storage.setGoodVersion(currentStrudelId, code);
+          markSaved();
+        }
+      } catch (error) {
+        console.error("Local save failed:", error);
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
     if (!isAuthenticated) {
-      // Prompt login for anonymous users
-      setLoginModalOpen(true);
+      // No strudel yet for anonymous users - open save dialog
+      setSaveStrudelDialogOpen(true);
       return;
     }
 
@@ -139,7 +233,7 @@ export function useAutosave() {
     } finally {
       setIsSaving(false);
     }
-  }, [isAuthenticated, hasStrudel, currentStrudelId, code, conversationHistory, setLoginModalOpen, setSaveStrudelDialogOpen, markSaved, updateStrudel]);
+  }, [isAuthenticated, hasStrudel, isLocalStrudel, currentStrudelId, code, conversationHistory, setSaveStrudelDialogOpen, markSaved, updateStrudel]);
 
   // get good version for current strudel
   const getGoodVersion = useCallback((): GoodVersion | null => {

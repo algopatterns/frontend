@@ -35,13 +35,11 @@ export function Header() {
         </Link>
 
         <nav className="ml-6 flex items-center gap-4 text-sm">
-          {isAuthenticated && (
-            <Link
-              href="/shelf"
-              className={pathname === '/shelf' ? 'text-foreground/90' : 'text-muted-foreground hover:text-foreground transition-colors'}>
-              Shelf
-            </Link>
-          )}
+          <Link
+            href="/shelf"
+            className={pathname === '/shelf' ? 'text-foreground/90' : 'text-muted-foreground hover:text-foreground transition-colors'}>
+            Shelf
+          </Link>
 
           <Link
             href="/explore"
