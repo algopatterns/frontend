@@ -10,8 +10,19 @@ import { StrudelStatsDialog } from '@/components/shared/strudel-stats-dialog';
 import { StrudelPreviewModal } from '@/components/shared/strudel-preview-modal';
 import { LocalStrudelSettingsDialog } from '@/components/shared/local-strudel-settings-dialog';
 import { useDashboard } from './hooks';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogBody,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Settings, Pencil, Loader2, BarChart3, Eye, Trash2 } from 'lucide-react';
 import type { Strudel } from '@/lib/api/strudels/types';
+import { useDeleteStrudel } from '@/lib/hooks/use-strudels';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useUIStore } from '@/lib/stores/ui';
 import { usePlayerStore } from '@/lib/stores/player';
@@ -25,6 +36,9 @@ function DashboardContent() {
   const [localSettingsOpen, setLocalSettingsOpen] = useState(false);
   const [statsStrudel, setStatsStrudel] = useState<Strudel | null>(null);
   const [previewStrudel, setPreviewStrudel] = useState<Strudel | null>(null);
+  const [deleteStrudel, setDeleteStrudel] = useState<Strudel | null>(null);
+
+  const deleteStrudelMutation = useDeleteStrudel();
 
   const { isDirty, code, currentStrudelId } = useEditorStore();
   const { setPendingOpenStrudelId } = useUIStore();
@@ -47,9 +61,16 @@ function DashboardContent() {
     }
   };
 
-  const handleDeleteLocal = (strudelId: string) => {
-    storage.deleteLocalStrudel(strudelId);
-    refreshLocalStrudels();
+  const handleConfirmDelete = async () => {
+    if (!deleteStrudel) return;
+
+    if (isLocalStrudel(deleteStrudel)) {
+      storage.deleteLocalStrudel(deleteStrudel.id);
+      refreshLocalStrudels();
+    } else {
+      await deleteStrudelMutation.mutateAsync(deleteStrudel.id);
+    }
+    setDeleteStrudel(null);
   };
 
   // check if strudel is local (for anon users)
@@ -124,7 +145,7 @@ function DashboardContent() {
                           size="icon-round-sm"
                           variant="outline"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteLocal(strudel.id)}>
+                          onClick={() => setDeleteStrudel(strudel)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </>
@@ -163,6 +184,13 @@ function DashboardContent() {
                           className="text-muted-foreground hover:text-foreground"
                           onClick={() => handleOpenStrudel(strudel.id)}>
                           <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon-round-sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => setDeleteStrudel(strudel)}>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </>
                     )
@@ -236,6 +264,25 @@ function DashboardContent() {
           open={!!previewStrudel}
           onOpenChange={open => !open && setPreviewStrudel(null)}
         />
+
+        <AlertDialog open={!!deleteStrudel} onOpenChange={open => !open && setDeleteStrudel(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Strudel</AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Are you sure you want to delete &ldquo;{deleteStrudel?.title}&rdquo;? This action cannot be undone.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
   );
 }
