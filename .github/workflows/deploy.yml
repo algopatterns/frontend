@@ -41,6 +41,7 @@ jobs:
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
             cd ~/algojams/frontend
+            git pull origin main
             docker compose down || true
             docker ps -q --filter "publish=3000" | xargs -r docker stop | xargs -r docker rm || true
             docker compose pull
