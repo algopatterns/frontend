@@ -619,9 +619,9 @@ body {
   color: var(--foreground) !important;
 }
 
-/* dark theme: reset canvas filter */
+/* dark theme: convert blue drawings to white */
 html.dark canvas {
-  filter: none !important;
+  filter: saturate(0) brightness(2) !important;
 }
 
 /* blue theme: strudel drawings */
