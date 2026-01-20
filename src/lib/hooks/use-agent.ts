@@ -1,12 +1,13 @@
 'use client';
 
+import { useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { agentApi } from '@/lib/api/agent';
 import { useEditorStore } from '@/lib/stores/editor';
 import { useWebSocketStore } from '@/lib/stores/websocket';
 import { storage } from '@/lib/utils/storage';
 import { getBYOKProvider, getBYOKApiKey } from '@/components/shared/settings-modal/hooks';
-import type { GenerateRequest, GenerateResponse } from '@/lib/api/agent/types';
+import type { GenerateRequest, GenerateResponse, StreamEvent } from '@/lib/api/agent/types';
 
 export function useAgentGenerate() {
   const {
@@ -17,8 +18,10 @@ export function useAgentGenerate() {
     parentCCSignal,
     setAIGenerating,
     addToHistory,
+    updateMessage,
   } = useEditorStore();
   const { sessionId } = useWebSocketStore();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   return useMutation({
     meta: { skipGlobalErrorToast: true }, // errors shown in conversation UI instead
@@ -55,6 +58,12 @@ export function useAgentGenerate() {
         ...(sessionId && { session_id: sessionId }),
       };
 
+      // use streaming for BYOK users
+      if (byokApiKey) {
+        return streamGenerate(request);
+      }
+
+      // fall back to non-streaming for platform API
       return agentApi.generate(request);
     },
 
@@ -75,24 +84,24 @@ export function useAgentGenerate() {
     onSuccess: (response: GenerateResponse) => {
       setAIGenerating(false);
 
-      // code is NOT auto-applied to editor
-      // user must click "apply to editor" button in aiMessage component
+      // for non-streaming responses, add to history
+      // streaming responses are already added during the stream
+      if (!response._streamed) {
+        const hasContent = response.code || response.clarifying_questions?.length;
 
-      // add assistant response to conversation history
-      const hasContent = response.code || response.clarifying_questions?.length;
-
-      if (hasContent) {
-        addToHistory({
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: response.code || '',
-          is_actionable: response.is_actionable,
-          is_code_response: response.is_code_response,
-          clarifying_questions: response.clarifying_questions,
-          strudel_references: response.strudel_references,
-          doc_references: response.doc_references,
-          created_at: new Date().toISOString(),
-        });
+        if (hasContent) {
+          addToHistory({
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: response.code || '',
+            is_actionable: response.is_actionable,
+            is_code_response: response.is_code_response,
+            clarifying_questions: response.clarifying_questions,
+            strudel_references: response.strudel_references,
+            doc_references: response.doc_references,
+            created_at: new Date().toISOString(),
+          });
+        }
       }
 
       saveDraft();
@@ -130,6 +139,96 @@ export function useAgentGenerate() {
       });
     },
   });
+
+  // streaming generation for BYOK users
+  async function streamGenerate(request: GenerateRequest): Promise<GenerateResponse & { _streamed?: boolean }> {
+    // create abort controller for this request
+    abortControllerRef.current = new AbortController();
+
+    // create placeholder message for streaming
+    const messageId = crypto.randomUUID();
+    let streamedContent = '';
+    let refs: { strudel_references?: StreamEvent['strudel_references']; doc_references?: StreamEvent['doc_references'] } = {};
+    let finalContent = '';
+    let finalIsCode = false;
+    let finalModel = '';
+
+    // add streaming message to history
+    addToHistory({
+      id: messageId,
+      role: 'assistant',
+      content: '',
+      is_streaming: true,
+      created_at: new Date().toISOString(),
+    });
+
+    try {
+      await agentApi.generateStream(
+        request,
+        (event: StreamEvent) => {
+          switch (event.type) {
+            case 'refs':
+              // store refs for later
+              refs = {
+                strudel_references: event.strudel_references,
+                doc_references: event.doc_references,
+              };
+              // update message with refs
+              updateMessage(messageId, refs);
+              break;
+
+            case 'chunk':
+              // append chunk to content
+              streamedContent += event.content || '';
+              updateMessage(messageId, { content: streamedContent });
+              break;
+
+            case 'done':
+              finalContent = event.content || streamedContent;
+              finalIsCode = event.is_code_response || false;
+              finalModel = event.model || '';
+              // update with final processed content and metadata
+              updateMessage(messageId, {
+                content: finalContent,
+                is_streaming: false,
+                is_code_response: finalIsCode,
+                strudel_references: event.strudel_references || refs.strudel_references,
+                doc_references: event.doc_references || refs.doc_references,
+              });
+              break;
+
+            case 'error':
+              updateMessage(messageId, {
+                content: `Error: ${event.error}`,
+                is_streaming: false,
+              });
+              throw new Error(event.error);
+          }
+        },
+        abortControllerRef.current.signal
+      );
+
+      // return response in expected format
+      return {
+        code: finalContent || streamedContent,
+        is_actionable: true,
+        is_code_response: finalIsCode,
+        docs_retrieved: 0,
+        examples_retrieved: 0,
+        strudel_references: refs.strudel_references,
+        doc_references: refs.doc_references,
+        model: finalModel,
+        _streamed: true, // flag to skip adding to history in onSuccess
+      };
+    } catch (error) {
+      // update message with error if not already updated
+      updateMessage(messageId, {
+        content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        is_streaming: false,
+      });
+      throw error;
+    }
+  }
 
   function saveDraft() {
     const { code, conversationHistory, currentStrudelId, currentDraftId } = useEditorStore.getState();

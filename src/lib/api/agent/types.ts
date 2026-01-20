@@ -39,4 +39,18 @@ export interface GenerateResponse {
   strudel_references?: StrudelReference[];
   doc_references?: DocReference[];
   model: string;
+  _streamed?: boolean; // internal flag to indicate response was streamed
+}
+
+// streaming response event from SSE endpoint
+export interface StreamEvent {
+  type: 'chunk' | 'refs' | 'done' | 'error';
+  content?: string;
+  error?: string;
+  strudel_references?: StrudelReference[];
+  doc_references?: DocReference[];
+  model?: string;
+  is_code_response?: boolean;
+  input_tokens?: number;
+  output_tokens?: number;
 }

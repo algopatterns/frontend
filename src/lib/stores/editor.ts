@@ -82,6 +82,7 @@ interface EditorState {
   setNextUpdateSource: (source: CodeUpdateSource) => void;
   consumeNextUpdateSource: () => CodeUpdateSource;
   addToHistory: (message: AgentMessage) => void;
+  updateMessage: (id: string, updates: Partial<AgentMessage>) => void;
   setConversationHistory: (history: AgentMessage[]) => void;
   clearHistory: () => void;
   reset: () => void;
@@ -228,5 +229,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
 
     return result;
+  },
+
+  updateMessage: (id: string, updates: Partial<AgentMessage>) => {
+    set(state => ({
+      conversationHistory: state.conversationHistory.map(msg =>
+        msg.id === id ? { ...msg, ...updates } : msg
+      ),
+    }));
   },
 }));

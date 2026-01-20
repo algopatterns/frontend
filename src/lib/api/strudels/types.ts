@@ -42,6 +42,7 @@ export interface AgentMessage {
   content: string;
   is_actionable?: boolean;
   is_code_response?: boolean;
+  is_streaming?: boolean; // true while streaming response is in progress
   clarifying_questions?: string[];
   strudel_references?: StrudelReference[];
   doc_references?: DocReference[];

@@ -20,6 +20,7 @@ export function AIMessage({ message, onApplyCode }: AIMessageProps) {
     role,
     content,
     is_code_response,
+    is_streaming,
     clarifying_questions,
     strudel_references,
     doc_references,
@@ -59,14 +60,23 @@ export function AIMessage({ message, onApplyCode }: AIMessageProps) {
     <div className="rounded-lg rounded-bl-none bg-muted/30 border border-muted/60 p-3">
         <div className="flex items-center gap-2 mb-2">
           <span className={`font-medium text-[12px] ${assistantColor}`}>Assistant</span>
-          {formattedTime && (
+          {formattedTime && !is_streaming && (
             <span className="text-muted-foreground/60 text-[10px]">{formattedTime}</span>
           )}
         </div>
 
+      {/* streaming indicator when no content yet */}
+      {is_streaming && !displayContent && (
+        <div className="flex items-center gap-1 text-muted-foreground/60 text-[13px]">
+          <span className="animate-pulse">●</span>
+          <span className="animate-pulse animation-delay-150">●</span>
+          <span className="animate-pulse animation-delay-300">●</span>
+        </div>
+      )}
+
       {displayContent && (
         <>
-          {is_code_response ? (
+          {is_code_response && !is_streaming ? (
             <>
               <Highlight
                 theme={themes.duotoneDark}
