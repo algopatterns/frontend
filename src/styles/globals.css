@@ -619,6 +619,11 @@ body {
   color: var(--foreground) !important;
 }
 
+/* dark theme: reset canvas filter */
+html.dark canvas {
+  filter: none !important;
+}
+
 /* blue theme: strudel drawings */
 html.blue canvas {
   filter: brightness(0.75) sepia(1) hue-rotate(180deg) saturate(4) !important;
