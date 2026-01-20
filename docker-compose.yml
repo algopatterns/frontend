@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: kadetxx/algojams-frontend:latest
+    image: kadetxx/algopatterns-frontend:latest
     ports:
       - '3000:3000'
     restart: unless-stopped

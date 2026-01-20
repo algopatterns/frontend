@@ -9,8 +9,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://algojams.cc"),
-  title: "Algojams",
+  metadataBase: new URL("https://algopatterns.cc"),
+  title: "Algopatterns",
   description: "Live code music with strudel and collaborate with friends in real time.",
   manifest: "/manifest.json",
   icons: {
@@ -21,23 +21,23 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "Algojams",
+    title: "Algopatterns",
     description: "Live code music with friends using strudel",
-    url: "https://algojams.cc",
-    siteName: "Algojams",
+    url: "https://algopatterns.cc",
+    siteName: "Algopatterns",
     images: [
       {
         url: "/site-banner.png",
         width: 1200,
         height: 630,
-        alt: "Algojams - Live code music with friends",
+        alt: "Algopatterns - Live code music with friends",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Algojams",
+    title: "Algopatterns",
     description: "Live code music with friends using strudel",
     images: ["/site-banner.png"],
   },

@@ -1,8 +1,8 @@
-# algojams frontend - agent context
+# algopatterns frontend - agent context
 
 ## Project Overview
 
-algojams is a live coding music platform where users create "strudels" (music patterns) with AI assistance. users can collaborate in real-time via WebSocket, with support for both anonymous and authenticated sessions.
+algopatterns is a live coding music platform where users create "strudels" (music patterns) with AI assistance. users can collaborate in real-time via WebSocket, with support for both anonymous and authenticated sessions.
 
 ## Tech Stack
 

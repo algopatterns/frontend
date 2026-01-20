@@ -1,17 +1,17 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Explore | Algojams',
-  description: 'Discover and fork live coding patterns created by the Algojams community. Find inspiration for your next musical creation.',
+  title: 'Explore | Algopatterns',
+  description: 'Discover and fork live coding patterns created by the Algopatterns community. Find inspiration for your next musical creation.',
   openGraph: {
-    title: 'Explore | Algojams',
-    description: 'Discover and fork live coding patterns created by the Algojams community.',
+    title: 'Explore | Algopatterns',
+    description: 'Discover and fork live coding patterns created by the Algopatterns community.',
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'Explore | Algojams',
-    description: 'Discover and fork live coding patterns created by the Algojams community.',
+    title: 'Explore | Algopatterns',
+    description: 'Discover and fork live coding patterns created by the Algopatterns community.',
   },
 };
 

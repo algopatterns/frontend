@@ -5,7 +5,7 @@ export const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
 
 export const STORAGE_KEYS = {
-  SESSION_ID: "algojams_session_id",
+  SESSION_ID: "algopatterns_session_id",
   REDIRECT_AFTER_LOGIN: "redirect_after_login",
 } as const;
 
@@ -24,7 +24,7 @@ export const RATE_LIMITS = {
 
 export const EDITOR = {
   MAX_CODE_SIZE_BYTES: 100 * 1024, // 100KB
-  DEFAULT_CODE: `// Welcome to Algojams!
+  DEFAULT_CODE: `// Welcome to Algopatterns!
 // Edit the code below and press play
 // Learn more at strudel.cc/learn
 

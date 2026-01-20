@@ -1,10 +1,10 @@
 import { STORAGE_KEYS } from '@/lib/constants';
 import type { AgentMessage, CCSignal, CCLicense } from '@/lib/api/strudels/types';
 
-const DRAFT_PREFIX = 'algojams_draft_';
-const CURRENT_DRAFT_ID_KEY = 'algojams_current_draft_id';
-const GOOD_VERSION_PREFIX = 'algojams_good_version_';
-const LOCAL_STRUDEL_PREFIX = 'algojams_local_strudel_';
+const DRAFT_PREFIX = 'algopatterns_draft_';
+const CURRENT_DRAFT_ID_KEY = 'algopatterns_current_draft_id';
+const GOOD_VERSION_PREFIX = 'algopatterns_good_version_';
+const LOCAL_STRUDEL_PREFIX = 'algopatterns_local_strudel_';
 
 export interface GoodVersion {
   code: string;
@@ -73,17 +73,17 @@ export const storage = {
   // stored in sessionStorage so it survives OAuth redirect but is ephemeral
   getPreviousSessionId: (): string | null => {
     if (typeof window === 'undefined') return null;
-    return sessionStorage.getItem('algojams_previous_session_id');
+    return sessionStorage.getItem('algopatterns_previous_session_id');
   },
 
   setPreviousSessionId: (sessionId: string): void => {
     if (typeof window === 'undefined') return;
-    sessionStorage.setItem('algojams_previous_session_id', sessionId);
+    sessionStorage.setItem('algopatterns_previous_session_id', sessionId);
   },
 
   clearPreviousSessionId: (): void => {
     if (typeof window === 'undefined') return;
-    sessionStorage.removeItem('algojams_previous_session_id');
+    sessionStorage.removeItem('algopatterns_previous_session_id');
   },
 
   // viewer/collaborator session - for reconnecting after refresh (within same browser session)
@@ -96,7 +96,7 @@ export const storage = {
       return null;
     }
 
-    const data = sessionStorage.getItem('algojams_viewer_session');
+    const data = sessionStorage.getItem('algopatterns_viewer_session');
 
     if (!data) {
       return null;
@@ -117,30 +117,30 @@ export const storage = {
     if (typeof window === 'undefined') return;
 
     sessionStorage.setItem(
-      'algojams_viewer_session',
+      'algopatterns_viewer_session',
       JSON.stringify({ sessionId, inviteToken, displayName })
     );
   },
 
   clearViewerSession: (): void => {
     if (typeof window === 'undefined') return;
-    sessionStorage.removeItem('algojams_viewer_session');
+    sessionStorage.removeItem('algopatterns_viewer_session');
   },
 
   // current strudel being edited - per tab, survives refresh
   getCurrentStrudelId: (): string | null => {
     if (typeof window === 'undefined') return null;
-    return sessionStorage.getItem('algojams_current_strudel_id');
+    return sessionStorage.getItem('algopatterns_current_strudel_id');
   },
 
   setCurrentStrudelId: (id: string): void => {
     if (typeof window === 'undefined') return;
-    sessionStorage.setItem('algojams_current_strudel_id', id);
+    sessionStorage.setItem('algopatterns_current_strudel_id', id);
   },
 
   clearCurrentStrudelId: (): void => {
     if (typeof window === 'undefined') return;
-    sessionStorage.removeItem('algojams_current_strudel_id');
+    sessionStorage.removeItem('algopatterns_current_strudel_id');
   },
 
   // draft system - for preserving unsaved work

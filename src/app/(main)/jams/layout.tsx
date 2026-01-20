@@ -1,16 +1,16 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Jams | Algojams',
-  description: 'Join live coding sessions and create music together in real-time. Experience collaborative algojams performances.',
+  title: 'Jams | Algopatterns',
+  description: 'Join live coding sessions and create music together in real-time. Experience collaborative algopatterns performances.',
   openGraph: {
-    title: 'Jams | Algojams',
+    title: 'Jams | Algopatterns',
     description: 'Join live coding sessions and create music together in real-time.',
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'Jams | Algojams',
+    title: 'Jams | Algopatterns',
     description: 'Join live coding sessions and create music together in real-time.',
   },
 };

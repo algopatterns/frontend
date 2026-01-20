@@ -21,7 +21,7 @@ export function Providers({ children }: { children: ReactNode }) {
       attribute="class"
       defaultTheme="dark"
       themes={['dark', 'light', 'blue', 'pink']}
-      storageKey="algojams-theme"
+      storageKey="algopatterns-theme"
       disableTransitionOnChange
     >
       <QueryProvider>

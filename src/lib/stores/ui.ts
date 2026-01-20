@@ -47,7 +47,7 @@ interface UIState {
 }
 
 // localStorage key for desktop sidebar preference
-const DESKTOP_SIDEBAR_KEY = 'algojams_desktop_sidebar_open';
+const DESKTOP_SIDEBAR_KEY = 'algopatterns_desktop_sidebar_open';
 
 const getDesktopSidebarPreference = (): boolean => {
   if (typeof window === 'undefined') return true;

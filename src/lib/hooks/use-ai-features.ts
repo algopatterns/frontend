@@ -4,8 +4,8 @@ import { useSyncExternalStore } from "react";
 import { useAuth } from "./use-auth";
 import { getBYOKApiKey } from "@/components/shared/settings-modal/hooks";
 
-const AI_DISABLED_KEY = "algojams_ai_disabled";
-const BYOK_API_KEY = "algojams_byok_api_key";
+const AI_DISABLED_KEY = "algopatterns_ai_disabled";
+const BYOK_API_KEY = "algopatterns_byok_api_key";
 
 // NOTE: Free AI tier is currently disabled. Users must provide their own API key (BYOK).
 // To re-enable free tier, remove the hasBYOKKey check below.

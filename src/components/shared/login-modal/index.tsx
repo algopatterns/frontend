@@ -17,7 +17,7 @@ export function LoginModal() {
     <Dialog open={isLoginModalOpen} onOpenChange={setLoginModalOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sign in to Algojams</DialogTitle>
+          <DialogTitle>Sign in to Algopatterns</DialogTitle>
           <DialogDescription>
             Sign in to save your strudels, join live sessions, and more.
           </DialogDescription>

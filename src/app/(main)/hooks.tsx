@@ -68,9 +68,9 @@ export const useEditor = ({
   // update document title when strudel title changes
   useEffect(() => {
     if (currentStrudelTitle) {
-      document.title = `${currentStrudelTitle} | Algojams`;
+      document.title = `${currentStrudelTitle} | Algopatterns`;
     } else {
-      document.title = 'Algojams';
+      document.title = 'Algopatterns';
     }
   }, [currentStrudelTitle]);
 
