@@ -19,7 +19,8 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="dark"
+      defaultTheme="blue"
+      themes={['dark', 'light', 'blue', 'pink']}
       storageKey="algojams-theme"
       disableTransitionOnChange
     >

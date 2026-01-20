@@ -12,7 +12,7 @@ export function SaveIndicator({ status }: { status: SaveStatus }) {
     return <Cloud className="h-4 w-4 text-yellow-500" />;
   }
 
-  return <Cloud className="h-4 w-4 text-green-500" />;
+  return <Cloud className="h-4 w-4 text-green-500 save-indicator-saved" />;
 }
 
 export function ConnectionIndicator({

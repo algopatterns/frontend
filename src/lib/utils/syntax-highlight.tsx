@@ -1,24 +1,17 @@
 import React from 'react';
 
-// strudel theme colors
-export const STRUDEL_COLORS = {
-  grey: '#7c859a',    // comments, brackets
-  purple: '#c792ea',  // function names
-  blue: '#7fc9e6',    // $:, /, ., ,
-  green: '#b8dd87',   // everything else (strings, numbers, identifiers)
-};
-
 // simple syntax highlighter matching strudel's 4-color scheme
+// uses CSS classes so themes can override colors
 export function highlightStrudelCode(code: string): React.ReactNode[] {
   const tokens: React.ReactNode[] = [];
   let i = 0;
   let key = 0;
 
   while (i < code.length) {
-    // check for $: pattern - light blue
+    // check for $: pattern
     if (code[i] === '$' && code[i + 1] === ':') {
       tokens.push(
-        <span key={key++} style={{ color: STRUDEL_COLORS.blue }}>
+        <span key={key++} className="syntax-blue">
           $:
         </span>
       );
@@ -26,12 +19,12 @@ export function highlightStrudelCode(code: string): React.ReactNode[] {
       continue;
     }
 
-    // check for comments - grey
+    // check for comments
     if (code[i] === '/' && code[i + 1] === '/') {
       let end = i;
       while (end < code.length && code[end] !== '\n') end++;
       tokens.push(
-        <span key={key++} style={{ color: STRUDEL_COLORS.grey }}>
+        <span key={key++} className="syntax-grey">
           {code.slice(i, end)}
         </span>
       );
@@ -39,10 +32,10 @@ export function highlightStrudelCode(code: string): React.ReactNode[] {
       continue;
     }
 
-    // check for brackets - grey
+    // check for brackets
     if (/[()[\]{}]/.test(code[i])) {
       tokens.push(
-        <span key={key++} style={{ color: STRUDEL_COLORS.grey }}>
+        <span key={key++} className="syntax-grey">
           {code[i]}
         </span>
       );
@@ -50,10 +43,10 @@ export function highlightStrudelCode(code: string): React.ReactNode[] {
       continue;
     }
 
-    // check for /, ., , - light blue
+    // check for /, ., ,
     if (code[i] === '/' || code[i] === '.' || code[i] === ',') {
       tokens.push(
-        <span key={key++} style={{ color: STRUDEL_COLORS.blue }}>
+        <span key={key++} className="syntax-blue">
           {code[i]}
         </span>
       );
@@ -61,7 +54,7 @@ export function highlightStrudelCode(code: string): React.ReactNode[] {
       continue;
     }
 
-    // check for function/method names (word followed by open paren) - purple
+    // check for function/method names (word followed by open paren)
     if (/[a-zA-Z_$]/.test(code[i])) {
       let end = i;
       while (end < code.length && /[a-zA-Z0-9_$]/.test(code[end])) end++;
@@ -70,14 +63,14 @@ export function highlightStrudelCode(code: string): React.ReactNode[] {
       // check if followed by ( - it's a function call
       if (code[end] === '(') {
         tokens.push(
-          <span key={key++} style={{ color: STRUDEL_COLORS.purple }}>
+          <span key={key++} className="syntax-purple">
             {word}
           </span>
         );
       } else {
-        // regular identifier - green
+        // regular identifier
         tokens.push(
-          <span key={key++} style={{ color: STRUDEL_COLORS.green }}>
+          <span key={key++} className="syntax-green">
             {word}
           </span>
         );
@@ -86,7 +79,7 @@ export function highlightStrudelCode(code: string): React.ReactNode[] {
       continue;
     }
 
-    // strings - green
+    // strings
     if (code[i] === '"' || code[i] === "'" || code[i] === '`') {
       const quote = code[i];
       let end = i + 1;
@@ -96,7 +89,7 @@ export function highlightStrudelCode(code: string): React.ReactNode[] {
       }
       end++;
       tokens.push(
-        <span key={key++} style={{ color: STRUDEL_COLORS.green }}>
+        <span key={key++} className="syntax-green">
           {code.slice(i, end)}
         </span>
       );
@@ -104,12 +97,12 @@ export function highlightStrudelCode(code: string): React.ReactNode[] {
       continue;
     }
 
-    // numbers - green
+    // numbers
     if (/\d/.test(code[i])) {
       let end = i;
       while (end < code.length && /[\d.]/.test(code[end])) end++;
       tokens.push(
-        <span key={key++} style={{ color: STRUDEL_COLORS.green }}>
+        <span key={key++} className="syntax-green">
           {code.slice(i, end)}
         </span>
       );
@@ -117,9 +110,9 @@ export function highlightStrudelCode(code: string): React.ReactNode[] {
       continue;
     }
 
-    // everything else (operators, whitespace, etc.) - green
+    // everything else (operators, whitespace, etc.)
     tokens.push(
-      <span key={key++} style={{ color: STRUDEL_COLORS.green }}>
+      <span key={key++} className="syntax-green">
         {code[i]}
       </span>
     );

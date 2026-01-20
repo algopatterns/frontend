@@ -17,7 +17,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, BotMessageSquare, User, Key } from 'lucide-react';
+import { Settings, BotMessageSquare, User, Key, Palette } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useSettingsModal, getAnonDisplayName, getBYOKProvider, getBYOKApiKey, type BYOKProvider } from './hooks';
 
 export { getAnonDisplayName, getBYOKProvider, getBYOKApiKey, type BYOKProvider } from './hooks';
@@ -35,6 +36,7 @@ export function SettingsModal() {
     handleBYOKApiKeyChange,
     byokApiKey,
   } = useSettingsModal();
+  const { theme, setTheme } = useTheme();
 
   return (
     <Dialog open={isSettingsModalOpen} onOpenChange={handleOpenChange}>
@@ -67,12 +69,7 @@ export function SettingsModal() {
                     maxLength={50}
                   />
                 </div>
-                <div className="pt-2 border-t border-dashed text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Sign in for more profile options
-                  </p>
-                </div>
-              </div>
+                              </div>
             </div>
           )}
 
@@ -102,6 +99,28 @@ export function SettingsModal() {
               </div>
             </div>
           )}
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Appearance
+            </h3>
+            <div className="space-y-4 rounded-lg border p-4">
+              <div className="space-y-2">
+                <Label htmlFor="theme-select">Theme</Label>
+                <Select value={theme} onValueChange={setTheme}>
+                  <SelectTrigger id="theme-select" className="w-full">
+                    <SelectValue placeholder="Select theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dark">Default</SelectItem>
+                    <SelectItem value="blue">Blue</SelectItem>
+                    <SelectItem value="pink">Pink</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium flex items-center gap-2">
@@ -157,7 +176,7 @@ export function SettingsModal() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Key is stored locally and sent directly to the provider. Unlimited usage when using your own key.
+                  Stored securely in your browser. Requests go directly to the provider.
                 </p>
               </div>
             </div>

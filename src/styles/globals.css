@@ -92,6 +92,93 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  /* syntax highlighting colors */
+  --syntax-grey: #7c859a;
+  --syntax-purple: #c792ea;
+  --syntax-blue: #7fc9e6;
+  --syntax-green: #b8dd87;
+}
+
+/* blue theme - minimalist monochrome */
+.blue body {
+  color-scheme: dark;
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.75 0.1 220);
+  --card: oklch(0.05 0 0);
+  --card-foreground: oklch(0.75 0.1 220);
+  --card-border: oklch(0.2 0.05 220);
+  --popover: oklch(0.05 0 0);
+  --popover-foreground: oklch(0.75 0.1 220);
+  --primary: oklch(0.75 0.1 220);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.1 0.02 220);
+  --secondary-foreground: oklch(0.75 0.1 220);
+  --muted: oklch(0.1 0.02 220);
+  --muted-foreground: oklch(0.55 0.07 220);
+  --accent: oklch(0.15 0.03 220);
+  --accent-foreground: oklch(0.75 0.1 220);
+  --destructive: oklch(0.6 0.15 220);
+  --border: oklch(0.25 0.05 220);
+  --input: oklch(0.2 0.04 220);
+  --ring: oklch(0.55 0.07 220);
+  --chart-1: oklch(0.75 0.1 220);
+  --chart-2: oklch(0.65 0.08 220);
+  --chart-3: oklch(0.55 0.06 220);
+  --chart-4: oklch(0.45 0.04 220);
+  --chart-5: oklch(0.35 0.02 220);
+  --sidebar: oklch(0 0 0);
+  --sidebar-foreground: oklch(0.75 0.1 220);
+  --sidebar-primary: oklch(0.75 0.1 220);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.1 0.02 220);
+  --sidebar-accent-foreground: oklch(0.75 0.1 220);
+  --sidebar-border: oklch(0.25 0.05 220);
+  --sidebar-ring: oklch(0.55 0.07 220);
+  /* syntax highlighting - single color */
+  --syntax-default: oklch(0.75 0.1 220);
+  --syntax-muted: oklch(0.55 0.07 220);
+  --syntax-bright: oklch(0.85 0.12 220);
+}
+
+/* pink theme - minimalist monochrome */
+.pink body {
+  color-scheme: dark;
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.65 0.14 350);
+  --card: oklch(0.05 0 0);
+  --card-foreground: oklch(0.65 0.14 350);
+  --card-border: oklch(0.2 0.08 350);
+  --popover: oklch(0.05 0 0);
+  --popover-foreground: oklch(0.65 0.14 350);
+  --primary: oklch(0.65 0.14 350);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.1 0.03 350);
+  --secondary-foreground: oklch(0.65 0.14 350);
+  --muted: oklch(0.1 0.03 350);
+  --muted-foreground: oklch(0.45 0.09 350);
+  --accent: oklch(0.15 0.05 350);
+  --accent-foreground: oklch(0.65 0.14 350);
+  --destructive: oklch(0.6 0.15 350);
+  --border: oklch(0.25 0.08 350);
+  --input: oklch(0.2 0.06 350);
+  --ring: oklch(0.45 0.09 350);
+  --chart-1: oklch(0.65 0.14 350);
+  --chart-2: oklch(0.55 0.11 350);
+  --chart-3: oklch(0.45 0.08 350);
+  --chart-4: oklch(0.35 0.05 350);
+  --chart-5: oklch(0.25 0.02 350);
+  --sidebar: oklch(0 0 0);
+  --sidebar-foreground: oklch(0.65 0.14 350);
+  --sidebar-primary: oklch(0.65 0.14 350);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.1 0.03 350);
+  --sidebar-accent-foreground: oklch(0.65 0.14 350);
+  --sidebar-border: oklch(0.25 0.08 350);
+  --sidebar-ring: oklch(0.45 0.09 350);
+  /* syntax highlighting - single color */
+  --syntax-default: oklch(0.65 0.14 350);
+  --syntax-muted: oklch(0.45 0.09 350);
+  --syntax-bright: oklch(0.75 0.17 350);
 }
 
 /* light theme */
@@ -129,6 +216,11 @@ body {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* syntax highlighting colors */
+  --syntax-grey: #6b7280;
+  --syntax-purple: #9333ea;
+  --syntax-blue: #0891b2;
+  --syntax-green: #16a34a;
 }
 
 @layer base {
@@ -417,5 +509,199 @@ body {
   word-break: break-word !important;
   margin: 0.1rem 0 !important;
   display: block !important;
+}
+
+/* syntax highlighting classes */
+.syntax-grey { color: var(--syntax-grey); }
+.syntax-purple { color: var(--syntax-purple); }
+.syntax-blue { color: var(--syntax-blue); }
+.syntax-green { color: var(--syntax-green); }
+
+/* blue theme: monochrome syntax */
+.blue .syntax-grey { color: var(--syntax-muted); }
+.blue .syntax-purple { color: var(--syntax-bright); }
+.blue .syntax-blue { color: var(--syntax-default); }
+.blue .syntax-green { color: var(--syntax-default); }
+
+/* blue theme: codemirror editor syntax highlighting */
+.blue .cm-editor .cm-content {
+  color: var(--syntax-default) !important;
+  caret-color: var(--syntax-default) !important;
+}
+
+.blue .cm-editor .cm-cursor {
+  border-left-color: var(--syntax-default) !important;
+}
+
+.blue .cm-editor .cm-selectionBackground,
+.blue .cm-editor .cm-content ::selection {
+  background: oklch(0.75 0.1 220 / 20%) !important;
+}
+
+.blue .cm-editor .cm-activeLine {
+  background: oklch(0.75 0.1 220 / 5%) !important;
+}
+
+.blue .cm-editor .cm-gutters {
+  background: #000 !important;
+  color: var(--syntax-muted) !important;
+  border-right-color: oklch(0.75 0.1 220 / 20%) !important;
+}
+
+.blue .cm-editor .cm-activeLineGutter {
+  background: oklch(0.75 0.1 220 / 10%) !important;
+}
+
+/* blue theme: autocomplete tooltip colors */
+.blue .cm-tooltip.cm-tooltip-autocomplete {
+  background: #000 !important;
+  border-color: oklch(0.75 0.1 220 / 30%) !important;
+}
+
+.blue .cm-tooltip-autocomplete > ul > li {
+  color: var(--syntax-default) !important;
+}
+
+.blue .cm-tooltip-autocomplete > ul > li[aria-selected="true"] {
+  background: oklch(0.75 0.1 220 / 15%) !important;
+}
+
+.blue .cm-tooltip.cm-completionInfo,
+.blue .cm-tooltip-hover {
+  background: #000 !important;
+  border-color: oklch(0.75 0.1 220 / 30%) !important;
+  color: var(--syntax-default) !important;
+}
+
+.blue .cm-completionInfo .autocomplete-info-function-name,
+.blue .cm-tooltip-hover .autocomplete-info-function-name {
+  color: var(--syntax-default) !important;
+}
+
+.blue .cm-completionInfo .autocomplete-info-function-synonyms,
+.blue .cm-completionInfo .autocomplete-info-section-title,
+.blue .cm-completionInfo .autocomplete-info-param-type,
+.blue .cm-completionInfo .autocomplete-info-param-desc,
+.blue .cm-tooltip-hover .autocomplete-info-function-synonyms,
+.blue .cm-tooltip-hover .autocomplete-info-section-title,
+.blue .cm-tooltip-hover .autocomplete-info-param-type,
+.blue .cm-tooltip-hover .autocomplete-info-param-desc {
+  color: var(--syntax-muted) !important;
+}
+
+.blue .cm-completionInfo .autocomplete-info-function-description code,
+.blue .cm-completionInfo .autocomplete-info-example-code,
+.blue .cm-tooltip-hover .autocomplete-info-function-description code,
+.blue .cm-tooltip-hover .autocomplete-info-example-code {
+  background: oklch(0.75 0.1 220 / 10%) !important;
+  color: var(--syntax-default) !important;
+}
+
+/* blue theme: save indicator */
+.blue .save-indicator-saved {
+  color: var(--syntax-default) !important;
+}
+
+/* blue theme: force all editor text to be blue (catch-all) */
+.blue .cm-editor .cm-line,
+.blue .cm-editor .cm-line * {
+  color: var(--syntax-default) !important;
+}
+
+/* blue theme: comments specifically muted (ͼ13 is CodeMirror's comment class) */
+.blue .cm-editor .cm-line .ͼ13,
+.blue .cm-editor .cm-line span.ͼ13 {
+  color: var(--syntax-muted) !important;
+}
+
+/* pink theme: codemirror editor syntax highlighting */
+.pink .cm-editor .cm-content {
+  color: var(--syntax-default) !important;
+  caret-color: var(--syntax-default) !important;
+}
+
+.pink .cm-editor .cm-cursor {
+  border-left-color: var(--syntax-default) !important;
+}
+
+.pink .cm-editor .cm-selectionBackground,
+.pink .cm-editor .cm-content ::selection {
+  background: oklch(0.75 0.15 350 / 20%) !important;
+}
+
+.pink .cm-editor .cm-activeLine {
+  background: oklch(0.75 0.15 350 / 5%) !important;
+}
+
+.pink .cm-editor .cm-gutters {
+  background: #000 !important;
+  color: var(--syntax-muted) !important;
+  border-right-color: oklch(0.75 0.15 350 / 20%) !important;
+}
+
+.pink .cm-editor .cm-activeLineGutter {
+  background: oklch(0.75 0.15 350 / 10%) !important;
+}
+
+/* pink theme: force all editor text to be pink */
+.pink .cm-editor .cm-line,
+.pink .cm-editor .cm-line * {
+  color: var(--syntax-default) !important;
+}
+
+/* pink theme: comments muted */
+.pink .cm-editor .cm-line .ͼ13,
+.pink .cm-editor .cm-line span.ͼ13 {
+  color: var(--syntax-muted) !important;
+}
+
+/* pink theme: save indicator */
+.pink .save-indicator-saved {
+  color: var(--syntax-default) !important;
+}
+
+/* pink theme: autocomplete tooltip colors */
+.pink .cm-tooltip.cm-tooltip-autocomplete {
+  background: #000 !important;
+  border-color: oklch(0.75 0.15 350 / 30%) !important;
+}
+
+.pink .cm-tooltip-autocomplete > ul > li {
+  color: var(--syntax-default) !important;
+}
+
+.pink .cm-tooltip-autocomplete > ul > li[aria-selected="true"] {
+  background: oklch(0.75 0.15 350 / 15%) !important;
+}
+
+.pink .cm-tooltip.cm-completionInfo,
+.pink .cm-tooltip-hover {
+  background: #000 !important;
+  border-color: oklch(0.75 0.15 350 / 30%) !important;
+  color: var(--syntax-default) !important;
+}
+
+.pink .cm-completionInfo .autocomplete-info-function-name,
+.pink .cm-tooltip-hover .autocomplete-info-function-name {
+  color: var(--syntax-default) !important;
+}
+
+.pink .cm-completionInfo .autocomplete-info-function-synonyms,
+.pink .cm-completionInfo .autocomplete-info-section-title,
+.pink .cm-completionInfo .autocomplete-info-param-type,
+.pink .cm-completionInfo .autocomplete-info-param-desc,
+.pink .cm-tooltip-hover .autocomplete-info-function-synonyms,
+.pink .cm-tooltip-hover .autocomplete-info-section-title,
+.pink .cm-tooltip-hover .autocomplete-info-param-type,
+.pink .cm-tooltip-hover .autocomplete-info-param-desc {
+  color: var(--syntax-muted) !important;
+}
+
+.pink .cm-completionInfo .autocomplete-info-function-description code,
+.pink .cm-completionInfo .autocomplete-info-example-code,
+.pink .cm-tooltip-hover .autocomplete-info-function-description code,
+.pink .cm-tooltip-hover .autocomplete-info-example-code {
+  background: oklch(0.75 0.15 350 / 10%) !important;
+  color: var(--syntax-default) !important;
 }
 
