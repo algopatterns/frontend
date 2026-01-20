@@ -1,13 +1,31 @@
 import { STORAGE_KEYS } from '@/lib/constants';
-import type { AgentMessage, CCSignal } from '@/lib/api/strudels/types';
+import type { AgentMessage, CCSignal, CCLicense } from '@/lib/api/strudels/types';
 
 const DRAFT_PREFIX = 'algojams_draft_';
 const CURRENT_DRAFT_ID_KEY = 'algojams_current_draft_id';
 const GOOD_VERSION_PREFIX = 'algojams_good_version_';
+const LOCAL_STRUDEL_PREFIX = 'algojams_local_strudel_';
 
 export interface GoodVersion {
   code: string;
   timestamp: number;
+}
+
+// local strudel - saved strudel for anonymous users (stored in localStorage)
+export interface LocalStrudel {
+  id: string;
+  title: string;
+  code: string;
+  description?: string;
+  tags: string[];
+  is_public: boolean;
+  license?: CCLicense | null;
+  cc_signal?: CCSignal | null;
+  forked_from?: string;
+  parent_cc_signal?: CCSignal | null;
+  conversation_history: AgentMessage[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Draft {
@@ -215,5 +233,74 @@ export const storage = {
   clearGoodVersion: (strudelId: string): void => {
     if (typeof window === 'undefined') return;
     localStorage.removeItem(`${GOOD_VERSION_PREFIX}${strudelId}`);
+  },
+
+  // local strudels - saved strudels for anonymous users
+  getLocalStrudel: (id: string): LocalStrudel | null => {
+    if (typeof window === 'undefined') return null;
+    const data = localStorage.getItem(`${LOCAL_STRUDEL_PREFIX}${id}`);
+    if (!data) return null;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
+  },
+
+  setLocalStrudel: (strudel: LocalStrudel): void => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(`${LOCAL_STRUDEL_PREFIX}${strudel.id}`, JSON.stringify(strudel));
+  },
+
+  deleteLocalStrudel: (id: string): void => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(`${LOCAL_STRUDEL_PREFIX}${id}`);
+    // also clear good version if exists
+    localStorage.removeItem(`${GOOD_VERSION_PREFIX}${id}`);
+  },
+
+  getAllLocalStrudels: (): LocalStrudel[] => {
+    if (typeof window === 'undefined') return [];
+    const strudels: LocalStrudel[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(LOCAL_STRUDEL_PREFIX)) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            strudels.push(JSON.parse(data));
+          } catch {
+            // skip invalid entries
+          }
+        }
+      }
+    }
+    return strudels.sort((a, b) =>
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    );
+  },
+
+  generateLocalStrudelId: (): string => {
+    return `local_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  },
+
+  // convert draft to local strudel (for saving)
+  draftToLocalStrudel: (draft: Draft, title: string): LocalStrudel => {
+    const now = new Date().toISOString();
+    return {
+      id: storage.generateLocalStrudelId(),
+      title,
+      code: draft.code,
+      description: '',
+      tags: [],
+      is_public: false,
+      license: null,
+      cc_signal: null,
+      forked_from: draft.forkedFromId,
+      parent_cc_signal: draft.parentCCSignal,
+      conversation_history: draft.conversationHistory,
+      created_at: now,
+      updated_at: now,
+    };
   },
 };

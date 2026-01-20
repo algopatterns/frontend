@@ -1,44 +1,55 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useEditorStore } from "@/lib/stores/editor";
-import { useAuthStore } from "@/lib/stores/auth";
-import { useUIStore } from "@/lib/stores/ui";
-import { useUpdateStrudel } from "@/lib/hooks/use-strudels";
-import { storage, type GoodVersion } from "@/lib/utils/storage";
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEditorStore } from '@/lib/stores/editor';
+import { useAuthStore } from '@/lib/stores/auth';
+import { useUIStore } from '@/lib/stores/ui';
+import { useUpdateStrudel } from '@/lib/hooks/use-strudels';
+import { storage, type GoodVersion } from '@/lib/utils/storage';
 
-type SaveStatus = "saved" | "saving" | "unsaved";
+type SaveStatus = 'saved' | 'saving' | 'unsaved';
 
 const AUTOSAVE_DEBOUNCE_MS = 10000;
 
+// check if a strudel ID is a local strudel
+function isLocalStrudelId(id: string | null): boolean {
+  return !!id && id.startsWith('local_');
+}
+
 export function useAutosave() {
-  const { isDirty, code, conversationHistory, currentStrudelId, markSaved, setCode } = useEditorStore();
+  const { isDirty, code, conversationHistory, currentStrudelId, markSaved, setCode } =
+    useEditorStore();
   const { token } = useAuthStore();
-  const { setLoginModalOpen, setSaveStrudelDialogOpen } = useUIStore();
+  const { setSaveStrudelDialogOpen } = useUIStore();
   const updateStrudel = useUpdateStrudel();
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAuthenticated = !!token;
   const hasStrudel = !!currentStrudelId;
+  const isLocalStrudel = isLocalStrudelId(currentStrudelId);
 
-  // Determine save status
+  // determine save status
   const getSaveStatus = useCallback((): SaveStatus => {
-    if (isSaving) return "saving";
-    if (!isAuthenticated) return "unsaved"; // Always show unsaved for anonymous
-    if (!hasStrudel) return "unsaved"; // No strudel saved yet
-    if (isDirty) return "unsaved";
-    return "saved";
-  }, [isSaving, isAuthenticated, hasStrudel, isDirty]);
+    if (isSaving) return 'saving';
+    // local strudels: check dirty state
+    if (isLocalStrudel) {
+      return isDirty ? 'unsaved' : 'saved';
+    }
+    if (!isAuthenticated) return 'unsaved'; // no strudel saved yet for anon
+    if (!hasStrudel) return 'unsaved'; // no strudel saved yet
+    if (isDirty) return 'unsaved';
+    return 'saved';
+  }, [isSaving, isAuthenticated, hasStrudel, isDirty, isLocalStrudel]);
 
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(getSaveStatus);
 
-  // Update save status when dependencies change
+  // update save status when dependencies change
   useEffect(() => {
     setSaveStatus(getSaveStatus());
   }, [getSaveStatus]);
 
-  // Set initial good version when loading a strudel (if none exists)
+  // set initial good version when loading a strudel (if none exists)
   useEffect(() => {
     if (!currentStrudelId || !code) return;
 
@@ -47,20 +58,21 @@ export function useAutosave() {
       // first time loading this strudel - set current code as good version
       storage.setGoodVersion(currentStrudelId, code);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStrudelId]); // only on strudel change, not code change
 
-  // Autosave for authenticated users with an existing strudel
+  // Autosave for authenticated users with an existing cloud strudel
   useEffect(() => {
-    if (!isAuthenticated || !hasStrudel || !isDirty) {
+    if (!isAuthenticated || !hasStrudel || !isDirty || isLocalStrudel) {
       return;
     }
 
-    // Clear any pending save
+    // clear any pending save
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Debounce the autosave
+    // debounce the autosave
     saveTimeoutRef.current = setTimeout(async () => {
       setIsSaving(true);
       try {
@@ -69,7 +81,7 @@ export function useAutosave() {
           data: {
             code,
             conversation_history: conversationHistory.map(h => ({
-              role: h.role as "user" | "assistant",
+              role: h.role as 'user' | 'assistant',
               content: h.content,
               is_actionable: h.is_actionable,
               is_code_response: h.is_code_response,
@@ -81,7 +93,7 @@ export function useAutosave() {
         });
         markSaved();
       } catch (error) {
-        console.error("Autosave failed:", error);
+        console.error('Autosave failed:', error);
       } finally {
         setIsSaving(false);
       }
@@ -92,13 +104,107 @@ export function useAutosave() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [isAuthenticated, hasStrudel, isDirty, currentStrudelId, code, conversationHistory, markSaved, updateStrudel]);
+  }, [
+    isAuthenticated,
+    hasStrudel,
+    isDirty,
+    isLocalStrudel,
+    currentStrudelId,
+    code,
+    conversationHistory,
+    markSaved,
+    updateStrudel,
+  ]);
 
-  // Handle manual save click
+  // autosave for local strudels (anonymous users)
+  useEffect(() => {
+    if (!isLocalStrudel || !isDirty || !currentStrudelId) {
+      return;
+    }
+
+    // clear any pending save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // debounce the autosave
+    saveTimeoutRef.current = setTimeout(() => {
+      setIsSaving(true);
+      try {
+        const existingStrudel = storage.getLocalStrudel(currentStrudelId);
+        if (existingStrudel) {
+          storage.setLocalStrudel({
+            ...existingStrudel,
+            code,
+            conversation_history: conversationHistory.map(h => ({
+              role: h.role as 'user' | 'assistant',
+              content: h.content,
+              is_actionable: h.is_actionable,
+              is_code_response: h.is_code_response,
+              clarifying_questions: h.clarifying_questions,
+              strudel_references: h.strudel_references,
+              doc_references: h.doc_references,
+            })),
+            updated_at: new Date().toISOString(),
+          });
+          markSaved();
+        }
+      } catch (error) {
+        console.error('Local autosave failed:', error);
+      } finally {
+        setIsSaving(false);
+      }
+    }, AUTOSAVE_DEBOUNCE_MS);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [isLocalStrudel, isDirty, currentStrudelId, code, conversationHistory, markSaved]);
+
+  // handle manual save click
   const handleSave = useCallback(async () => {
+    // for local strudels, save immediately to localStorage
+    if (isLocalStrudel && currentStrudelId) {
+      // clear any pending autosave
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      setIsSaving(true);
+      try {
+        const existingStrudel = storage.getLocalStrudel(currentStrudelId);
+        if (existingStrudel) {
+          storage.setLocalStrudel({
+            ...existingStrudel,
+            code,
+            conversation_history: conversationHistory.map(h => ({
+              role: h.role as 'user' | 'assistant',
+              content: h.content,
+              is_actionable: h.is_actionable,
+              is_code_response: h.is_code_response,
+              clarifying_questions: h.clarifying_questions,
+              strudel_references: h.strudel_references,
+              doc_references: h.doc_references,
+            })),
+            updated_at: new Date().toISOString(),
+          });
+          // manual save = mark this as "good version" checkpoint
+          storage.setGoodVersion(currentStrudelId, code);
+          markSaved();
+        }
+      } catch (error) {
+        console.error('Local save failed:', error);
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
     if (!isAuthenticated) {
-      // Prompt login for anonymous users
-      setLoginModalOpen(true);
+      // o strudel yet for anonymous users - open save dialog
+      setSaveStrudelDialogOpen(true);
       return;
     }
 
@@ -121,7 +227,7 @@ export function useAutosave() {
         data: {
           code,
           conversation_history: conversationHistory.map(h => ({
-            role: h.role as "user" | "assistant",
+            role: h.role as 'user' | 'assistant',
             content: h.content,
             is_actionable: h.is_actionable,
             is_code_response: h.is_code_response,
@@ -135,11 +241,21 @@ export function useAutosave() {
       storage.setGoodVersion(currentStrudelId, code);
       markSaved();
     } catch (error) {
-      console.error("Save failed:", error);
+      console.error('Save failed:', error);
     } finally {
       setIsSaving(false);
     }
-  }, [isAuthenticated, hasStrudel, currentStrudelId, code, conversationHistory, setLoginModalOpen, setSaveStrudelDialogOpen, markSaved, updateStrudel]);
+  }, [
+    isAuthenticated,
+    hasStrudel,
+    isLocalStrudel,
+    currentStrudelId,
+    code,
+    conversationHistory,
+    setSaveStrudelDialogOpen,
+    markSaved,
+    updateStrudel,
+  ]);
 
   // get good version for current strudel
   const getGoodVersion = useCallback((): GoodVersion | null => {

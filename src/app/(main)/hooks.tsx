@@ -161,12 +161,16 @@ export const useEditor = ({
     // note: unsaved drafts are accessed via /drafts page, not auto-restored
   }, [strudelId, forkStrudelId, urlSessionId, urlInviteToken, router]);
 
+  // check if loading a local strudel (for anon users)
+  const isLocalStrudelId = strudelId?.startsWith('local_') ?? false;
+
   // fetch strudel for edit mode (requires auth - user's own strudel)
+  // skip API call for local strudels
   const {
     data: ownStrudel,
     isLoading: isLoadingOwnStrudel,
     error: ownStrudelError,
-  } = useStrudel(strudelId || '');
+  } = useStrudel(isLocalStrudelId ? '' : (strudelId || ''));
 
   // fetch strudel for fork mode (public endpoint - no auth required)
   const {
@@ -177,10 +181,62 @@ export const useEditor = ({
 
   const isLoadingStrudel = isLoadingOwnStrudel || isLoadingPublicStrudel;
 
+  // handle local strudel loading (for anon users)
+  useEffect(() => {
+    if (!strudelId || !isLocalStrudelId) {
+      return;
+    }
+
+    // already loaded this strudel
+    if (loadedStrudelIdRef.current === strudelId) {
+      return;
+    }
+
+    const localStrudel = storage.getLocalStrudel(strudelId);
+    if (!localStrudel) {
+      toast.error('Local strudel not found');
+      router.replace('/');
+      return;
+    }
+
+    loadedStrudelIdRef.current = strudelId;
+
+    // set code and conversation history from local strudel
+    setCode(localStrudel.code, true);
+    setConversationHistory(localStrudel.conversation_history || []);
+
+    // set strudel metadata
+    setCurrentStrudel(localStrudel.id, localStrudel.title);
+
+    // set fork info if this strudel was forked
+    if (localStrudel.forked_from) {
+      setForkedFromId(localStrudel.forked_from);
+      setParentCCSignal(localStrudel.parent_cc_signal ?? null);
+    }
+
+    markSaved();
+
+    // sync code to WebSocket session
+    wsClient.onceConnected(() => {
+      wsClient.sendCodeUpdate(localStrudel.code, undefined, undefined, 'loaded_strudel');
+    });
+  }, [
+    strudelId,
+    isLocalStrudelId,
+    router,
+    setCode,
+    setConversationHistory,
+    setCurrentStrudel,
+    setForkedFromId,
+    setParentCCSignal,
+    markSaved,
+  ]);
+
   // handle strudel loading from REST API
   useEffect(() => {
-    if (!strudelId) {
-      if (loadedStrudelIdRef.current) {
+    // skip for local strudels - handled by separate effect
+    if (!strudelId || isLocalStrudelId) {
+      if (loadedStrudelIdRef.current && !isLocalStrudelId) {
         loadedStrudelIdRef.current = null;
       }
       return;
@@ -201,7 +257,7 @@ export const useEditor = ({
           toast.error('Failed to load strudel');
           break;
       }
-      
+
       router.replace('/');
       return;
     }
@@ -232,6 +288,7 @@ export const useEditor = ({
     }
   }, [
     strudelId,
+    isLocalStrudelId,
     ownStrudel,
     ownStrudelError,
     router,
