@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { FileText, Trash2, Play, Clock } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils/date';
+import { highlightStrudelCode } from '@/lib/utils/syntax-highlight';
 import { useDraftsModal } from './hooks';
 
 export function DraftsModal() {
@@ -74,8 +75,8 @@ export function DraftsModal() {
                       </Button>
                     </div>
                   </div>
-                  <pre className="mt-3 text-xs bg-muted/50 p-2 rounded overflow-hidden whitespace-pre font-mono leading-relaxed max-h-[5.5rem]">
-                    {draft.code.split('\n').slice(0, 5).join('\n')}
+                  <pre className="mt-3 text-xs bg-muted/50 p-2 rounded overflow-auto whitespace-pre font-mono leading-relaxed max-h-32">
+                    {highlightStrudelCode(draft.code)}
                   </pre>
                 </div>
               ))}
