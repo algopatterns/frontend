@@ -614,6 +614,17 @@ body {
   color: var(--syntax-muted) !important;
 }
 
+/* blue theme: sign in button */
+.blue .sign-in-btn {
+  color: var(--foreground) !important;
+}
+
+/* blue theme: strudel drawings */
+html.blue canvas,
+.blue canvas {
+  filter: brightness(0.75) sepia(1) hue-rotate(180deg) saturate(4) !important;
+}
+
 /* pink theme: codemirror editor syntax highlighting */
 .pink .cm-editor .cm-content {
   color: var(--syntax-default) !important;
@@ -653,6 +664,17 @@ body {
 .pink .cm-editor .cm-line .ͼ13,
 .pink .cm-editor .cm-line span.ͼ13 {
   color: var(--syntax-muted) !important;
+}
+
+/* pink theme: sign in button */
+.pink .sign-in-btn {
+  color: var(--foreground) !important;
+}
+
+/* pink theme: strudel drawings */
+html.pink canvas,
+.pink canvas {
+  filter: brightness(0.75) sepia(1) hue-rotate(300deg) saturate(4) !important;
 }
 
 /* pink theme: save indicator */

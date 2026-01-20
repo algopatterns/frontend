@@ -113,7 +113,7 @@ export function Header() {
               ) : (
                 <DropdownMenuItem
                   onClick={() => setLoginModalOpen(true)}
-                  className="cursor-pointer text-emerald-500 focus:text-emerald-500">
+                  className="cursor-pointer text-emerald-500 focus:text-emerald-500 sign-in-btn">
                   <LogIn className="mr-2 h-4 w-4" />
                   Sign in
                 </DropdownMenuItem>
