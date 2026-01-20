@@ -32,16 +32,18 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
     isAIBlocked,
     pasteLocked,
     messagesEndRef,
+    contentRef,
     handleApplyCode,
     handleSend,
     handleKeyDown,
+    handleManualResize,
   } = useAIInput(onSendAIRequest, disabled);
 
-  const { aiDrawerHeight, setAIDrawerHeight } = useUIStore();
+  const { aiDrawerHeight } = useUIStore();
   const { currentStrudel: playerStrudel } = usePlayerStore();
   const { handleMouseDown } = useResizable({
     initialSize: aiDrawerHeight,
-    onResize: setAIDrawerHeight,
+    onResize: handleManualResize,
     direction: 'top',
   });
 
@@ -114,7 +116,7 @@ export function AIInput({ onSendAIRequest, disabled = false }: AIInputProps) {
             </Button>
           </div>
 
-          <div className="overflow-y-auto p-3 space-y-2 flex-1 min-h-0">
+          <div ref={contentRef} className="overflow-y-auto p-3 space-y-2 flex-1 min-h-0">
             {conversationHistory.map(msg => (
               <AIMessage
                 key={msg.id || msg.created_at}
