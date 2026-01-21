@@ -619,15 +619,7 @@ body {
   color: var(--foreground) !important;
 }
 
-/* dark theme: convert blue drawings to white */
-html.dark canvas {
-  filter: saturate(0) brightness(2) !important;
-}
-
-/* blue theme: strudel drawings */
-html.blue canvas {
-  filter: brightness(0.75) sepia(1) hue-rotate(180deg) saturate(2) !important;
-}
+/* strudel canvas - no filters, colors set via setTheme() */
 
 /* pink theme: codemirror editor syntax highlighting */
 .pink .cm-editor .cm-content {
@@ -675,10 +667,6 @@ html.blue canvas {
   color: var(--foreground) !important;
 }
 
-/* pink theme: strudel drawings */
-html.pink canvas {
-  filter: brightness(0.75) sepia(1) hue-rotate(300deg) saturate(5) !important;
-}
 
 /* pink theme: save indicator */
 .pink .save-indicator-saved {

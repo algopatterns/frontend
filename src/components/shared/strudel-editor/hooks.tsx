@@ -768,6 +768,9 @@ export function useStrudelEditor(
     if (!containerRef.current || initializedRef.current) return;
     initializedRef.current = true;
 
+    // capture ref value for cleanup function
+    const canvasId = canvasIdRef.current;
+
     let isMounted = true;
 
     async function initEditor() {
@@ -810,6 +813,44 @@ export function useStrudelEditor(
           // enable extensions on reused instance
           globalMirrorInstance.reconfigureExtension?.('isAutoCompletionEnabled', true);
 
+          // set up strudel draw theme (when reusing global mirror)
+          const drawModule = await import('@strudel/draw') as unknown as { setTheme: (theme: Record<string, string>) => void };
+          const { setTheme } = drawModule;
+          // theme foreground colors (hex) - must match globals.css theme definitions
+          const THEME_COLORS: Record<string, string> = {
+            default: '#ffffff',  // dark theme: oklch(0.985 0 0) ≈ white
+            blue: '#6fa8dc',     // blue theme: oklch(0.75 0.1 220) ≈ blue
+            pink: '#d47a9e',     // pink theme: oklch(0.65 0.14 350) ≈ pink
+            light: '#252525',    // light theme: oklch(0.145 0 0) ≈ dark
+          };
+          const getThemeColor = (): string => {
+            const htmlClasses = document.documentElement.className;
+            if (htmlClasses.includes('blue')) return THEME_COLORS.blue;
+            if (htmlClasses.includes('pink')) return THEME_COLORS.pink;
+            if (htmlClasses.includes('light')) return THEME_COLORS.light;
+            return THEME_COLORS.default;
+          };
+          const updateStrudelTheme = () => {
+            const foreground = getThemeColor();
+            setTheme({
+              background: 'transparent',
+              foreground,
+              lineHighlight: 'transparent',
+              gutterBackground: 'transparent',
+              gutterForeground: foreground,
+            });
+          };
+          updateStrudelTheme();
+          const themeObserver = new MutationObserver(() => updateStrudelTheme());
+          themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+          // store cleanup for theme observer
+          const prevCleanup = (globalMirrorInstance as StrudelMirrorInstance & { _cleanup?: () => void })._cleanup;
+          (globalMirrorInstance as StrudelMirrorInstance & { _cleanup?: () => void })._cleanup = () => {
+            prevCleanup?.();
+            themeObserver.disconnect();
+          };
+
           setInitialized(true);
           setupTooltipHighlighting();
 
@@ -841,14 +882,15 @@ export function useStrudelEditor(
           containerRef.current.innerHTML = '';
         }
 
-        // Set autocomplete enabled BEFORE importing @strudel/codemirror
-        // The persistentAtom reads from localStorage on module load
+        // set autocomplete enabled BEFORE importing @strudel/codemirror
+        // the persistentAtom reads from localStorage on module load
         try {
           const key = 'codemirror-settings';
           const stored = localStorage.getItem(key);
           const settings = stored ? JSON.parse(stored) : {};
           settings.isAutoCompletionEnabled = true;
           localStorage.setItem(key, JSON.stringify(settings));
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {
           // ignore
         }
@@ -893,8 +935,45 @@ export function useStrudelEditor(
         const { evalScope, silence } = coreModule;
 
         // import draw module and stop any running animations
-        const { getDrawContext, cleanupDraw } = await import('@strudel/draw');
+        const drawModule = await import('@strudel/draw') as unknown as {
+          getDrawContext: (id?: string, options?: Record<string, unknown>) => CanvasRenderingContext2D;
+          cleanupDraw: (clearScreen?: boolean, id?: string) => void;
+          setTheme: (theme: Record<string, string>) => void;
+        };
+        const { getDrawContext, cleanupDraw, setTheme } = drawModule;
         cleanupDraw(true);
+
+        // theme foreground colors (hex) - must match globals.css theme definitions
+        const THEME_COLORS: Record<string, string> = {
+          default: '#ffffff',  // dark theme: oklch(0.985 0 0) ≈ white
+          blue: '#6fa8dc',     // blue theme: oklch(0.75 0.1 220) ≈ blue
+          pink: '#d47a9e',     // pink theme: oklch(0.65 0.14 350) ≈ pink
+          light: '#252525',    // light theme: oklch(0.145 0 0) ≈ dark
+        };
+        const getThemeColor = (): string => {
+          const htmlClasses = document.documentElement.className;
+          if (htmlClasses.includes('blue')) return THEME_COLORS.blue;
+          if (htmlClasses.includes('pink')) return THEME_COLORS.pink;
+          if (htmlClasses.includes('light')) return THEME_COLORS.light;
+          return THEME_COLORS.default;
+        };
+
+        // set strudel draw theme based on current app theme
+        const updateStrudelTheme = () => {
+          const foreground = getThemeColor();
+          setTheme({
+            background: 'transparent',
+            foreground,
+            lineHighlight: 'transparent',
+            gutterBackground: 'transparent',
+            gutterForeground: foreground,
+          });
+        };
+        updateStrudelTheme();
+
+        // watch for theme changes on html element
+        const themeObserver = new MutationObserver(() => updateStrudelTheme());
+        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
         // create fresh draw context with unique ID
         const drawContext = getDrawContext(canvasIdRef.current);
@@ -1075,6 +1154,7 @@ export function useStrudelEditor(
           currentContainer?.removeEventListener('keyup', emitCursorPosition);
           currentContainer?.removeEventListener('mouseup', emitCursorPosition);
           currentContainer?.removeEventListener('click', emitCursorPosition);
+          themeObserver.disconnect();
         };
 
         // attach cleanup to the return
@@ -1141,12 +1221,14 @@ export function useStrudelEditor(
         if (getStrudelMirrorInstance() === instance) {
           setStrudelMirrorInstance(null);
         }
+
         mirrorInstanceRef.current = null;
       }
 
       // only remove THIS component's draw canvas, not widget canvases
       // widget canvases belong to the persistent global mirror
-      const myCanvas = document.getElementById(canvasIdRef.current);
+      const myCanvas = document.getElementById(canvasId);
+      
       if (myCanvas) {
         myCanvas.id = `_stale_${myCanvas.id}_${Date.now()}`;
         myCanvas.remove();
