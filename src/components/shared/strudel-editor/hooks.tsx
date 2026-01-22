@@ -812,6 +812,7 @@ export function useStrudelEditor(
 
           // enable extensions on reused instance
           globalMirrorInstance.reconfigureExtension?.('isAutoCompletionEnabled', true);
+          globalMirrorInstance.reconfigureExtension?.('isTooltipEnabled', true);
 
           // set up strudel draw theme (when reusing global mirror)
           const drawModule = await import('@strudel/draw') as unknown as { setTheme: (theme: Record<string, string>) => void };
@@ -1099,6 +1100,7 @@ export function useStrudelEditor(
         mirror.reconfigureExtension?.('isPatternHighlightingEnabled', true);
         mirror.reconfigureExtension?.('isFlashEnabled', true);
         mirror.reconfigureExtension?.('isAutoCompletionEnabled', true);
+        mirror.reconfigureExtension?.('isTooltipEnabled', true);
 
         // apply read-only state after editor is created
         if (readOnlyRef.current && containerRef.current) {
