@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist_Mono } from "next/font/google";
 import { Providers } from "@/providers";
 import "@/styles/globals.css";
@@ -52,6 +53,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className="h-full overflow-hidden">
       <body className={`${geistMono.variable} font-mono antialiased h-full overflow-hidden`}>
         <Providers>{children}</Providers>
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="6e5fc480-bff9-4bdd-9570-bbe9025fbe72"
+        />
       </body>
     </html>
   );
