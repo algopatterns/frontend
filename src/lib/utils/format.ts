@@ -6,7 +6,7 @@ const PRETTIER_OPTIONS = {
   parser: 'babel',
   plugins: [prettierBabel, prettierEstree],
   semi: false,
-  singleQuote: true,
+  singleQuote: false, // Strudel uses double quotes for mini-notation
   trailingComma: 'es5' as const,
   printWidth: 80,
   tabWidth: 2,

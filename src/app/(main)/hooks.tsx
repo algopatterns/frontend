@@ -536,6 +536,8 @@ export const useEditor = ({
     try {
       const formatted = await formatCode(code);
       if (formatted !== code) {
+        // reset nextUpdateSource to 'typed' - format is not a paste operation
+        useEditorStore.getState().setNextUpdateSource('typed');
         setCode(formatted, false);
         if (isConnected && canEdit) {
           sendCode(formatted);

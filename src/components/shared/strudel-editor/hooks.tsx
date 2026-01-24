@@ -868,13 +868,22 @@ export function useStrudelEditor(
                 const { formatCode } = await import('@/lib/utils/format');
                 const currentCode = useEditorStore.getState().code;
                 const formatted = await formatCode(currentCode);
+                // consume the 'paste' source for this update, then reset to 'typed'
+                const source = useEditorStore.getState().consumeNextUpdateSource();
                 if (formatted !== currentCode) {
                   useEditorStore.getState().setCode(formatted, false);
                   const { wsClient } = await import('@/lib/websocket/client');
-                  wsClient.sendCodeUpdate(formatted);
+                  // send with the consumed source ('paste') so backend can detect it
+                  wsClient.sendCodeUpdate(formatted, undefined, undefined, source);
+                } else {
+                  // no formatting needed - send original pasted code with 'paste' source
+                  const { wsClient } = await import('@/lib/websocket/client');
+                  wsClient.sendCodeUpdate(currentCode, undefined, undefined, source);
                 }
               } catch (error) {
                 console.warn('Auto-format on paste failed:', error);
+                // consume source on error to prevent stale 'paste' source
+                useEditorStore.getState().consumeNextUpdateSource();
               }
             }, 50);
           };
@@ -1164,14 +1173,23 @@ export function useStrudelEditor(
               const { formatCode } = await import('@/lib/utils/format');
               const currentCode = useEditorStore.getState().code;
               const formatted = await formatCode(currentCode);
+              // consume the 'paste' source for this update, then reset to 'typed'
+              const source = useEditorStore.getState().consumeNextUpdateSource();
               if (formatted !== currentCode) {
                 useEditorStore.getState().setCode(formatted, false);
                 // sync to websocket if connected
                 const { wsClient } = await import('@/lib/websocket/client');
-                wsClient.sendCodeUpdate(formatted);
+                // send with the consumed source ('paste') so backend can detect it
+                wsClient.sendCodeUpdate(formatted, undefined, undefined, source);
+              } else {
+                // no formatting needed - send original pasted code with 'paste' source
+                const { wsClient } = await import('@/lib/websocket/client');
+                wsClient.sendCodeUpdate(currentCode, undefined, undefined, source);
               }
             } catch (error) {
               console.warn('Auto-format on paste failed:', error);
+              // consume source on error to prevent stale 'paste' source
+              useEditorStore.getState().consumeNextUpdateSource();
             }
           }, 50);
         };
