@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Play, Square, Plus, Radio, X, RefreshCw, RotateCcw, PanelRight } from 'lucide-react';
+import { Play, Square, Plus, Radio, X, RefreshCw, RotateCcw, PanelRight, WrapText } from 'lucide-react';
 import { useEditorToolbar, type SaveStatus } from './hooks';
 import { SaveIndicator, ConnectionIndicator } from './indicators';
 
@@ -17,6 +17,7 @@ interface EditorToolbarProps {
   onGoLive?: () => void;
   onEndLive?: () => void;
   onToggleSidebar?: () => void;
+  onFormat?: () => void;
   showSave?: boolean;
   showNew?: boolean;
   showGoLive?: boolean;
@@ -26,6 +27,7 @@ interface EditorToolbarProps {
   saveStatus?: SaveStatus;
   hasRestorableVersion?: boolean;
   isViewer?: boolean;
+  isFormatting?: boolean;
 }
 
 export function EditorToolbar({
@@ -38,6 +40,7 @@ export function EditorToolbar({
   onGoLive,
   onEndLive,
   onToggleSidebar,
+  onFormat,
   showSave = false,
   showNew = false,
   showGoLive = false,
@@ -47,6 +50,7 @@ export function EditorToolbar({
   saveStatus = 'saved',
   hasRestorableVersion = false,
   isViewer = false,
+  isFormatting = false,
 }: EditorToolbarProps) {
   const { isPlaying, isInitialized, isCodeDirty, status } = useEditorToolbar();
 
@@ -81,6 +85,21 @@ export function EditorToolbar({
           className="rounded-sm aspect-square px-0">
           <RefreshCw className="h-3 w-3" />
         </Button>
+        {onFormat && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onFormat}
+                disabled={isViewer || isFormatting}
+                className="rounded-sm aspect-square px-0">
+                <WrapText className="h-3 w-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Format code (Alt+Shift+F)</TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       <Separator orientation="vertical" className="h-6" />

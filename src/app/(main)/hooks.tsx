@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useStrudelAudio } from '@/lib/hooks/use-strudel-audio';
@@ -16,6 +16,7 @@ import { useAudioStore } from '@/lib/stores/audio';
 import { useWebSocketStore } from '@/lib/stores/websocket';
 import { wsClient } from '@/lib/websocket/client';
 import { storage } from '@/lib/utils/storage';
+import { formatCode } from '@/lib/utils/format';
 import { EDITOR } from '@/lib/constants';
 import {
   evaluateStrudel,
@@ -54,6 +55,7 @@ export const useEditor = ({
   const { saveStatus, handleSave, handleRestore, hasRestorableVersion, isAuthenticated } = useAutosave();
   const { isChatPanelOpen, toggleChatPanel, setNewStrudelDialogOpen } = useUIStore();
   const {
+    code,
     setCode,
     setCurrentStrudel,
     setCurrentDraftId,
@@ -64,6 +66,8 @@ export const useEditor = ({
     markSaved,
     setConversationHistory,
   } = useEditorStore();
+
+  const [isFormatting, setIsFormatting] = useState(false);
 
   // update document title when strudel title changes
   useEffect(() => {
@@ -525,6 +529,27 @@ export const useEditor = ({
     });
   }, [sessionId, softEndSession]);
 
+  const handleFormat = useCallback(async () => {
+    if (isFormatting) return;
+
+    setIsFormatting(true);
+    try {
+      const formatted = await formatCode(code);
+      if (formatted !== code) {
+        setCode(formatted, false);
+        if (isConnected && canEdit) {
+          sendCode(formatted);
+        }
+        toast.success('Code formatted');
+      }
+    } catch (error) {
+      toast.error('Failed to format code');
+      console.error('Format error:', error);
+    } finally {
+      setIsFormatting(false);
+    }
+  }, [code, isFormatting, setCode, isConnected, canEdit, sendCode]);
+
   return {
     handleCodeChange,
     handlePlay,
@@ -536,6 +561,7 @@ export const useEditor = ({
     handleRestore,
     handleNewStrudel,
     handleEndLive,
+    handleFormat,
     isChatPanelOpen,
     toggleChatPanel,
     isConnected,
@@ -552,5 +578,6 @@ export const useEditor = ({
     showChat,
     isLive,
     isEndingLive: softEndSession.isPending,
+    isFormatting,
   };
 };

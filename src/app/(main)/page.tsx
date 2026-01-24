@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { StrudelEditor } from '@/components/shared/strudel-editor';
 import { EditorToolbar } from '@/components/shared/editor-toolbar';
@@ -56,6 +56,7 @@ function HomePageContent() {
     handleRestore,
     handleNewStrudel,
     handleEndLive,
+    handleFormat,
     isChatPanelOpen,
     toggleChatPanel,
     isConnected,
@@ -69,6 +70,7 @@ function HomePageContent() {
     isAuthenticated,
     isLive,
     isEndingLive,
+    isFormatting,
   } = useEditor({
     strudelId,
     forkStrudelId,
@@ -109,6 +111,21 @@ function HomePageContent() {
     setDesktopSidebarOpen(newState);
   };
 
+  // keyboard shortcut for format (Alt+Shift+F)
+  useEffect(() => {
+    if (!canEdit) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.shiftKey && e.key === 'F') {
+        e.preventDefault();
+        handleFormat();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canEdit, handleFormat]);
+
   // when sidebar is collapsed on desktop, use mobile-like styling
   const sidebarVisible = isChatPanelOpen;
 
@@ -126,6 +143,7 @@ function HomePageContent() {
             onGoLive={handleGoLive}
             onEndLive={isHost ? handleEndLive : undefined}
             onToggleSidebar={handleToggleDesktopSidebar}
+            onFormat={canEdit ? handleFormat : undefined}
             showSave={canEdit}
             showNew={canEdit}
             showGoLive={!!sessionId && canEdit}
@@ -135,6 +153,7 @@ function HomePageContent() {
             saveStatus={saveStatus}
             hasRestorableVersion={hasRestorableVersion()}
             isViewer={isViewer}
+            isFormatting={isFormatting}
           />
           <div className="flex-1 overflow-hidden">
             <StrudelEditor onCodeChange={handleCodeChange} readOnly={isViewer} />

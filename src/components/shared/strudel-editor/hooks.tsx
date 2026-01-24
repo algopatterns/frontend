@@ -813,6 +813,7 @@ export function useStrudelEditor(
           // enable extensions on reused instance
           globalMirrorInstance.reconfigureExtension?.('isAutoCompletionEnabled', true);
           globalMirrorInstance.reconfigureExtension?.('isTooltipEnabled', true);
+          globalMirrorInstance.reconfigureExtension?.('isLineNumbersDisplayed', true);
           globalMirrorInstance.setLineNumbers?.(true);
           globalMirrorInstance.setLineWrapping?.(true);
 
@@ -857,6 +858,28 @@ export function useStrudelEditor(
           setInitialized(true);
           setupTooltipHighlighting();
 
+          // paste detection + auto-format (for reused global mirror)
+          const handlePaste = async () => {
+            useEditorStore.getState().setNextUpdateSource('paste');
+
+            // auto-format after paste
+            setTimeout(async () => {
+              try {
+                const { formatCode } = await import('@/lib/utils/format');
+                const currentCode = useEditorStore.getState().code;
+                const formatted = await formatCode(currentCode);
+                if (formatted !== currentCode) {
+                  useEditorStore.getState().setCode(formatted, false);
+                  const { wsClient } = await import('@/lib/websocket/client');
+                  wsClient.sendCodeUpdate(formatted);
+                }
+              } catch (error) {
+                console.warn('Auto-format on paste failed:', error);
+              }
+            }, 50);
+          };
+          containerRef.current?.addEventListener('paste', handlePaste);
+
           // set up code polling
           const interval = setInterval(() => {
             const inst = getStrudelMirrorInstance();
@@ -885,13 +908,15 @@ export function useStrudelEditor(
           containerRef.current.innerHTML = '';
         }
 
-        // set autocomplete enabled BEFORE importing @strudel/codemirror
+        // set editor settings BEFORE importing @strudel/codemirror
         // the persistentAtom reads from localStorage on module load
         try {
           const key = 'codemirror-settings';
           const stored = localStorage.getItem(key);
           const settings = stored ? JSON.parse(stored) : {};
           settings.isAutoCompletionEnabled = true;
+          settings.isLineNumbersDisplayed = true;
+          settings.isTooltipEnabled = true;
           localStorage.setItem(key, JSON.stringify(settings));
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {
@@ -1103,6 +1128,7 @@ export function useStrudelEditor(
         mirror.reconfigureExtension?.('isFlashEnabled', true);
         mirror.reconfigureExtension?.('isAutoCompletionEnabled', true);
         mirror.reconfigureExtension?.('isTooltipEnabled', true);
+        mirror.reconfigureExtension?.('isLineNumbersDisplayed', true);
 
         // apply read-only state after editor is created
         if (readOnlyRef.current && containerRef.current) {
@@ -1127,10 +1153,27 @@ export function useStrudelEditor(
         setInitialized(true);
         setupTooltipHighlighting();
 
-        // paste detection for CC signals
+        // paste detection for CC signals + auto-format
         const currentContainer = containerRef.current;
-        const handlePaste = () => {
+        const handlePaste = async () => {
           useEditorStore.getState().setNextUpdateSource('paste');
+
+          // auto-format after paste (small delay to let paste complete)
+          setTimeout(async () => {
+            try {
+              const { formatCode } = await import('@/lib/utils/format');
+              const currentCode = useEditorStore.getState().code;
+              const formatted = await formatCode(currentCode);
+              if (formatted !== currentCode) {
+                useEditorStore.getState().setCode(formatted, false);
+                // sync to websocket if connected
+                const { wsClient } = await import('@/lib/websocket/client');
+                wsClient.sendCodeUpdate(formatted);
+              }
+            } catch (error) {
+              console.warn('Auto-format on paste failed:', error);
+            }
+          }, 50);
         };
         currentContainer?.addEventListener('paste', handlePaste);
 
